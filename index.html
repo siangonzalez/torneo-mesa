@@ -346,7 +346,7 @@ window.saveGame = async function() {
   const selects = document.querySelectorAll('#posSelect select');
   const positions = [...selects].map(s=>s.value).filter(Boolean);
   const unique = [...new Set(positions)];
-  if(unique.length < 2) { showToast('Asigna al menos 2 jugadores distintos'); return; }
+  if(unique.length < 1) { showToast('Asigna al menos 1 jugador'); return; }
   if(unique.length !== positions.length) { showToast('Hay jugadores repetidos en las posiciones'); return; }
   if(!state.games) state.games = [];
   state.games.push({ name, positions: unique, date: new Date().toISOString() });
@@ -408,8 +408,9 @@ window.goTo = function(pg, btn) {
   btn.classList.add('active');
   if(pg==='add') {
     const cont = document.getElementById('posSelect');
-    if(!cont.children.length) initPosRows();
-    else refreshPosSelects();
+    const prevCount = cont.children.length || 2;
+    cont.innerHTML = '';
+    for(let i=0;i<prevCount;i++) window.addPosRow();
   }
 };
 
@@ -425,7 +426,6 @@ function showToast(msg) {
 }
 
 // Init
-initPosRows();
 </script>
 </body>
 </html>
