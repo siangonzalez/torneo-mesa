@@ -286,6 +286,9 @@ window.render = function() {
     </div>
   `).join('') : '<div style="font-size:13px;color:#aaa;padding:8px 0;">Sin jugadores aún.</div>';
 
+  // Refresh pos selects with current players
+  refreshPosSelects();
+
   // History
   const hist = document.getElementById('historyList');
   if(!(state.games||[]).length) {
@@ -311,13 +314,25 @@ window.render = function() {
   }
 };
 
+function buildPlayerOpts() {
+  return '<option value="">— jugador —</option>' + (state.players||[]).map(p=>`<option value="${p}">${p}</option>`).join('');
+}
+
+function refreshPosSelects() {
+  const cont = document.getElementById('posSelect');
+  [...cont.querySelectorAll('select')].forEach(sel => {
+    const current = sel.value;
+    sel.innerHTML = buildPlayerOpts();
+    if(current) sel.value = current;
+  });
+}
+
 window.addPosRow = function() {
   const cont = document.getElementById('posSelect');
   const i = cont.children.length;
-  const opts = '<option value="">— jugador —</option>' + (state.players||[]).map(p=>`<option value="${p}">${p}</option>`).join('');
   const div = document.createElement('div');
   div.className = 'pos-item';
-  div.innerHTML = `<span class="pos-label">${i+1}°</span><select>${opts}</select>`;
+  div.innerHTML = `<span class="pos-label">${i+1}°</span><select>${buildPlayerOpts()}</select>`;
   cont.appendChild(div);
 };
 
@@ -394,6 +409,7 @@ window.goTo = function(pg, btn) {
   if(pg==='add') {
     const cont = document.getElementById('posSelect');
     if(!cont.children.length) initPosRows();
+    else refreshPosSelects();
   }
 };
 
