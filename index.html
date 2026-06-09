@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Torneo">
+<title>Torneo de Mesa</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f2;min-height:100vh;color:#1a1a1a;}
+.app{max-width:480px;margin:0 auto;padding:0 0 72px;}
+.topbar{background:#fff;border-bottom:0.5px solid rgba(0,0,0,.1);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.topbar-title{font-size:16px;font-weight:500;}
+.topbar-sub{font-size:12px;color:#888;margin-top:1px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#4caf50;display:inline-block;margin-right:4px;transition:background .3s;}
+.sync-dot.off{background:#ccc;}
+.sync-dot.syncing{background:#ff9800;}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:0.5px solid rgba(0,0,0,.1);display:flex;z-index:10;}
+.nav button{flex:1;border:none;background:none;padding:10px 4px 8px;font-size:11px;color:#999;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .15s;}
+.nav button.active{color:#1a1a1a;}
+.nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.page{display:none;padding:12px 12px 0;}
+.page.active{display:block;}
+.card{background:#fff;border:0.5px solid rgba(0,0,0,.1);border-radius:12px;padding:14px;margin-bottom:10px;}
+.card-title{font-size:12px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
+input[type=text],select{width:100%;padding:9px 12px;border:0.5px solid rgba(0,0,0,.2);border-radius:8px;font-size:15px;background:#fff;color:#1a1a1a;outline:none;margin-bottom:8px;-webkit-appearance:none;}
+input:focus,select:focus{border-color:rgba(0,0,0,.5);}
+.btn{display:block;width:100%;padding:11px;border:0.5px solid rgba(0,0,0,.2);border-radius:8px;font-size:14px;font-weight:500;background:transparent;color:#1a1a1a;cursor:pointer;text-align:center;transition:background .12s;-webkit-appearance:none;}
+.btn:active{background:#f0f0ee;}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:transparent;}
+.btn-primary:active{opacity:.85;}
+.btn-sm{display:inline-block;width:auto;padding:5px 12px;font-size:13px;}
+.btn-danger{border-color:rgba(180,40,40,.25);color:#a33;}
+.btn-row{display:flex;gap:8px;margin-top:10px;}
+.leader-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+.leader-row:last-child{border:none;}
+.rank{font-size:20px;width:30px;text-align:center;}
+.player-pts{font-size:18px;font-weight:500;}
+.player-pts span{font-size:12px;font-weight:400;color:#888;}
+.tag-win{background:#e8f5e9;color:#2e7d32;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:500;}
+.tag-pod{background:#fff8e1;color:#856a00;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:500;}
+.pos-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#f5f5f2;border-radius:8px;border:0.5px solid rgba(0,0,0,.1);margin-bottom:6px;}
+.pos-label{font-size:13px;font-weight:500;width:24px;color:#888;}
+.pos-item select{margin:0;flex:1;padding:5px 8px;font-size:14px;background:#fff;}
+.game-row{padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+.game-row:last-child{border:none;}
+.game-title{font-size:14px;font-weight:500;margin-bottom:5px;}
+.chip{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500;background:#f0f0ee;color:#555;margin:2px 2px 2px 0;}
+.empty{text-align:center;padding:32px 16px;color:#aaa;font-size:14px;line-height:1.6;}
+.player-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+.player-item:last-child{border:none;}
+.add-player-row{display:flex;gap:8px;margin-top:8px;}
+.add-player-row input{margin:0;flex:1;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+@media (prefers-color-scheme: dark){
+  body{background:#111;color:#f0f0f0;}
+  .topbar,.nav,.card{background:#1c1c1e;border-color:rgba(255,255,255,.1);}
+  input[type=text],select,.pos-item select{background:#2c2c2e;color:#f0f0f0;border-color:rgba(255,255,255,.15);}
+  .pos-item{background:#2c2c2e;border-color:rgba(255,255,255,.1);}
+  .btn{color:#f0f0f0;border-color:rgba(255,255,255,.2);}
+  .btn:active{background:#2c2c2e;}
+  .btn-primary{background:#f0f0f0;color:#1a1a1a;}
+  .chip{background:#2c2c2e;color:#ccc;}
+  .leader-row,.game-row,.player-item{border-color:rgba(255,255,255,.07);}
+  .nav button{color:#666;}
+  .nav button.active{color:#f0f0f0;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="tourneyName">Torneo de Mesa</div>
+      <div class="topbar-sub"><span class="sync-dot off" id="syncDot"></span><span id="syncLabel">conectando...</span></div>
+    </div>
+    <div id="gameCount" style="font-size:13px;color:#888;">0 juegos</div>
+  </div>
+
+  <!-- MARCADOR -->
+  <div class="page active" id="pg-board">
+    <div class="card">
+      <div class="card-title">Marcador en vivo</div>
+      <div id="leaderList"><div class="empty">Agrega jugadores en Ajustes para comenzar.</div></div>
+    </div>
+  </div>
+
+  <!-- REGISTRAR -->
+  <div class="page" id="pg-add">
+    <div class="card">
+      <div class="card-title">Nombre del juego</div>
+      <input type="text" id="gameName" placeholder="Ej. Catan, UNO, Exploding Kittens...">
+    </div>
+    <div class="card">
+      <div class="card-title">Posiciones (1° a último)</div>
+      <div id="posSelect"></div>
+      <div class="btn-row">
+        <button class="btn btn-sm" onclick="addPosRow()">+ jugador</button>
+        <button class="btn btn-sm btn-danger" onclick="removePosRow()">− quitar</button>
+      </div>
+      <button class="btn btn-primary" style="margin-top:14px;" onclick="saveGame()">Guardar resultado</button>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="page" id="pg-history">
+    <div class="card">
+      <div class="card-title">Historial de juegos</div>
+      <div id="historyList"><div class="empty">Sin juegos registrados.</div></div>
+    </div>
+  </div>
+
+  <!-- AJUSTES -->
+  <div class="page" id="pg-settings">
+    <div class="card">
+      <div class="card-title">Nombre del torneo</div>
+      <input type="text" id="settingName" placeholder="Ej. Torneo Navidad 2025">
+      <button class="btn" onclick="saveName()">Guardar nombre</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Jugadores</div>
+      <div id="playersList"></div>
+      <div class="add-player-row">
+        <input type="text" id="newPlayerName" placeholder="Nombre del jugador">
+        <button class="btn btn-sm" onclick="addPlayer()">Agregar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Sistema de puntos</div>
+      <select id="settingSystem" onchange="saveSystem()">
+        <option value="proportional">Proporcional (recomendado)</option>
+        <option value="fibonacci">Fibonacci invertido</option>
+        <option value="flat">Puntos fijos</option>
+      </select>
+    </div>
+    <div class="card">
+      <button class="btn btn-danger" onclick="confirmReset()">Reiniciar torneo</button>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="active" onclick="goTo('board',this)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Marcador
+    </button>
+    <button onclick="goTo('add',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Registrar
+    </button>
+    <button onclick="goTo('history',this)">
+      <svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 16 3.05 11 8 11"/></svg>
+      Historial
+    </button>
+    <button onclick="goTo('settings',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Ajustes
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
+  authDomain: "torneo-mesa.firebaseapp.com",
+  databaseURL: "https://torneo-mesa-default-rtdb.firebaseio.com",
+  projectId: "torneo-mesa",
+  storageBucket: "torneo-mesa.firebasestorage.app",
+  messagingSenderId: "541715613556",
+  appId: "1:541715613556:web:4a4ef8b65d707304238e21"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+const torneoRef = ref(db, 'torneo');
+
+let state = { name: 'Torneo de Mesa', players: [], games: [], system: 'proportional' };
+let isRemoteUpdate = false;
+
+// Escuchar cambios en tiempo real
+onValue(torneoRef, (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    state = data;
+    if (!state.players) state.players = [];
+    if (!state.games) state.games = [];
+  }
+  render();
+  setSyncStatus('ok');
+}, (error) => {
+  setSyncStatus('off');
+});
+
+// Guardar en Firebase
+window.saveState = async function() {
+  setSyncStatus('syncing');
+  try {
+    await set(torneoRef, state);
+    setSyncStatus('ok');
+  } catch(e) {
+    setSyncStatus('off');
+    showToast('Error al guardar. Revisa tu conexión.');
+  }
+};
+
+function setSyncStatus(s) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (s==='off' ? ' off' : s==='syncing' ? ' syncing' : '');
+  lbl.textContent = s==='ok' ? 'en vivo' : s==='syncing' ? 'guardando...' : 'sin conexión';
+}
+
+function getPoints(n, system) {
+  if(system === 'fibonacci') {
+    const fibs = [1,2,3,5,8,13,21];
+    const base = fibs.slice(0,n).reverse();
+    const m = base[0];
+    return base.map(v => Math.round(v/m*100));
+  } else if(system === 'flat') {
+    return [100,70,50,35,20,10].slice(0,n);
+  }
+  return Array.from({length:n}, (_,i) => Math.round((n-i)/n*100));
+}
+
+function computeScores() {
+  const scores={}, wins={}, podiums={};
+  state.players.forEach(p => { scores[p]=0; wins[p]=0; podiums[p]=0; });
+  (state.games||[]).forEach(g => {
+    const pts = getPoints(g.positions.length, state.system);
+    g.positions.forEach((p,i) => {
+      if(p && scores[p]!==undefined) {
+        scores[p] += pts[i]||0;
+        if(i===0) wins[p]++;
+        if(i<3) podiums[p]++;
+      }
+    });
+  });
+  return state.players
+    .map(p => ({name:p, pts:scores[p], wins:wins[p], podiums:podiums[p]}))
+    .sort((a,b) => b.pts-a.pts || b.wins-a.wins);
+}
+
+const medals = ['🥇','🥈','🥉'];
+
+window.render = function() {
+  document.getElementById('tourneyName').textContent = state.name || 'Torneo de Mesa';
+  document.getElementById('settingName').value = state.name || '';
+  document.getElementById('settingSystem').value = state.system || 'proportional';
+  document.getElementById('gameCount').textContent = (state.games||[]).length + ' juego' + ((state.games||[]).length===1?'':'s');
+
+  // Leaderboard
+  const board = document.getElementById('leaderList');
+  if(!(state.players||[]).length) {
+    board.innerHTML = '<div class="empty">Agrega jugadores en Ajustes<br>para comenzar el torneo.</div>';
+  } else {
+    const sc = computeScores();
+    board.innerHTML = sc.map((p,i) => `
+      <div class="leader-row">
+        <span class="rank">${i<3?medals[i]:i+1}</span>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:${i===0?'500':'400'}">${p.name}</div>
+          <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">
+            ${p.wins?`<span class="tag-win">${p.wins} victoria${p.wins>1?'s':''}</span>`:''}
+            ${p.podiums>0&&p.podiums!==p.wins?`<span class="tag-pod">${p.podiums} podio${p.podiums>1?'s':''}</span>`:''}
+          </div>
+        </div>
+        <div class="player-pts">${p.pts} <span>pts</span></div>
+      </div>
+    `).join('');
+  }
+
+  // Players in settings
+  const pl = document.getElementById('playersList');
+  pl.innerHTML = (state.players||[]).length ? (state.players||[]).map((p,i) => `
+    <div class="player-item">
+      <span style="flex:1;font-size:14px;">${p}</span>
+      <button class="btn btn-sm btn-danger" onclick="removePlayer(${i})">Quitar</button>
+    </div>
+  `).join('') : '<div style="font-size:13px;color:#aaa;padding:8px 0;">Sin jugadores aún.</div>';
+
+  // History
+  const hist = document.getElementById('historyList');
+  if(!(state.games||[]).length) {
+    hist.innerHTML = '<div class="empty">Sin juegos registrados todavía.</div>';
+  } else {
+    hist.innerHTML = [...(state.games||[])].reverse().map((g, ri) => {
+      const i = state.games.length - 1 - ri;
+      const pts = getPoints(g.positions.length, state.system);
+      const d = g.date ? new Date(g.date).toLocaleDateString('es-CO',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+      return `
+        <div class="game-row">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div class="game-title">${g.name||'Juego'}</div>
+              ${d?`<div style="font-size:11px;color:#aaa;margin-bottom:4px;">${d}</div>`:''}
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteGame(${i})" style="padding:3px 10px;font-size:12px;margin-left:8px;">Borrar</button>
+          </div>
+          <div>${g.positions.map((p,pi)=>`<span class="chip">${pi+1}° ${p} +${pts[pi]}</span>`).join('')}</div>
+        </div>
+      `;
+    }).join('');
+  }
+};
+
+window.addPosRow = function() {
+  const cont = document.getElementById('posSelect');
+  const i = cont.children.length;
+  const opts = '<option value="">— jugador —</option>' + (state.players||[]).map(p=>`<option value="${p}">${p}</option>`).join('');
+  const div = document.createElement('div');
+  div.className = 'pos-item';
+  div.innerHTML = `<span class="pos-label">${i+1}°</span><select>${opts}</select>`;
+  cont.appendChild(div);
+};
+
+window.removePosRow = function() {
+  const cont = document.getElementById('posSelect');
+  if(cont.children.length > 2) cont.removeChild(cont.lastChild);
+};
+
+window.saveGame = async function() {
+  const name = document.getElementById('gameName').value.trim() || 'Juego';
+  const selects = document.querySelectorAll('#posSelect select');
+  const positions = [...selects].map(s=>s.value).filter(Boolean);
+  const unique = [...new Set(positions)];
+  if(unique.length < 2) { showToast('Asigna al menos 2 jugadores distintos'); return; }
+  if(unique.length !== positions.length) { showToast('Hay jugadores repetidos en las posiciones'); return; }
+  if(!state.games) state.games = [];
+  state.games.push({ name, positions: unique, date: new Date().toISOString() });
+  await window.saveState();
+  document.getElementById('gameName').value = '';
+  document.getElementById('posSelect').innerHTML = '';
+  initPosRows();
+  goTo('board', document.querySelector('.nav button'));
+  showToast('Resultado guardado ✓');
+};
+
+window.deleteGame = async function(i) {
+  if(!confirm('¿Borrar este resultado?')) return;
+  state.games.splice(i,1);
+  await window.saveState();
+  showToast('Juego borrado');
+};
+
+window.addPlayer = async function() {
+  const inp = document.getElementById('newPlayerName');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(!state.players) state.players = [];
+  if(state.players.includes(name)) { showToast('Ya existe ese jugador'); return; }
+  state.players.push(name);
+  inp.value = '';
+  await window.saveState();
+  showToast(name + ' agregado ✓');
+};
+
+window.removePlayer = async function(i) {
+  if(!confirm('¿Quitar a ' + state.players[i] + '?')) return;
+  state.players.splice(i,1);
+  await window.saveState();
+};
+
+window.saveName = async function() {
+  state.name = document.getElementById('settingName').value.trim() || 'Torneo de Mesa';
+  await window.saveState();
+  showToast('Nombre guardado ✓');
+};
+
+window.saveSystem = async function() {
+  state.system = document.getElementById('settingSystem').value;
+  await window.saveState();
+};
+
+window.confirmReset = async function() {
+  if(!confirm('¿Reiniciar el torneo? Se borrarán todos los datos.')) return;
+  state = { name: state.name, players: [], games: [], system: state.system };
+  await window.saveState();
+  showToast('Torneo reiniciado');
+};
+
+window.goTo = function(pg, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+pg).classList.add('active');
+  btn.classList.add('active');
+  if(pg==='add') {
+    const cont = document.getElementById('posSelect');
+    if(!cont.children.length) initPosRows();
+  }
+};
+
+function initPosRows() {
+  for(let i=0;i<2;i++) window.addPosRow();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Init
+initPosRows();
+</script>
+</body>
+</html>
