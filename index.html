@@ -110,6 +110,52 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
   .catalog-search{background:#2c2c2e;color:#f0f0f0;border-color:rgba(255,255,255,.15);}
 }
 
+
+/* Timer */
+.timer-tabs{display:flex;background:#f0f0ee;border-radius:8px;padding:2px;margin-bottom:14px;}
+.timer-tab{flex:1;border:none;background:none;padding:7px 4px;font-size:12px;border-radius:6px;cursor:pointer;color:#888;font-weight:500;}
+.timer-tab.active{background:#fff;color:#1a1a1a;}
+.timer-display{text-align:center;padding:24px 0 16px;}
+.timer-time{font-size:72px;font-weight:300;letter-spacing:-2px;color:#1a1a1a;line-height:1;font-variant-numeric:tabular-nums;}
+.timer-time.warning{color:#e65100;animation:pulse 1s infinite;}
+.timer-time.danger{color:#c62828;animation:pulse .4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.timer-sub{font-size:13px;color:#aaa;margin-top:6px;}
+.timer-controls{display:flex;gap:8px;margin-bottom:12px;}
+.timer-btn{flex:1;padding:13px;border-radius:10px;border:0.5px solid rgba(0,0,0,.15);background:transparent;color:#1a1a1a;font-size:14px;font-weight:500;cursor:pointer;}
+.timer-btn.primary{background:#1a1a1a;color:#fff;border-color:transparent;}
+.timer-btn.danger{border-color:rgba(180,40,40,.3);color:#a33;}
+.timer-btn:active{opacity:.7;}
+.timer-setup{margin-bottom:12px;}
+.timer-preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.timer-preset{padding:6px 12px;border-radius:20px;border:0.5px solid rgba(0,0,0,.2);background:transparent;color:#888;font-size:13px;font-weight:500;cursor:pointer;}
+.timer-preset.active{background:#1a1a1a;color:#fff;border-color:transparent;}
+/* Turn timer */
+.turn-player{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:0.5px solid rgba(0,0,0,.1);margin-bottom:6px;background:#f9f9f7;cursor:grab;}
+.turn-player.active-turn{background:#1a1a1a;color:#fff;border-color:transparent;}
+.turn-player.active-turn .turn-time{color:#fff;}
+.turn-player.overtime{background:#fce4ec;}
+.turn-avatar{width:36px;height:36px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;flex-shrink:0;overflow:hidden;}
+.turn-avatar img{width:36px;height:36px;object-fit:cover;border-radius:50%;}
+.turn-name{flex:1;font-size:14px;font-weight:500;}
+.turn-time{font-size:14px;font-weight:500;color:#888;font-variant-numeric:tabular-nums;}
+.turn-rank{font-size:11px;color:#aaa;}
+.results-list{margin-top:8px;}
+.result-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+.result-row:last-child{border:none;}
+.flash-red{animation:flashRed 0.5s ease-in-out;}
+@keyframes flashRed{0%{background:#fff;}50%{background:#ffcdd2;}100%{background:#fff;}}
+@media(prefers-color-scheme:dark){
+  .timer-time{color:#f0f0f0;}
+  .timer-tab.active{background:#3a3a3c;color:#f0f0f0;}
+  .timer-tabs{background:#2c2c2e;}
+  .timer-btn{color:#f0f0f0;border-color:rgba(255,255,255,.2);}
+  .timer-btn.primary{background:#f0f0f0;color:#1a1a1a;}
+  .turn-player{background:#2c2c2e;border-color:rgba(255,255,255,.1);}
+  .turn-player.active-turn{background:#f0f0f0;color:#1a1a1a;}
+  .turn-player.active-turn .turn-time,.turn-player.active-turn .turn-name{color:#1a1a1a;}
+}
+
 /* Dice roller */
 .dice-config{display:flex;gap:10px;margin-bottom:14px;}
 .dice-selector{flex:1;text-align:center;}
@@ -404,10 +450,12 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
     </div>
   </div>
 
-  <!-- DADOS -->
+  <!-- MESA: DADOS + TIMER -->
   <div class="page" id="pg-dice">
+
+    <!-- DADOS -->
     <div class="card">
-      <div class="card-title">Configuración</div>
+      <div class="card-title">Dados</div>
       <div class="dice-config">
         <div class="dice-selector">
           <label>Cantidad</label>
@@ -433,19 +481,112 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
           </select>
         </div>
       </div>
-      <button class="btn btn-primary btn-roll" onclick="rollDice()">🎲 Lanzar</button>
-    </div>
-    <div class="card" id="diceResultCard" style="display:none;">
-      <div class="card-title">Resultado</div>
-      <div class="dice-results" id="diceResults"></div>
-      <div class="dice-total">
-        <div class="total-num" id="diceTotal">—</div>
-        <div class="total-lbl" id="diceTotalLbl">total</div>
+      <button class="btn btn-primary btn-roll" onclick="rollDice()">🎲 Lanzar dados</button>
+      <div id="diceResultCard" style="display:none;margin-top:12px;">
+        <div class="dice-results" id="diceResults"></div>
+        <div class="dice-total">
+          <div class="total-num" id="diceTotal">—</div>
+          <div class="total-lbl" id="diceTotalLbl">total</div>
+        </div>
+      </div>
+      <div id="diceHistCard" style="display:none;margin-top:10px;">
+        <div class="card-title" style="margin-bottom:6px;">Últimos lanzamientos</div>
+        <div class="dice-history" id="diceHistory"></div>
       </div>
     </div>
-    <div class="card" id="diceHistCard" style="display:none;">
-      <div class="card-title">Últimos lanzamientos</div>
-      <div class="dice-history" id="diceHistory"></div>
+
+    <!-- TIMER -->
+    <div class="card">
+      <div class="card-title">Timer</div>
+      <div class="timer-tabs">
+        <button class="timer-tab active" onclick="setTimerMode('stopwatch',this)">⏱ Cronómetro</button>
+        <button class="timer-tab" onclick="setTimerMode('countdown',this)">⏳ Cuenta regresiva</button>
+        <button class="timer-tab" onclick="setTimerMode('turns',this)">🎯 Turnos</button>
+      </div>
+
+      <!-- STOPWATCH -->
+      <div id="timerStopwatch">
+        <div class="timer-display">
+          <div class="timer-time" id="swDisplay">00:00</div>
+          <div class="timer-sub" id="swSub">listo para iniciar</div>
+        </div>
+        <div class="timer-controls">
+          <button class="timer-btn primary" id="swStartBtn" onclick="swToggle()">▶ Iniciar</button>
+          <button class="timer-btn danger" onclick="swReset()">↺ Reset</button>
+        </div>
+      </div>
+
+      <!-- COUNTDOWN -->
+      <div id="timerCountdown" style="display:none;">
+        <div class="timer-setup">
+          <div class="card-title" style="margin-bottom:6px;">Duración</div>
+          <div class="timer-preset-row">
+            <button class="timer-preset" onclick="setCdPreset(1,this)">1 min</button>
+            <button class="timer-preset" onclick="setCdPreset(2,this)">2 min</button>
+            <button class="timer-preset active" onclick="setCdPreset(5,this)">5 min</button>
+            <button class="timer-preset" onclick="setCdPreset(10,this)">10 min</button>
+            <button class="timer-preset" onclick="setCdPreset(15,this)">15 min</button>
+            <button class="timer-preset" onclick="setCdPreset(30,this)">30 min</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="cdMinutes" value="5" min="1" max="999" style="width:80px;margin:0;text-align:center;">
+            <span style="font-size:14px;color:#888;">minutos</span>
+          </div>
+        </div>
+        <div class="timer-display">
+          <div class="timer-time" id="cdDisplay">05:00</div>
+          <div class="timer-sub" id="cdSub">listo para iniciar</div>
+        </div>
+        <div class="timer-controls">
+          <button class="timer-btn primary" id="cdStartBtn" onclick="cdToggle()">▶ Iniciar</button>
+          <button class="timer-btn danger" onclick="cdReset()">↺ Reset</button>
+        </div>
+      </div>
+
+      <!-- TURN TIMER -->
+      <div id="timerTurns" style="display:none;">
+        <!-- Setup phase -->
+        <div id="turnSetup">
+          <div class="card-title" style="margin-bottom:6px;">Jugadores del juego</div>
+          <div id="turnPlayerPicker" style="margin-bottom:10px;"></div>
+          <button class="btn btn-sm" onclick="addTurnPlayers()" style="margin-bottom:10px;">+ Usar jugadores del torneo</button>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <input type="text" id="turnCustomPlayer" placeholder="Agregar jugador manualmente..." style="margin:0;flex:1;font-size:14px;">
+            <button class="btn btn-sm" onclick="addTurnCustomPlayer()">+</button>
+          </div>
+          <div class="card-title" style="margin-bottom:6px;">Orden de turnos</div>
+          <div id="turnOrderList" style="margin-bottom:10px;"></div>
+          <button class="btn btn-sm" onclick="shuffleTurnOrder()" style="margin-bottom:10px;">🔀 Orden aleatorio</button>
+          <div class="card-title" style="margin-bottom:6px;">Límite de tiempo por turno (opcional)</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <input type="number" id="turnLimit" value="0" min="0" max="60" style="width:70px;margin:0;text-align:center;">
+            <span style="font-size:13px;color:#888;">minutos (0 = sin límite)</span>
+          </div>
+          <button class="btn btn-primary" onclick="startTurnTimer()">▶ Iniciar partida</button>
+        </div>
+
+        <!-- Active phase -->
+        <div id="turnActive" style="display:none;">
+          <div class="timer-display" style="padding:12px 0 8px;">
+            <div class="timer-time" id="turnDisplay">00:00</div>
+            <div class="timer-sub" id="turnSub">turno de —</div>
+          </div>
+          <div id="turnPlayerList" style="margin-bottom:10px;"></div>
+          <div class="timer-controls">
+            <button class="timer-btn primary" id="turnPauseBtn" onclick="turnPause()">⏸ Pausar</button>
+            <button class="timer-btn" onclick="turnNext()" style="background:#1a7a3a;color:#fff;border-color:transparent;">Pasar turno ›</button>
+          </div>
+          <button class="btn btn-danger" onclick="turnEnd()" style="margin-top:8px;">Terminar partida</button>
+        </div>
+
+        <!-- Results phase -->
+        <div id="turnResults" style="display:none;">
+          <div class="card-title" style="margin-bottom:8px;">⏱ Resultados de la partida</div>
+          <div id="turnResultsList"></div>
+          <button class="btn" onclick="turnRestart()" style="margin-top:10px;">↺ Nueva partida</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -468,7 +609,7 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
     </button>
     <button onclick="goTo('dice',this)">
       <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>
-      Dados
+      Mesa
     </button>
     <button onclick="goTo('settings',this)">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -511,7 +652,7 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
     'removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog',
     'confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney',
     'setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected',
-    'updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame'];
+    'updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','moveTurnPlayer','removeTurnPlayer','renderTurnPicker'];
   fns.forEach(function(fn){ if(!window[fn]) window[fn] = handler(fn); });
   window._resolveQueue = function(){
     fns.forEach(function(fn){
@@ -1426,6 +1567,342 @@ window.toggleGameCard = function(id) {
     const arr = document.getElementById('arr_'+idx);
     if(arr) arr.textContent = '⌄';
   }
+};
+
+// ==================== TIMER ====================
+let timerMode = 'stopwatch';
+
+window.setTimerMode = function(mode, btn) {
+  timerMode = mode;
+  document.querySelectorAll('.timer-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('timerStopwatch').style.display  = mode==='stopwatch' ? 'block' : 'none';
+  document.getElementById('timerCountdown').style.display  = mode==='countdown' ? 'block' : 'none';
+  document.getElementById('timerTurns').style.display      = mode==='turns'     ? 'block' : 'none';
+  if(mode==='turns') renderTurnPicker();
+};
+
+// ---- STOPWATCH ----
+let swInterval = null, swSeconds = 0, swRunning = false;
+
+function fmtTime(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if(h>0) return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+
+window.swToggle = function() {
+  if(swRunning) {
+    clearInterval(swInterval); swRunning = false;
+    document.getElementById('swStartBtn').textContent = 'Continuar';
+    document.getElementById('swSub').textContent = 'pausado';
+  } else {
+    swRunning = true;
+    document.getElementById('swStartBtn').textContent = 'Pausar';
+    document.getElementById('swSub').textContent = 'en curso';
+    swInterval = setInterval(function() {
+      swSeconds++;
+      document.getElementById('swDisplay').textContent = fmtTime(swSeconds);
+    }, 1000);
+  }
+};
+
+window.swReset = function() {
+  clearInterval(swInterval); swRunning = false; swSeconds = 0;
+  document.getElementById('swDisplay').textContent = '00:00';
+  document.getElementById('swStartBtn').textContent = 'Iniciar';
+  document.getElementById('swSub').textContent = 'listo para iniciar';
+};
+
+// ---- COUNTDOWN ----
+let cdInterval = null, cdSeconds = 300, cdTotal = 300, cdRunning = false;
+
+window.setCdPreset = function(mins, btn) {
+  document.querySelectorAll('.timer-preset').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('cdMinutes').value = mins;
+  cdReset();
+};
+
+window.cdToggle = function() {
+  if(cdRunning) {
+    clearInterval(cdInterval); cdRunning = false;
+    document.getElementById('cdStartBtn').textContent = 'Continuar';
+    document.getElementById('cdSub').textContent = 'pausado';
+  } else {
+    if(cdSeconds <= 0) cdReset();
+    cdRunning = true;
+    document.getElementById('cdStartBtn').textContent = 'Pausar';
+    document.getElementById('cdSub').textContent = 'en curso';
+    cdInterval = setInterval(function() {
+      cdSeconds--;
+      var pct = cdSeconds / cdTotal;
+      var el = document.getElementById('cdDisplay');
+      el.textContent = fmtTime(cdSeconds);
+      el.className = 'timer-time';
+      if(cdSeconds <= 0) {
+        el.className = 'timer-time danger';
+        clearInterval(cdInterval); cdRunning = false;
+        document.getElementById('cdStartBtn').textContent = 'Iniciar';
+        document.getElementById('cdSub').textContent = 'tiempo!';
+        playBeep(3);
+      } else if(pct <= 0.5) {
+        el.className = 'timer-time warning';
+        if(cdSeconds === Math.floor(cdTotal * 0.5)) playBeep(1);
+      }
+    }, 1000);
+  }
+};
+
+window.cdReset = function() {
+  clearInterval(cdInterval); cdRunning = false;
+  var mins = parseInt(document.getElementById('cdMinutes').value) || 5;
+  cdTotal = cdSeconds = mins * 60;
+  document.getElementById('cdDisplay').textContent = fmtTime(cdSeconds);
+  document.getElementById('cdDisplay').className = 'timer-time';
+  document.getElementById('cdStartBtn').textContent = 'Iniciar';
+  document.getElementById('cdSub').textContent = 'listo para iniciar';
+};
+
+// ---- BEEP ----
+function playBeep(times) {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var t = ctx.currentTime;
+    for(var i=0; i<times; i++) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = i === times-1 ? 880 : 660;
+      gain.gain.setValueAtTime(0.4, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t+0.3);
+      osc.start(t); osc.stop(t+0.3);
+      t += 0.4;
+    }
+  } catch(e) {}
+}
+
+// ---- TURN TIMER ----
+var turnPlayers = [];
+var turnOrder = [];
+var turnTimes = {};
+var turnCurrent = 0;
+var turnInterval = null;
+var turnSeconds = 0;
+var turnRunning = false;
+var turnLimit = 0;
+var turnLimitReached = false;
+
+window.renderTurnPicker = function() {
+  var picker = document.getElementById('turnPlayerPicker');
+  if(!picker) return;
+  var selected = {};
+  turnPlayers.forEach(function(p){ selected[p]=true; });
+  picker.innerHTML = (state.players||[]).map(function(p) {
+    var photo = (state.playerPhotos||{})[p];
+    var av = photo
+      ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">'
+      : '<div style="width:28px;height:28px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;">'+p[0]+'</div>';
+    var sel = !!selected[p];
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,.07);cursor:pointer;" onclick="toggleTurnPlayer(''+p+'')">'
+      + av
+      + '<span style="flex:1;font-size:14px;">'+p+'</span>'
+      + '<span style="font-size:18px;color:'+(sel?'#1a1a1a':'#ccc')+';">'+(sel?'✓':'○')+'</span>'
+      + '</div>';
+  }).join('') || '<div style="font-size:13px;color:#aaa;padding:8px 0;">Sin jugadores en el torneo.</div>';
+  renderTurnOrder();
+};
+
+window.toggleTurnPlayer = function(name) {
+  var idx = turnPlayers.indexOf(name);
+  if(idx >= 0) { turnPlayers.splice(idx,1); turnOrder = turnOrder.filter(function(p){return p!==name;}); }
+  else { turnPlayers.push(name); turnOrder.push(name); }
+  renderTurnPicker();
+};
+
+window.addTurnPlayers = function() {
+  (state.players||[]).forEach(function(p) {
+    if(turnPlayers.indexOf(p)<0) { turnPlayers.push(p); turnOrder.push(p); }
+  });
+  renderTurnPicker();
+};
+
+window.addTurnCustomPlayer = function() {
+  var inp = document.getElementById('turnCustomPlayer');
+  var name = inp.value.trim();
+  if(!name) return;
+  if(turnPlayers.indexOf(name)<0) { turnPlayers.push(name); turnOrder.push(name); }
+  inp.value = '';
+  renderTurnPicker();
+};
+
+window.shuffleTurnOrder = function() {
+  for(var i=turnOrder.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=turnOrder[i]; turnOrder[i]=turnOrder[j]; turnOrder[j]=tmp;
+  }
+  renderTurnOrder();
+};
+
+function renderTurnOrder() {
+  var list = document.getElementById('turnOrderList');
+  if(!list) return;
+  list.innerHTML = turnOrder.map(function(p,i) {
+    var photo = (state.playerPhotos||{})[p];
+    var av = photo
+      ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">'
+      : '<div style="width:28px;height:28px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;">'+p[0]+'</div>';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f5f5f2;border-radius:8px;margin-bottom:4px;">'
+      + '<span style="font-size:12px;color:#aaa;width:18px;">'+(i+1)+'.</span>'
+      + av
+      + '<span style="flex:1;font-size:14px;">'+p+'</span>'
+      + '<div style="display:flex;gap:4px;">'
+      + (i>0?'<button class="btn btn-sm" onclick="moveTurnPlayer('+i+',-1)" style="padding:2px 8px;">↑</button>':'')
+      + (i<turnOrder.length-1?'<button class="btn btn-sm" onclick="moveTurnPlayer('+i+',1)" style="padding:2px 8px;">↓</button>':'')
+      + '<button class="btn btn-sm btn-danger" onclick="removeTurnPlayer('+i+')" style="padding:2px 8px;">×</button>'
+      + '</div></div>';
+  }).join('') || '<div style="font-size:13px;color:#aaa;">Selecciona jugadores arriba.</div>';
+}
+
+window.moveTurnPlayer = function(i, dir) {
+  var j = i+dir;
+  if(j<0||j>=turnOrder.length) return;
+  var tmp=turnOrder[i]; turnOrder[i]=turnOrder[j]; turnOrder[j]=tmp;
+  renderTurnOrder();
+};
+
+window.removeTurnPlayer = function(i) {
+  var name = turnOrder[i];
+  turnOrder.splice(i,1);
+  turnPlayers = turnPlayers.filter(function(p){return p!==name;});
+  renderTurnPicker();
+};
+
+window.startTurnTimer = function() {
+  if(turnOrder.length < 1) { showToast('Agrega al menos 1 jugador'); return; }
+  turnTimes = {};
+  turnOrder.forEach(function(p){ turnTimes[p]=0; });
+  turnCurrent = 0; turnSeconds = 0; turnRunning = false; turnLimitReached = false;
+  turnLimit = (parseInt(document.getElementById('turnLimit').value)||0) * 60;
+  document.getElementById('turnSetup').style.display = 'none';
+  document.getElementById('turnActive').style.display = 'block';
+  document.getElementById('turnResults').style.display = 'none';
+  renderTurnActive();
+  turnResume();
+};
+
+function renderTurnActive() {
+  var list = document.getElementById('turnPlayerList');
+  if(!list) return;
+  list.innerHTML = turnOrder.map(function(p,i) {
+    var isCurrent = i === turnCurrent;
+    var photo = (state.playerPhotos||{})[p];
+    var av = photo
+      ? '<img src="'+photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">'
+      : '<div class="turn-avatar" style="'+(isCurrent?'background:#fff;color:#1a1a1a;':'')+'">'+p[0]+'</div>';
+    return '<div class="turn-player'+(isCurrent?' active-turn':'')+'">'
+      + av
+      + '<span class="turn-name">'+p+'</span>'
+      + '<span class="turn-time">'+fmtTime(turnTimes[p])+'</span>'
+      + '</div>';
+  }).join('');
+
+  var el = document.getElementById('turnDisplay');
+  el.textContent = fmtTime(turnSeconds);
+  document.getElementById('turnSub').textContent = 'turno de ' + turnOrder[turnCurrent];
+
+  if(turnLimit > 0) {
+    var pct = turnSeconds / turnLimit;
+    el.className = 'timer-time';
+    if(pct >= 1) el.className = 'timer-time danger';
+    else if(pct >= 0.5) el.className = 'timer-time warning';
+  }
+}
+
+function turnResume() {
+  if(turnRunning) return;
+  turnRunning = true;
+  document.getElementById('turnPauseBtn').textContent = 'Pausar';
+  turnInterval = setInterval(function() {
+    turnSeconds++;
+    turnTimes[turnOrder[turnCurrent]]++;
+    renderTurnActive();
+    if(turnLimit > 0) {
+      var pct = turnSeconds / turnLimit;
+      if(pct >= 1 && !turnLimitReached) {
+        turnLimitReached = true;
+        playBeep(3);
+        document.getElementById('turnDisplay').className = 'timer-time danger';
+        var el = document.getElementById('turnActive');
+        el.classList.add('flash-red');
+        setTimeout(function(){ el.classList.remove('flash-red'); }, 600);
+      } else if(turnSeconds === Math.floor(turnLimit * 0.5) && !turnLimitReached) {
+        playBeep(1);
+      }
+    }
+  }, 1000);
+}
+
+window.turnPause = function() {
+  if(turnRunning) {
+    clearInterval(turnInterval); turnRunning = false;
+    document.getElementById('turnPauseBtn').textContent = 'Continuar';
+  } else {
+    turnResume();
+  }
+};
+
+window.turnNext = function() {
+  clearInterval(turnInterval); turnRunning = false;
+  turnCurrent = (turnCurrent + 1) % turnOrder.length;
+  turnSeconds = 0; turnLimitReached = false;
+  document.getElementById('turnDisplay').className = 'timer-time';
+  renderTurnActive();
+  turnResume();
+};
+
+window.turnEnd = function() {
+  if(!confirm('Terminar la partida y ver resultados?')) return;
+  clearInterval(turnInterval); turnRunning = false;
+  showTurnResults();
+};
+
+function showTurnResults() {
+  document.getElementById('turnActive').style.display = 'none';
+  document.getElementById('turnResults').style.display = 'block';
+  var sorted = turnOrder.slice().sort(function(a,b){ return turnTimes[b]-turnTimes[a]; });
+  var total = 0;
+  turnOrder.forEach(function(p){ total += turnTimes[p]; });
+  var medals = ['1', '2', '3'];
+  document.getElementById('turnResultsList').innerHTML = sorted.map(function(p,i) {
+    var photo = (state.playerPhotos||{})[p];
+    var av = photo
+      ? '<img src="'+photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">'
+      : '<div class="turn-avatar">'+p[0]+'</div>';
+    var pct = total > 0 ? Math.round(turnTimes[p]/total*100) : 0;
+    var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'';
+    return '<div class="result-row">'
+      + '<span style="font-size:18px;width:28px;">'+medal+'</span>'
+      + av
+      + '<div style="flex:1;">'
+      + '<div style="font-size:14px;font-weight:500;">'+p+'</div>'
+      + '<div style="height:4px;background:#f0f0ee;border-radius:2px;margin-top:4px;overflow:hidden;">'
+      + '<div style="height:100%;background:#1a1a1a;border-radius:2px;width:'+pct+'%;"></div>'
+      + '</div></div>'
+      + '<div style="text-align:right;">'
+      + '<div style="font-size:14px;font-weight:500;">'+fmtTime(turnTimes[p])+'</div>'
+      + '<div style="font-size:11px;color:#aaa;">'+pct+'%</div>'
+      + '</div></div>';
+  }).join('') + '<div style="text-align:center;font-size:13px;color:#aaa;margin-top:10px;">Tiempo total: '+fmtTime(total)+'</div>';
+}
+
+window.turnRestart = function() {
+  clearInterval(turnInterval); turnRunning = false;
+  turnPlayers = []; turnOrder = []; turnTimes = {}; turnCurrent = 0; turnSeconds = 0;
+  document.getElementById('turnSetup').style.display = 'block';
+  document.getElementById('turnActive').style.display = 'none';
+  document.getElementById('turnResults').style.display = 'none';
+  renderTurnPicker();
 };
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
