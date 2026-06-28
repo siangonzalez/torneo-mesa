@@ -707,35 +707,7 @@ window.render = function() {
 
   // Catalog settings
   renderCatalog();
-  if(false){const cl=document.getElementById('catalogList');(state.catalog||[]).map((g,i)=>{
-    const typeClass=g.type==='Cooperativo'?'gtag-type-c':g.type==='Semi-cooperativo'?'gtag-type-s':'gtag-type-v';
-    const compClass=g.complexity==='Alta'?'gtag-high':g.complexity==='Media'?'gtag-med':'gtag-low';
-    const expandId=`gexp_${i}`;
-    const hasInfo=g.type||g.players||g.duration||g.complexity||g.category||g.desc;
-    return `<div>
-      <div class="game-cat-item" style="cursor:${hasInfo?'pointer':'default'};" onclick="${hasInfo?`toggleGameCard('${expandId}')`:''}" >
-        <span class="game-emoji">${g.emoji}</span>
-        <div class="game-info">
-          <div class="game-name">${g.name}</div>
-          ${g.players||g.duration?`<div class="game-meta">${g.players?'👥 '+g.players:''}${g.players&&g.duration?' · ':''}${g.duration?'⏱ '+g.duration:''}</div>`:''}
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          ${i>=DEFAULT_GAMES.length?`<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeGameFromCatalog(${i})" style="padding:3px 8px;">×</button>`:''}
-          ${hasInfo?`<span style="font-size:14px;color:#aaa;" id="arr_${i}">›</span>`:''}
-        </div>
-      </div>
-      <div class="game-expand-card" id="${expandId}">
-        <div class="game-tags">
-          ${g.type?`<span class="gtag ${typeClass}">${g.type==='Cooperativo'?'🤝':'⚔️'} ${g.type}</span>`:''}
-          ${g.complexity?`<span class="gtag ${compClass}">🎯 ${g.complexity}</span>`:''}
-          ${g.category?`<span class="gtag gtag-cat">🏷 ${g.category}</span>`:''}
-        </div>
-        ${g.players?`<div class="game-expand-row">👥 <b>Jugadores:</b> ${g.players}</div>`:''}
-        ${g.duration?`<div class="game-expand-row">⏱ <b>Duración:</b> ${g.duration}</div>`:''}
-        ${g.desc?`<div class="game-desc">${g.desc}</div>`:''}
-      </div>
-    </div>`;
-  }).join('');
+  
 
   // History current
   const hist=document.getElementById('historyList');
@@ -1375,16 +1347,16 @@ window.renderCatalog = function() {
   const search = (document.getElementById('catalogSearch')||{}).value || '';
   const {type, complexity, players} = catalogFilters;
 
-  const filtered = (state.catalog||[]).filter((g, i) => {
+  const filtered = (state.catalog||[]).filter((g) => {
     if(search && !g.name.toLowerCase().includes(search.toLowerCase())) return false;
     if(type && g.type !== type) return false;
     if(complexity && g.complexity !== complexity) return false;
     if(players && g.players) {
-      // Parse min players from "2-6" or "4-8" etc
-      const min = parseInt((g.players||'').split('-')[0]);
-      const max = parseInt((g.players||'').split('-').pop());
+      const parts = g.players.replace(/\s/g,'').split('-');
+      const min = parseInt(parts[0]);
+      const max = parseInt(parts[parts.length-1]);
       const want = parseInt(players);
-      if(want === 2) { if(min > 2) return false; }
+      if(want === 2){ if(min > 2) return false; }
       else { if(max < want) return false; }
     }
     return true;
@@ -1396,35 +1368,46 @@ window.renderCatalog = function() {
   const cl = document.getElementById('catalogList');
   if(!cl) return;
 
+  const typeClass = (t) => t==='Cooperativo'?'gtag-type-c':t==='Semi-cooperativo'?'gtag-type-s':'gtag-type-v';
+  const compClass = (c) => c==='Alta'?'gtag-high':c==='Media'?'gtag-med':'gtag-low';
+
   cl.innerHTML = filtered.map((g) => {
     const i = (state.catalog||[]).indexOf(g);
-    const typeClass = g.type==='Cooperativo'?'gtag-type-c':g.type==='Semi-cooperativo'?'gtag-type-s':'gtag-type-v';
-    const compClass = g.complexity==='Alta'?'gtag-high':g.complexity==='Media'?'gtag-med':'gtag-low';
-    const expandId = `gexp_${i}`;
-    const hasInfo = g.type||g.players||g.duration||g.complexity||g.category||g.desc;
-    return `<div>
-      <div class="game-cat-item" style="cursor:${hasInfo?'pointer':'default'};" onclick="${hasInfo?`toggleGameCard('${expandId}')`:''}" >
-        <span class="game-emoji">${g.emoji||'🎲'}</span>
-        <div class="game-info">
-          <div class="game-name">${g.name}</div>
-          ${g.players||g.duration?`<div class="game-meta">${g.players?'👥 '+g.players:''}${g.players&&g.duration?' · ':''}${g.duration?'⏱ '+g.duration:''}</div>`:''}
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          ${i>=DEFAULT_GAMES.length?`<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeGameFromCatalog(${i})" style="padding:3px 8px;">×</button>`:''}
-          ${hasInfo?`<span style="font-size:14px;color:#aaa;" id="arr_${i}">›</span>`:''}
-        </div>
-      </div>
-      <div class="game-expand-card" id="${expandId}">
-        <div class="game-tags">
-          ${g.type?`<span class="gtag ${typeClass}">${g.type==='Cooperativo'?'🤝':'⚔️'} ${g.type}</span>`:''}
-          ${g.complexity?`<span class="gtag ${compClass}">🎯 ${g.complexity}</span>`:''}
-          ${g.category?`<span class="gtag gtag-cat">🏷 ${g.category}</span>`:''}
-        </div>
-        ${g.players?`<div class="game-expand-row">👥 <b>Jugadores:</b> ${g.players}</div>`:''}
-        ${g.duration?`<div class="game-expand-row">⏱ <b>Duración:</b> ${g.duration}</div>`:''}
-        ${g.desc?`<div class="game-desc">${g.desc}</div>`:''}
-      </div>
-    </div>`;
+    const expandId = 'gexp_' + i;
+    const hasInfo = !!(g.type||g.players||g.duration||g.complexity||g.category||g.desc);
+    const isCustom = i >= DEFAULT_GAMES.length;
+
+    let html = '<div>';
+    html += '<div class="game-cat-item" style="cursor:' + (hasInfo?'pointer':'default') + ';"';
+    if(hasInfo) html += ' onclick="toggleGameCard(' + "'" + expandId + "'" + ')"';
+    html += '>';
+    html += '<span class="game-emoji">' + (g.emoji||'🎲') + '</span>';
+    html += '<div class="game-info">';
+    html += '<div class="game-name">' + g.name + '</div>';
+    if(g.players||g.duration){
+      html += '<div class="game-meta">';
+      if(g.players) html += '👥 ' + g.players;
+      if(g.players&&g.duration) html += ' · ';
+      if(g.duration) html += '⏱ ' + g.duration;
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<div style="display:flex;align-items:center;gap:6px;">';
+    if(isCustom) html += '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeGameFromCatalog(' + i + ')" style="padding:3px 8px;">×</button>';
+    if(hasInfo) html += '<span style="font-size:14px;color:#aaa;" id="arr_' + i + '">›</span>';
+    html += '</div></div>';
+
+    html += '<div class="game-expand-card" id="' + expandId + '">';
+    html += '<div class="game-tags">';
+    if(g.type) html += '<span class="gtag ' + typeClass(g.type) + '">' + (g.type==='Cooperativo'?'🤝':'⚔️') + ' ' + g.type + '</span>';
+    if(g.complexity) html += '<span class="gtag ' + compClass(g.complexity) + '">🎯 ' + g.complexity + '</span>';
+    if(g.category) html += '<span class="gtag gtag-cat">🏷 ' + g.category + '</span>';
+    html += '</div>';
+    if(g.players) html += '<div class="game-expand-row">👥 <b>Jugadores:</b> ' + g.players + '</div>';
+    if(g.duration) html += '<div class="game-expand-row">⏱ <b>Duración:</b> ' + g.duration + '</div>';
+    if(g.desc) html += '<div class="game-desc">' + g.desc + '</div>';
+    html += '</div></div>';
+    return html;
   }).join('');
 };
 
