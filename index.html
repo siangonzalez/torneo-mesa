@@ -1425,8 +1425,60 @@ window.renderTurnPicker = function() {
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
-// Init
-Object.keys(window).forEach(function(k){if(window['_m_'+k]===undefined&&typeof window[k]==='function'){window['_m_'+k]=window[k];}});
+// Init — explicit bridge resolution
+window['_m_goTo'] = window.goTo;
+window['_m_rollDice'] = window.rollDice;
+window['_m_saveGame'] = window.saveGame;
+window['_m_addPosRow'] = window.addPosRow;
+window['_m_removePosRow'] = window.removePosRow;
+window['_m_addPlayer'] = window.addPlayer;
+window['_m_removePlayer'] = window.removePlayer;
+window['_m_saveName'] = window.saveName;
+window['_m_saveSystem'] = window.saveSystem;
+window['_m_addGameToCatalog'] = window.addGameToCatalog;
+window['_m_removeGameFromCatalog'] = window.removeGameFromCatalog;
+window['_m_confirmReset'] = window.confirmReset;
+window['_m_closeTournament'] = window.closeTournament;
+window['_m_deleteGame'] = window.deleteGame;
+window['_m_showProfile'] = window.showProfile;
+window['_m_showArchiveTorney'] = window.showArchiveTorney;
+window['_m_setHistTab'] = window.setHistTab;
+window['_m_setStatTab'] = window.setStatTab;
+window['_m_toggleGameCard'] = window.toggleGameCard;
+window['_m_migrateV1'] = window.migrateV1;
+window['_m_onPhotoSelected'] = window.onPhotoSelected;
+window['_m_updatePhoto'] = window.updatePhoto;
+window['_m_onGameSelect'] = window.onGameSelect;
+window['_m_setFilter'] = window.setFilter;
+window['_m_renderCatalog'] = window.renderCatalog;
+window['_m_openQueJugamos'] = window.openQueJugamos;
+window['_m_toggleQJCard'] = window.toggleQJCard;
+window['_m_closeQueJugamos'] = window.closeQueJugamos;
+window['_m_closeQueJugamosBtn'] = window.closeQueJugamosBtn;
+window['_m_pickRandomGame'] = window.pickRandomGame;
+window['_m_setTimerMode'] = window.setTimerMode;
+window['_m_swToggle'] = window.swToggle;
+window['_m_swReset'] = window.swReset;
+window['_m_cdToggle'] = window.cdToggle;
+window['_m_cdReset'] = window.cdReset;
+window['_m_setCdPreset'] = window.setCdPreset;
+window['_m_startTurnTimer'] = window.startTurnTimer;
+window['_m_turnPause'] = window.turnPause;
+window['_m_turnNext'] = window.turnNext;
+window['_m_turnEnd'] = window.turnEnd;
+window['_m_turnRestart'] = window.turnRestart;
+window['_m_shuffleTurnOrder'] = window.shuffleTurnOrder;
+window['_m_addTurnPlayers'] = window.addTurnPlayers;
+window['_m_addTurnCustomPlayer'] = window.addTurnCustomPlayer;
+window['_m_toggleTurnPlayer'] = window.toggleTurnPlayer;
+window['_m_moveTurnPlayer'] = window.moveTurnPlayer;
+window['_m_removeTurnPlayer'] = window.removeTurnPlayer;
+window['_m_renderTurnPicker'] = window.renderTurnPicker;
+window['_m_filterGameSelect'] = window.filterGameSelect;
+window['_m_toggleEmojiPicker'] = window.toggleEmojiPicker;
+window['_m_selectEmoji'] = window.selectEmoji;
+window['_m_render'] = window.render;
+window['_m_saveState'] = window.saveState;
 if(window._resolveQ)window._resolveQ();
 window.addPosRow();window.addPosRow();
 </script>
