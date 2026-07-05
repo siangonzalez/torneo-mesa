@@ -883,22 +883,13 @@ window.showArchiveTorney=function(i){
   const t=state.archive[i];if(!t)return;
   const sc=computeScores(t.games);
   const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
-  alert('🏆 '+t.name+'
-'+d+'
-
-Resultados:
-'+sc.map((p,i)=>`${i+1}. ${p.name} — ${p.pts} pts`).join('
-'));
+  alert('🏆 '+t.name+'\n'+d+'\n\nResultados:\n'+sc.map((p,i)=>(i+1)+'. '+p.name+' — '+p.pts+' pts').join('\n'));
 };
 
 window.closeTournament=async function(){
   if(!(state.games||[]).length){showToast('No hay juegos registrados aún');return;}
   const sc=computeScores(state.games);const champ=sc[0];
-  if(!confirm('¿Cerrar el torneo "'+state.name+'"?
-
-🏆 Campeón: '+champ.name+' con '+champ.pts+' pts
-
-Se archivará y empezará uno nuevo.'))return;
+  if(!confirm('¿Cerrar el torneo "'+state.name+'"?\n\n🏆 Campeón: '+champ.name+' con '+champ.pts+' pts\n\nSe archivará y empezará uno nuevo.'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
   state.games=[];await window.saveState();
@@ -1061,12 +1052,12 @@ window.migrateV1=async function(){
     const archived={name:v1.name||'Juegolimpiadas (v1)',date:v1.games[0].date||new Date().toISOString(),games:v1.games,players,_migratedFromV1:true};
     if(!state.archive)state.archive=[];state.archive.push(archived);
     const newPlayers=players.filter(p=>!(state.players||[]).includes(p));
-    if(newPlayers.length&&confirm('¿Agregar también estos jugadores?
-'+newPlayers.join(', '))){if(!state.players)state.players=[];state.players.push(...newPlayers);}
+    if(newPlayers.length&&confirm('¿Agregar también estos jugadores?\n'+newPlayers.join(', '))){if(!state.players)state.players=[];state.players.push(...newPlayers);}
     await window.saveState();statusEl.textContent='✓ Importados '+v1.games.length+' juegos.';document.getElementById('migrationCard').style.display='none';showToast('Datos v1 importados ✓');
   }catch(e){statusEl.textContent='✗ Error: '+e.message;btn.disabled=false;}
 };
 
+(function() {
 // ==================== TIMER ====================
 let timerMode = 'stopwatch';
 
@@ -1402,6 +1393,8 @@ window.turnRestart = function() {
   document.getElementById('turnResults').style.display = 'none';
   renderTurnPicker();
 };
+
+})();
 
 window.renderTurnPicker = function() {
   var picker = document.getElementById('turnPlayerPicker');
