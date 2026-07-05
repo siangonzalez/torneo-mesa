@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min-height:100vh;color:#000;}
+body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min-height:100vh;color:#000;overscroll-behavior-y:contain;-webkit-tap-highlight-color:transparent;}
 .app{max-width:480px;margin:0 auto;padding:0 0 72px;}
 
 /* TOPBAR */
@@ -23,7 +23,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 .game-count-badge{font-size:12px;font-weight:700;color:#000;background:#A3E635;border:2px solid #000;padding:3px 10px;border-radius:6px;box-shadow:2px 2px 0 #000;}
 
 /* NAV */
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:3px solid #000;display:flex;z-index:10;}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:3px solid #000;display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom);}
 .nav button{flex:1;border:none;border-right:1px solid #000;background:none;padding:8px 2px 6px;font-size:9px;font-weight:700;color:#888;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;text-transform:uppercase;letter-spacing:.03em;transition:all .1s;}
 .nav button:last-child{border-right:none;}
 .nav button.active{color:#000;background:#A3E635;}
@@ -537,6 +537,32 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 
 <div class="toast" id="toast"></div>
 
+<!-- Archive tournament modal -->
+<div class="modal-overlay" id="archiveModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-sheet">
+    <div class="modal-header" style="background:#FFE066;">
+      <h2 id="archiveModalTitle">🏆 Torneo</h2>
+      <button class="modal-close" onclick="document.getElementById('archiveModal').style.display='none'">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="archiveModalSub" style="font-size:12px;font-weight:700;color:#555;margin-bottom:12px;"></div>
+      <div id="archiveModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom confirm modal -->
+<div class="modal-overlay" id="confirmModal" style="display:none;align-items:center;">
+  <div style="background:#fff;border:3px solid #000;border-radius:12px;box-shadow:6px 6px 0 #000;max-width:340px;width:90%;padding:20px;margin:0 16px;">
+    <div id="confirmTitle" style="font-size:15px;font-weight:700;margin-bottom:8px;text-transform:uppercase;"></div>
+    <div id="confirmMsg" style="font-size:14px;font-weight:500;line-height:1.5;margin-bottom:16px;white-space:pre-line;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="nb-btn" style="flex:1;" onclick="resolveConfirm(false)">Cancelar</button>
+      <button class="nb-btn nb-btn-primary" style="flex:1;" id="confirmOkBtn" onclick="resolveConfirm(true)">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="queJugamosModal" style="display:none;" onclick="closeQueJugamos(event)">
   <div class="modal-sheet">
     <div class="modal-header">
@@ -890,13 +916,37 @@ window.showArchiveTorney=function(i){
   const t=state.archive[i];if(!t)return;
   const sc=computeScores(t.games);
   const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
-  alert('🏆 '+t.name+'\n'+d+'\n\nResultados:\n'+sc.map((p,i)=>(i+1)+'. '+p.name+' — '+p.pts+' pts').join('\n'));
+  document.getElementById('archiveModalTitle').textContent='🏆 '+t.name;
+  document.getElementById('archiveModalSub').textContent=d+' · '+t.games.length+' juegos jugados';
+  const ms=['🥇','🥈','🥉'];
+  document.getElementById('archiveModalBody').innerHTML=
+    sc.map((p,pi)=>{
+      const isFirst=pi===0;
+      return '<div class="leader-row'+(isFirst?' first-place':'')+'">'+
+        '<span class="rank">'+(pi<3?ms[pi]:pi+1)+'</span>'+
+        '<div style="flex:1;"><div class="player-name">'+p.name+'</div>'+
+        '<div style="display:flex;gap:3px;margin-top:3px;">'+
+        (p.wins?'<span class="nb-tag tag-win">'+p.wins+'V</span>':'')+
+        (p.podiums>p.wins?'<span class="nb-tag tag-pod">'+p.podiums+' pod</span>':'')+
+        '</div></div>'+
+        '<div class="player-pts">'+p.pts+'<small> pts</small></div>'+
+        '</div>';
+    }).join('')+
+    '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:14px 0 6px;">Juegos jugados</div>'+
+    t.games.map(g=>{
+      const pts=getPoints(g.positions.length,state.system);
+      return '<div class="game-row">'+
+        '<div style="font-size:13px;font-weight:700;">'+gameEmoji(g.name)+' '+g.name+'</div>'+
+        '<div style="margin-top:4px;">'+g.positions.map((p,pi)=>'<span class="nb-chip">'+(pi+1)+'° '+p+' +'+pts[pi]+'</span>').join('')+'</div>'+
+        '</div>';
+    }).join('');
+  document.getElementById('archiveModal').style.display='flex';
 };
 
 window.closeTournament=async function(){
   if(!(state.games||[]).length){showToast('No hay juegos registrados aún');return;}
   const sc=computeScores(state.games);const champ=sc[0];
-  if(!confirm('¿Cerrar el torneo "'+state.name+'"?\n\n🏆 Campeón: '+champ.name+' con '+champ.pts+' pts\n\nSe archivará y empezará uno nuevo.'))return;
+  if(!await nbConfirm('🏆 Campeón: '+champ.name+' con '+champ.pts+' pts\n\nEl torneo se archivará y empezará uno nuevo.','¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
   state.games=[];await window.saveState();
@@ -952,14 +1002,14 @@ window.saveGame=async function(){
   goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');
 };
 
-window.deleteGame=async function(i){if(!confirm('¿Borrar este resultado?'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');};
+window.deleteGame=async function(i){if(!await nbConfirm('Se eliminará este resultado y sus puntos.','¿Borrar resultado?','Borrar'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');};
 window.addPlayer=async function(){const inp=document.getElementById('newPlayerName');const n=inp.value.trim();if(!n)return;if((state.players||[]).includes(n)){showToast('Ya existe');return;}if(!state.players)state.players=[];state.players.push(n);if(pendingPhoto){if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[n]=pendingPhoto;pendingPhoto=null;document.getElementById('photoPreview').style.display='none';document.getElementById('photoPlaceholder').style.display='block';}inp.value='';await window.saveState();showToast(n+' agregado ✓');};
-window.removePlayer=async function(i){const name=state.players[i];if(!confirm('¿Quitar a '+name+'?'))return;state.players.splice(i,1);if(state.playerPhotos&&state.playerPhotos[name])delete state.playerPhotos[name];await window.saveState();};
+window.removePlayer=async function(i){const name=state.players[i];if(!await nbConfirm('Sus puntos en juegos ya registrados se conservan.','¿Quitar a '+name+'?','Quitar'))return;state.players.splice(i,1);if(state.playerPhotos&&state.playerPhotos[name])delete state.playerPhotos[name];await window.saveState();};
 window.saveName=async function(){state.name=document.getElementById('settingName').value.trim()||'Torneo de Mesa';await window.saveState();showToast('Guardado ✓');};
 window.saveSystem=async function(){state.system=document.getElementById('settingSystem').value;await window.saveState();};
 window.addGameToCatalog=async function(){const inp=document.getElementById('newGameName');const n=inp.value.trim();if(!n)return;if((state.catalog||[]).find(g=>g.name===n)){showToast('Ya está en el catálogo');return;}if(!state.catalog)state.catalog=[...DEFAULT_GAMES];state.catalog.push({name:n,emoji:selectedEmoji});inp.value='';selectedEmoji='🎲';document.getElementById('newGameEmoji').textContent='🎲';await window.saveState();showToast(n+' agregado al catálogo ✓');};
-window.removeGameFromCatalog=async function(i){if(!confirm('¿Quitar este juego?'))return;state.catalog.splice(i,1);await window.saveState();};
-window.confirmReset=async function(){if(!confirm('¿Reiniciar el torneo actual?'))return;state.games=[];await window.saveState();showToast('Torneo reiniciado');};
+window.removeGameFromCatalog=async function(i){if(!await nbConfirm('Se quitará del catálogo.','¿Quitar juego?','Quitar'))return;state.catalog.splice(i,1);await window.saveState();};
+window.confirmReset=async function(){if(!await nbConfirm('Se borran los juegos del torneo actual. Los torneos archivados se conservan.','¿Reiniciar torneo?','Reiniciar'))return;state.games=[];await window.saveState();showToast('Torneo reiniciado');};
 
 window.setFilter=function(key,val,btn){
   catalogFilters[key]=val;
@@ -1059,7 +1109,7 @@ window.migrateV1=async function(){
     const archived={name:v1.name||'Juegolimpiadas (v1)',date:v1.games[0].date||new Date().toISOString(),games:v1.games,players,_migratedFromV1:true};
     if(!state.archive)state.archive=[];state.archive.push(archived);
     const newPlayers=players.filter(p=>!(state.players||[]).includes(p));
-    if(newPlayers.length&&confirm('¿Agregar también estos jugadores?\n'+newPlayers.join(', '))){if(!state.players)state.players=[];state.players.push(...newPlayers);}
+    if(newPlayers.length&&await nbConfirm(newPlayers.join(', '),'¿Agregar estos jugadores?','Agregar')){if(!state.players)state.players=[];state.players.push(...newPlayers);}
     await window.saveState();statusEl.textContent='✓ Importados '+v1.games.length+' juegos.';document.getElementById('migrationCard').style.display='none';showToast('Datos v1 importados ✓');
   }catch(e){statusEl.textContent='✗ Error: '+e.message;btn.disabled=false;}
 };
@@ -1364,8 +1414,8 @@ window.turnNext = function() {
   turnResume();
 };
 
-window.turnEnd = function() {
-  if(!confirm('Terminar la partida y ver resultados?')) return;
+window.turnEnd = async function() {
+  if(!await nbConfirm('Se detendrá el contador y verás quién tardó más.','¿Terminar partida?','Terminar')) return;
   clearInterval(turnInterval); turnRunning = false;
   showTurnResults();
 };
@@ -1494,6 +1544,38 @@ window.toggleDiceHist = function() {
   el.style.display = open ? 'none' : 'block';
   arrow.textContent = open ? '▼' : '▲';
 };
+
+// Custom neobrutalist confirm
+let confirmResolver = null;
+function nbConfirm(msg, title, okLabel) {
+  return new Promise(resolve => {
+    confirmResolver = resolve;
+    document.getElementById('confirmTitle').textContent = title || '¿Seguro?';
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmOkBtn').textContent = okLabel || 'Confirmar';
+    document.getElementById('confirmModal').style.display = 'flex';
+  });
+}
+window.resolveConfirm = function(val) {
+  document.getElementById('confirmModal').style.display = 'none';
+  if(confirmResolver) { confirmResolver(val); confirmResolver = null; }
+};
+
+// Enter key support for inputs
+document.addEventListener('DOMContentLoaded', function() {
+  var enterMap = {
+    'newPlayerName': 'addPlayer',
+    'newGameName': 'addGameToCatalog',
+    'turnCustomPlayer': 'addTurnCustomPlayer',
+    'settingName': 'saveName'
+  };
+  Object.keys(enterMap).forEach(function(id) {
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('keydown', function(e) {
+      if(e.key === 'Enter') { e.preventDefault(); window[enterMap[id]](); }
+    });
+  });
+});
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
