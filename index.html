@@ -240,7 +240,10 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
     <div class="nb-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <span class="nb-card-title" style="margin:0;">Marcador en vivo</span>
-        <button class="nb-btn nb-btn-sm nb-btn-pink" onclick="openQueJugamos()" style="color:#000;">🎲 ¿Qué jugamos?</button>
+        <div style="display:flex;gap:6px;">
+          <button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="shareScoreboard()" style="font-size:11px;padding:4px 8px;">📤</button>
+          <button class="nb-btn nb-btn-sm nb-btn-pink" onclick="openQueJugamos()" style="color:#000;">🎲 ¿Qué jugamos?</button>
+        </div>
       </div>
       <div id="leaderList"><div class="nb-empty">Agrega jugadores en Ajustes.</div></div>
     </div>
@@ -586,13 +589,14 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','toggleDiceHist','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
 </script>
 
 <script type="module">
+
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,set,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 const firebaseConfig = {
@@ -722,6 +726,7 @@ window.render=function(){
             ${p.wins?`<span class="nb-tag tag-win">${p.wins}V</span>`:''}
             ${p.podiums>p.wins?`<span class="nb-tag tag-pod">${p.podiums} pod</span>`:''}
             <span class="nb-tag tag-games">${p.gamesPlayed} part</span>
+            ${streak?`<span class="nb-tag" style="background:#FF6B9D;border-color:#000;">\u{1F525} ${streak} racha</span>`:''}
           </div>
         </div>
         <div class="player-pts">${p.pts}<small> pts</small></div>
@@ -950,7 +955,7 @@ window.closeTournament=async function(){
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
   state.games=[];await window.saveState();
-  showChampionScreen(champ.name,champ.pts);
+  playSound('fanfare');showChampionScreen(champ.name,champ.pts);
 };
 
 function showChampionScreen(name,pts){
@@ -999,11 +1004,11 @@ window.saveGame=async function(){
   await window.saveState();
   document.getElementById('gameSelect').value='';document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';
   document.getElementById('posSelect').innerHTML='';window.addPosRow();window.addPosRow();
-  goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');
+  goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');playSound('success');
 };
 
-window.deleteGame=async function(i){if(!await nbConfirm('Se eliminará este resultado y sus puntos.','¿Borrar resultado?','Borrar'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');};
-window.addPlayer=async function(){const inp=document.getElementById('newPlayerName');const n=inp.value.trim();if(!n)return;if((state.players||[]).includes(n)){showToast('Ya existe');return;}if(!state.players)state.players=[];state.players.push(n);if(pendingPhoto){if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[n]=pendingPhoto;pendingPhoto=null;document.getElementById('photoPreview').style.display='none';document.getElementById('photoPlaceholder').style.display='block';}inp.value='';await window.saveState();showToast(n+' agregado ✓');};
+window.deleteGame=async function(i){if(!await nbConfirm('Se eliminará este resultado y sus puntos.','¿Borrar resultado?','Borrar'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');playSound('delete');};
+window.addPlayer=async function(){const inp=document.getElementById('newPlayerName');const n=inp.value.trim();if(!n)return;if((state.players||[]).includes(n)){showToast('Ya existe');return;}if(!state.players)state.players=[];state.players.push(n);if(pendingPhoto){if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[n]=pendingPhoto;pendingPhoto=null;document.getElementById('photoPreview').style.display='none';document.getElementById('photoPlaceholder').style.display='block';}inp.value='';await window.saveState();showToast(n+' agregado ✓');playSound('success');};
 window.removePlayer=async function(i){const name=state.players[i];if(!await nbConfirm('Sus puntos en juegos ya registrados se conservan.','¿Quitar a '+name+'?','Quitar'))return;state.players.splice(i,1);if(state.playerPhotos&&state.playerPhotos[name])delete state.playerPhotos[name];await window.saveState();};
 window.saveName=async function(){state.name=document.getElementById('settingName').value.trim()||'Torneo de Mesa';await window.saveState();showToast('Guardado ✓');};
 window.saveSystem=async function(){state.system=document.getElementById('settingSystem').value;await window.saveState();};
@@ -1114,7 +1119,160 @@ window.migrateV1=async function(){
   }catch(e){statusEl.textContent='✗ Error: '+e.message;btn.disabled=false;}
 };
 
+// ==================== SOUND SYSTEM ====================
+var audioCtx = null;
+function getAudioCtx() {
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playSound(type) {
+  try {
+    var ctx = getAudioCtx();
+    var t = ctx.currentTime;
+    if(type === 'tap') {
+      // Short pop
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.value = 800;
+      g.gain.setValueAtTime(0.15, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.08);
+      osc.start(t); osc.stop(t+0.08);
+    } else if(type === 'success') {
+      // Two-note chime
+      [523, 659].forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        g.gain.setValueAtTime(0.25, t + i*0.12);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i*0.12 + 0.25);
+        osc.start(t + i*0.12); osc.stop(t + i*0.12 + 0.25);
+      });
+    } else if(type === 'dice') {
+      // Rattle effect
+      for(var i=0; i<6; i++) {
+        var osc = ctx.createOscillator();
+        var g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.frequency.value = 200 + Math.random()*400;
+        osc.type = 'square';
+        g.gain.setValueAtTime(0.08, t + i*0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i*0.05 + 0.04);
+        osc.start(t + i*0.05); osc.stop(t + i*0.05 + 0.04);
+      }
+    } else if(type === 'turn') {
+      // Swoosh - descending
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.exponentialRampToValueAtTime(200, t+0.15);
+      osc.type = 'sine';
+      g.gain.setValueAtTime(0.2, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.2);
+      osc.start(t); osc.stop(t+0.2);
+    } else if(type === 'fanfare') {
+      // Victory fanfare - 5 notes
+      var notes = [523, 659, 784, 659, 1047];
+      var durations = [0.15, 0.15, 0.15, 0.15, 0.4];
+      var offset = 0;
+      notes.forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'triangle';
+        g.gain.setValueAtTime(0.3, t + offset);
+        g.gain.exponentialRampToValueAtTime(0.001, t + offset + durations[i]);
+        osc.start(t + offset); osc.stop(t + offset + durations[i] + 0.05);
+        offset += durations[i];
+      });
+    } else if(type === 'delete') {
+      // Descending tone
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.frequency.setValueAtTime(400, t);
+      osc.frequency.exponentialRampToValueAtTime(150, t+0.2);
+      g.gain.setValueAtTime(0.15, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.2);
+      osc.start(t); osc.stop(t+0.25);
+    }
+  } catch(e) {}
+}
+// Expose to module scope
+window._playSound = playSound;
+
+// ==================== STREAK DETECTION ====================
+function getStreaks() {
+  var games = state.games || [];
+  if(games.length < 2) return {};
+  var streaks = {};
+  var current = {};
+  // Go through games in order
+  games.forEach(function(g) {
+    var winner = g.positions && g.positions[0];
+    if(!winner) return;
+    if(!current[winner]) current[winner] = 0;
+    current[winner]++;
+    // Reset others
+    Object.keys(current).forEach(function(p) {
+      if(p !== winner) current[p] = 0;
+    });
+    if(current[winner] >= 2) streaks[winner] = current[winner];
+  });
+  // Only keep active streaks (last game winner must have streak)
+  var lastWinner = games.length > 0 && games[games.length-1].positions ? games[games.length-1].positions[0] : null;
+  var result = {};
+  if(lastWinner && streaks[lastWinner]) result[lastWinner] = streaks[lastWinner];
+  return result;
+}
+
+// ==================== SHARE SCOREBOARD ====================
+window.shareScoreboard = async function() {
+  var sc = computeScores(state.games);
+  if(!sc.length) { showToast('Sin datos para compartir'); return; }
+
+  // Build text version
+  var text = '🏆 ' + (state.name||'Torneo') + '\n';
+  text += (state.games||[]).length + ' juegos jugados\n\n';
+  var ms = ['🥇','🥈','🥉'];
+  sc.forEach(function(p, i) {
+    text += (i<3 ? ms[i] : (i+1)+'°') + ' ' + p.name + ' — ' + p.pts + ' pts';
+    if(p.wins) text += ' (' + p.wins + 'V)';
+    text += '\n';
+  });
+
+  // Try Web Share API first (works great on iOS)
+  if(navigator.share) {
+    try {
+      await navigator.share({
+        title: state.name || 'Torneo de Mesa',
+        text: text
+      });
+      playSound('success');
+      return;
+    } catch(e) {
+      // User cancelled or error - fall through to clipboard
+    }
+  }
+
+  // Fallback: copy to clipboard
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Marcador copiado al portapapeles ✓');
+    playSound('success');
+  } catch(e) {
+    showToast('No se pudo compartir');
+  }
+};
+
+
 (function() {
+var renderTurnOrder; // Forward declaration
 // ==================== TIMER ====================
 let timerMode = 'stopwatch';
 
@@ -1228,10 +1386,12 @@ function playBeep(times) {
   } catch(e) {}
 }
 
+
+
 // ---- TURN TIMER ----
-var turnPlayers = [];
-var turnOrder = [];
-var turnTimes = {};
+var turnPlayers = window._turnPlayers = [];
+var turnOrder = window._turnOrder = [];
+var turnTimes = window._turnTimes = {};
 var turnCurrent = 0;
 var turnInterval = null;
 var turnSeconds = 0;
@@ -1297,7 +1457,7 @@ window.shuffleTurnOrder = function() {
   renderTurnOrder();
 };
 
-function renderTurnOrder() {
+renderTurnOrder = window._renderTurnOrder = function() {
   var list = document.getElementById('turnOrderList');
   if(!list) return;
   list.innerHTML = turnOrder.map(function(p,i) {
@@ -1341,6 +1501,7 @@ window.startTurnTimer = function() {
   document.getElementById('turnActive').style.display = 'block';
   document.getElementById('turnResults').style.display = 'none';
   renderTurnActive();
+  playSound('turn');
   turnResume();
 };
 
@@ -1463,6 +1624,8 @@ window.turnRestart = function() {
 window.renderTurnPicker = function() {
   var picker = document.getElementById('turnPlayerPicker');
   if(!picker) return;
+  var turnOrder = window._turnOrder || [];
+  var turnPlayers = window._turnPlayers || [];
   // Build position map: player -> their position in turnOrder (1-based)
   var posMap = {};
   turnOrder.forEach(function(p, i){ posMap[p] = i+1; });
@@ -1487,12 +1650,13 @@ window.renderTurnPicker = function() {
   var countEl = document.getElementById('turnOrderCount');
   if(countEl) countEl.textContent = turnOrder.length ? '('+turnOrder.length+' seleccionados)' : '';
 
-  renderTurnOrder();
+  if(window._renderTurnOrder) window._renderTurnOrder();
 };
 
 window.clearTurnOrder = function() {
-  turnPlayers = []; turnOrder = [];
-  renderTurnPicker();
+  window._turnPlayers.length = 0;
+  window._turnOrder.length = 0;
+  window.renderTurnPicker();
 };
 
 // ==================== DADOS ====================
@@ -1507,6 +1671,7 @@ window.rollDice = function() {
   card.style.display = 'block';
 
   const resultsEl = document.getElementById('diceResults');
+  playSound('dice');
   resultsEl.innerHTML = rolls.map((r,i) =>
     '<div style="position:relative;margin-bottom:22px;">'+
     '<div class="die rolling" id="dr'+i+'">'+r+'</div>'+
@@ -1635,6 +1800,7 @@ window['_m_render'] = window.render;
 window['_m_saveState'] = window.saveState;
 if(window._resolveQ)window._resolveQ();
 window.addPosRow();window.addPosRow();
+
 </script>
 </body>
 </html>
