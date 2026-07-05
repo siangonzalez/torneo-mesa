@@ -354,9 +354,12 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
         <div class="dice-results" id="diceResults"></div>
         <div class="dice-total"><div class="total-num" id="diceTotal">—</div><div class="total-lbl" id="diceTotalLbl">total</div></div>
       </div>
-      <div id="diceHistCard" style="display:none;margin-top:10px;">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Últimos lanzamientos</div>
-        <div id="diceHistory"></div>
+      <div id="diceHistCard" style="display:none;margin-top:8px;padding-top:8px;border-top:2px solid #000;">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleDiceHist()">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#555;">Historial</div>
+          <span id="diceHistArrow" style="font-size:12px;font-weight:700;color:#555;">▼</span>
+        </div>
+        <div id="diceHistory" style="display:none;margin-top:4px;"></div>
       </div>
     </div>
     <div class="nb-card">
@@ -394,16 +397,20 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
       </div>
       <div id="timerTurns" style="display:none;">
         <div id="turnSetup">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Jugadores del juego</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Toca los jugadores en el orden que van a jugar</div>
+          <div style="font-size:12px;color:#555;font-weight:500;margin-bottom:8px;">El orden en que los toques es el orden de turnos.</div>
           <div id="turnPlayerPicker" style="margin-bottom:8px;"></div>
-          <button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="addTurnPlayers()" style="margin-bottom:8px;">+ Todos del torneo</button>
+          <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+            <button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="addTurnPlayers()">+ Todos del torneo</button>
+            <button class="nb-btn nb-btn-sm nb-btn-pink" onclick="shuffleTurnOrder()" style="color:#000;">🔀 Aleatorio</button>
+            <button class="nb-btn nb-btn-sm nb-btn-red" onclick="clearTurnOrder()">✕ Limpiar</button>
+          </div>
           <div style="display:flex;gap:8px;margin-bottom:10px;">
-            <input type="text" class="nb-input" id="turnCustomPlayer" placeholder="Agregar jugador..." style="margin:0;flex:1;font-size:13px;">
+            <input type="text" class="nb-input" id="turnCustomPlayer" placeholder="Agregar jugador externo..." style="margin:0;flex:1;font-size:13px;">
             <button class="nb-btn nb-btn-sm nb-btn-green" onclick="addTurnCustomPlayer()">+</button>
           </div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Orden de turnos</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Orden de turnos <span id="turnOrderCount" style="font-weight:400;color:#555;"></span></div>
           <div id="turnOrderList" style="margin-bottom:8px;"></div>
-          <button class="nb-btn nb-btn-sm nb-btn-pink" onclick="shuffleTurnOrder()" style="margin-bottom:10px;color:#000;">🔀 Orden aleatorio</button>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
             <input type="number" class="nb-input" id="turnLimit" value="0" min="0" max="60" style="width:70px;margin:0;text-align:center;">
             <span style="font-size:12px;font-weight:700;">min por turno (0 = sin límite)</span>
@@ -553,7 +560,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','toggleDiceHist','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
@@ -1203,9 +1210,16 @@ window._renderTurnPicker = function() {
 };
 
 window.toggleTurnPlayer = function(name) {
-  var idx = turnPlayers.indexOf(name);
-  if(idx >= 0) { turnPlayers.splice(idx,1); turnOrder = turnOrder.filter(function(p){return p!==name;}); }
-  else { turnPlayers.push(name); turnOrder.push(name); }
+  var idx = turnOrder.indexOf(name);
+  if(idx >= 0) {
+    // Already selected - remove from order
+    turnOrder.splice(idx, 1);
+    turnPlayers = turnPlayers.filter(function(p){return p!==name;});
+  } else {
+    // Not selected - add to END of order (preserves tap sequence)
+    turnOrder.push(name);
+    turnPlayers.push(name);
+  }
   renderTurnPicker();
 };
 
@@ -1399,21 +1413,86 @@ window.turnRestart = function() {
 window.renderTurnPicker = function() {
   var picker = document.getElementById('turnPlayerPicker');
   if(!picker) return;
-  var selected = {};
-  turnPlayers.forEach(function(p){ selected[p]=true; });
+  // Build position map: player -> their position in turnOrder (1-based)
+  var posMap = {};
+  turnOrder.forEach(function(p, i){ posMap[p] = i+1; });
+
   picker.innerHTML = (state.players||[]).map(function(p) {
     var photo = (state.playerPhotos||{})[p];
     var avHtml = photo
-      ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
-      : '<div style="width:28px;height:28px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">'+p[0]+'</div>';
-    var sel = !!selected[p];
-    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+p+'">'
+      ? '<img src="'+photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
+      : '<div style="width:32px;height:32px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">'+p[0]+'</div>';
+    var pos = posMap[p];
+    var sel = !!pos;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+p+'">'
       + avHtml
       + '<span style="flex:1;font-size:14px;font-weight:700;">'+p+'</span>'
-      + '<span style="font-size:18px;font-weight:700;color:'+(sel?'#000':'#ccc')+';">'+(sel?'✓':'○')+'</span>'
+      + (sel
+        ? '<span style="width:28px;height:28px;border-radius:50%;background:#000;color:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">'+pos+'</span>'
+        : '<span style="width:28px;height:28px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#ccc;">+</span>')
       + '</div>';
   }).join('') || '<div class="nb-empty">Sin jugadores en el torneo.</div>';
+
+  // Update order count
+  var countEl = document.getElementById('turnOrderCount');
+  if(countEl) countEl.textContent = turnOrder.length ? '('+turnOrder.length+' seleccionados)' : '';
+
   renderTurnOrder();
+};
+
+window.clearTurnOrder = function() {
+  turnPlayers = []; turnOrder = [];
+  renderTurnPicker();
+};
+
+// ==================== DADOS ====================
+window.rollDice = function() {
+  const count = parseInt(document.getElementById('diceCount').value);
+  const faces = parseInt(document.getElementById('diceFaces').value);
+  const rolls = Array.from({length:count}, () => Math.floor(Math.random()*faces)+1);
+  const total = rolls.reduce((a,b)=>a+b,0);
+  const avg = ((faces+1)/2*count).toFixed(1);
+
+  const card = document.getElementById('diceResultCard');
+  card.style.display = 'block';
+
+  const resultsEl = document.getElementById('diceResults');
+  resultsEl.innerHTML = rolls.map((r,i) =>
+    '<div style="position:relative;margin-bottom:22px;">'+
+    '<div class="die rolling" id="dr'+i+'">'+r+'</div>'+
+    '<div class="die-lbl">d'+faces+'</div></div>'
+  ).join('');
+  setTimeout(() => {
+    rolls.forEach((_,i) => {
+      const d = document.getElementById('dr'+i);
+      if(d) d.classList.remove('rolling');
+    });
+  }, 500);
+
+  document.getElementById('diceTotal').textContent = total;
+  document.getElementById('diceTotalLbl').textContent =
+    count > 1 ? 'suma de '+count+'d'+faces+' · promedio: '+avg : 'resultado d'+faces;
+
+  diceRollHistory.unshift({count, faces, rolls, total,
+    time: new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})});
+  if(diceRollHistory.length > 8) diceRollHistory.pop();
+
+  const histCard = document.getElementById('diceHistCard');
+  histCard.style.display = 'block';
+  document.getElementById('diceHistory').innerHTML = diceRollHistory.map(h =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #ddd;font-size:12px;font-weight:500;">'+
+    '<span style="color:#555;">'+h.time+' · '+h.count+'d'+h.faces+'</span>'+
+    '<span>['+h.rolls.join(', ')+'] = <strong>'+h.total+'</strong></span>'+
+    '</div>'
+  ).join('');
+};
+
+window.toggleDiceHist = function() {
+  var el = document.getElementById('diceHistory');
+  var arrow = document.getElementById('diceHistArrow');
+  var open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  arrow.textContent = open ? '▼' : '▲';
 };
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
