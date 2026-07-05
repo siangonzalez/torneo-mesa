@@ -672,7 +672,7 @@ let diceRollHistory=[];
 onValue(torneoRef,(snap)=>{
   const d=snap.val();
   if(d){state=d;if(!state.players)state.players=[];if(!state.games)state.games=[];if(!state.catalog||!state.catalog.length)state.catalog=DEFAULT_GAMES;if(!state.archive)state.archive=[];if(!state.playerPhotos)state.playerPhotos={};}
-  window.render();setSyncStatus('ok');
+  render();setSyncStatus('ok');
 },()=>setSyncStatus('off'));
 
 window.saveState=async function(){setSyncStatus('syncing');try{await set(torneoRef,state);setSyncStatus('ok');}catch(e){setSyncStatus('off');showToast('Error al guardar');}};
@@ -1004,7 +1004,7 @@ window.saveGame=async function(){
   await window.saveState();
   document.getElementById('gameSelect').value='';document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';
   document.getElementById('posSelect').innerHTML='';window.addPosRow();window.addPosRow();
-  window.goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');playSound('success');
+  goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');playSound('success');
 };
 
 window.deleteGame=async function(i){if(!await nbConfirm('Se eliminará este resultado y sus puntos.','¿Borrar resultado?','Borrar'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');playSound('delete');};
@@ -1272,7 +1272,6 @@ window.shareScoreboard = async function() {
 
 
 (function() {
-var renderTurnOrder; // Forward declaration
 // ==================== TIMER ====================
 let timerMode = 'stopwatch';
 
@@ -1457,7 +1456,7 @@ window.shuffleTurnOrder = function() {
   renderTurnOrder();
 };
 
-renderTurnOrder = window._renderTurnOrder = function() {
+var renderTurnOrder = window._renderTurnOrder = function() {
   var list = document.getElementById('turnOrderList');
   if(!list) return;
   list.innerHTML = turnOrder.map(function(p,i) {
