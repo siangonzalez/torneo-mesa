@@ -1272,6 +1272,7 @@ window.shareScoreboard = async function() {
 
 
 (function() {
+var renderTurnOrder; // Forward declaration
 // ==================== TIMER ====================
 let timerMode = 'stopwatch';
 
@@ -1456,7 +1457,7 @@ window.shuffleTurnOrder = function() {
   renderTurnOrder();
 };
 
-var renderTurnOrder = window._renderTurnOrder = function() {
+renderTurnOrder = window._renderTurnOrder = function() {
   var list = document.getElementById('turnOrderList');
   if(!list) return;
   list.innerHTML = turnOrder.map(function(p,i) {
