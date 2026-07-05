@@ -3,269 +3,223 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Torneo">
 <title>Torneo de Mesa</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f2;min-height:100vh;color:#1a1a1a;}
+body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min-height:100vh;color:#000;}
 .app{max-width:480px;margin:0 auto;padding:0 0 72px;}
-.topbar{background:#fff;border-bottom:0.5px solid rgba(0,0,0,.1);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
-.topbar-title{font-size:16px;font-weight:500;}
-.topbar-sub{font-size:12px;color:#888;margin-top:1px;display:flex;align-items:center;gap:4px;}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:#4caf50;display:inline-block;transition:background .3s;}
-.sync-dot.off{background:#ccc;}
-.sync-dot.syncing{background:#ff9800;}
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:0.5px solid rgba(0,0,0,.1);display:flex;z-index:10;}
-.nav button{flex:1;border:none;background:none;padding:8px 2px 6px;font-size:10px;color:#999;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s;}
-.nav button.active{color:#1a1a1a;}
-.nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+
+/* TOPBAR */
+.topbar{background:#FF6B9D;border-bottom:3px solid #000;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.topbar-title{font-size:17px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:-.3px;}
+.topbar-sub{font-size:11px;font-weight:700;color:#000;display:flex;align-items:center;gap:5px;margin-top:2px;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#A3E635;border:2px solid #000;display:inline-block;flex-shrink:0;}
+.sync-dot.off{background:#fff;}
+.sync-dot.syncing{background:#FFE066;}
+.game-count-badge{font-size:12px;font-weight:700;color:#000;background:#A3E635;border:2px solid #000;padding:3px 10px;border-radius:6px;box-shadow:2px 2px 0 #000;}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:3px solid #000;display:flex;z-index:10;}
+.nav button{flex:1;border:none;border-right:1px solid #000;background:none;padding:8px 2px 6px;font-size:9px;font-weight:700;color:#888;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;text-transform:uppercase;letter-spacing:.03em;transition:all .1s;}
+.nav button:last-child{border-right:none;}
+.nav button.active{color:#000;background:#A3E635;}
+.nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* PAGE */
 .page{display:none;padding:12px 12px 0;}
 .page.active{display:block;}
-.card{background:#fff;border:0.5px solid rgba(0,0,0,.1);border-radius:12px;padding:14px;margin-bottom:10px;}
-.card-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
-input[type=text],select{width:100%;padding:9px 12px;border:0.5px solid rgba(0,0,0,.2);border-radius:8px;font-size:15px;background:#fff;color:#1a1a1a;outline:none;margin-bottom:8px;-webkit-appearance:none;}
-input:focus,select:focus{border-color:rgba(0,0,0,.5);}
-.btn{display:block;width:100%;padding:11px;border:0.5px solid rgba(0,0,0,.2);border-radius:8px;font-size:14px;font-weight:500;background:transparent;color:#1a1a1a;cursor:pointer;text-align:center;-webkit-appearance:none;}
-.btn:active{opacity:.7;}
-.btn-primary{background:#1a1a1a;color:#fff;border-color:transparent;}
-.btn-sm{display:inline-block;width:auto;padding:5px 12px;font-size:13px;}
-.btn-danger{border-color:rgba(180,40,40,.25);color:#a33;}
-.btn-success{background:#1a7a3a;color:#fff;border-color:transparent;}
-.btn-row{display:flex;gap:8px;margin-top:10px;}
-/* Leaderboard */
-.leader-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+
+/* CARD */
+.nb-card{background:#fff;border:3px solid #000;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:4px 4px 0 #000;}
+.nb-card-title{font-size:10px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:.1em;background:#A3E635;border:2px solid #000;display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:12px;}
+
+/* BUTTONS */
+.nb-btn{display:block;width:100%;padding:11px;border:2px solid #000;border-radius:8px;font-size:14px;font-weight:700;background:#fff;color:#000;cursor:pointer;text-align:center;box-shadow:3px 3px 0 #000;font-family:inherit;transition:transform .1s,box-shadow .1s;}
+.nb-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000;}
+.nb-btn-primary{background:#000;color:#fff;}
+.nb-btn-green{background:#A3E635;color:#000;}
+.nb-btn-pink{background:#FF6B9D;color:#000;}
+.nb-btn-yellow{background:#FFE066;color:#000;}
+.nb-btn-red{background:#ff4444;color:#fff;}
+.nb-btn-sm{display:inline-block;width:auto;padding:5px 12px;font-size:12px;box-shadow:2px 2px 0 #000;}
+.nb-btn-row{display:flex;gap:8px;margin-top:10px;}
+
+/* INPUTS */
+.nb-input{width:100%;padding:9px 12px;border:2px solid #000;border-radius:8px;font-size:14px;font-weight:500;background:#fff;color:#000;outline:none;margin-bottom:8px;font-family:inherit;box-shadow:2px 2px 0 #000;}
+.nb-input:focus{box-shadow:3px 3px 0 #000;}
+.nb-select{width:100%;padding:9px 12px;border:2px solid #000;border-radius:8px;font-size:14px;font-weight:500;background:#fff;color:#000;outline:none;margin-bottom:8px;font-family:inherit;box-shadow:2px 2px 0 #000;-webkit-appearance:none;}
+
+/* SEARCH */
+.nb-search{width:100%;padding:9px 12px 9px 36px;border:2px solid #000;border-radius:8px;font-size:14px;font-weight:500;background:#fff;color:#000;outline:none;font-family:inherit;box-shadow:2px 2px 0 #000;margin-bottom:10px;}
+.nb-search:focus{box-shadow:3px 3px 0 #FF6B9D;}
+.search-wrap{position:relative;}
+.search-wrap::before{content:"🔍";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;}
+
+/* LEADERBOARD */
+.leader-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:2px solid #000;}
 .leader-row:last-child{border:none;}
-.rank{font-size:20px;width:30px;text-align:center;}
-.player-pts{font-size:18px;font-weight:500;}
-.player-pts span{font-size:12px;font-weight:400;color:#888;}
-.tag{padding:2px 7px;border-radius:5px;font-size:11px;font-weight:500;}
-.tag-win{background:#e8f5e9;color:#2e7d32;}
-.tag-pod{background:#fff8e1;color:#856a00;}
-.tag-blue{background:#e3f2fd;color:#1565c0;}
-/* Pos selects */
-.pos-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#f5f5f2;border-radius:8px;border:0.5px solid rgba(0,0,0,.1);margin-bottom:6px;}
-.pos-label{font-size:13px;font-weight:500;width:24px;color:#888;}
-.pos-item select{margin:0;flex:1;padding:5px 8px;font-size:14px;background:#fff;}
-/* Game rows */
-.game-row{padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+.leader-row.first-place{background:#FFE066;border:3px solid #000;border-radius:8px;padding:10px;margin-bottom:6px;box-shadow:3px 3px 0 #000;}
+.rank{font-size:22px;width:30px;text-align:center;}
+.nb-avatar{width:36px;height:36px;border-radius:50%;border:2px solid #000;background:#E8F5A3;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;overflow:hidden;}
+.nb-avatar img{width:36px;height:36px;object-fit:cover;border-radius:50%;}
+.player-name{font-size:15px;font-weight:700;}
+.player-pts{font-size:19px;font-weight:700;white-space:nowrap;}
+.player-pts small{font-size:11px;font-weight:400;}
+.nb-tag{font-size:10px;font-weight:700;padding:2px 6px;border:2px solid #000;border-radius:4px;display:inline-block;}
+.tag-win{background:#A3E635;}
+.tag-pod{background:#FFE066;}
+.tag-games{background:#f0f0f0;}
+
+/* GAME SELECT */
+.pos-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#E8F5A3;border-radius:8px;border:2px solid #000;margin-bottom:6px;box-shadow:2px 2px 0 #000;}
+.pos-label{font-size:13px;font-weight:700;width:24px;color:#000;}
+.pos-item select{margin:0;flex:1;padding:5px 8px;font-size:14px;font-weight:500;border:2px solid #000;border-radius:6px;background:#fff;font-family:inherit;}
+
+/* HISTORY */
+.game-row{padding:10px 0;border-bottom:2px solid #000;}
 .game-row:last-child{border:none;}
-.chip{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500;background:#f0f0ee;color:#555;margin:2px 2px 2px 0;}
-/* Player items */
-.player-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+.nb-chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border:2px solid #000;border-radius:4px;background:#E8F5A3;margin:2px 2px 2px 0;}
+
+/* PLAYER ITEMS */
+.player-item{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:2px solid #000;}
 .player-item:last-child{border:none;}
 .add-row{display:flex;gap:8px;margin-top:8px;}
 .add-row input{margin:0;flex:1;}
 
-
-
-
-
-
-/* Random game pick */
-.pick-result{background:#1a1a1a;color:#fff;border-radius:12px;padding:16px;text-align:center;margin-bottom:14px;}
-.pick-emoji{font-size:48px;margin-bottom:8px;}
-.pick-name{font-size:20px;font-weight:500;margin-bottom:4px;}
-.pick-meta{font-size:13px;opacity:.6;margin-bottom:12px;}
-.pick-desc{font-size:13px;opacity:.75;line-height:1.5;margin-bottom:12px;}
-.pick-reroll{background:rgba(255,255,255,.15);border:0.5px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;width:100%;}
-.pick-reroll:active{opacity:.7;}
-@media(prefers-color-scheme:dark){
-  .pick-result{background:#f0f0f0;color:#1a1a1a;}
-  .pick-reroll{background:rgba(0,0,0,.1);border-color:rgba(0,0,0,.2);color:#1a1a1a;}
-}
-
-/* Qué jugamos modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;justify-content:center;}
-.modal-sheet{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;}
-.modal-header{padding:16px 16px 10px;border-bottom:0.5px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.modal-header h2{font-size:16px;font-weight:500;margin:0;}
-.modal-close{border:none;background:none;font-size:22px;color:#aaa;cursor:pointer;padding:0 4px;}
-.modal-body{overflow-y:auto;padding:12px 14px 32px;flex:1;}
-.modal-sub{font-size:13px;color:#888;margin-bottom:12px;}
-.modal-game-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
-.modal-game-item:last-child{border:none;}
-.modal-game-expand{background:#f5f5f2;border-radius:8px;padding:8px 10px;margin-top:4px;font-size:13px;display:none;}
-.modal-game-expand.open{display:block;}
-@media(prefers-color-scheme:dark){
-  .modal-sheet{background:#1c1c1e;}
-  .modal-header{border-color:rgba(255,255,255,.1);}
-  .modal-game-item{border-color:rgba(255,255,255,.07);}
-  .modal-game-expand{background:#2c2c2e;}
-}
-
-/* Catalog filters */
-.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.filter-chip{padding:5px 11px;border-radius:20px;font-size:12px;font-weight:500;border:0.5px solid rgba(0,0,0,.2);background:transparent;color:#888;cursor:pointer;transition:all .12s;white-space:nowrap;}
-.filter-chip.active{background:#1a1a1a;color:#fff;border-color:transparent;}
-.filter-section{margin-bottom:8px;}
-.filter-section-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
-.catalog-search{width:100%;padding:8px 12px;border:0.5px solid rgba(0,0,0,.2);border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;outline:none;margin-bottom:10px;-webkit-appearance:none;}
-.catalog-search:focus{border-color:rgba(0,0,0,.5);}
-.catalog-count{font-size:12px;color:#aaa;margin-bottom:8px;}
-@media(prefers-color-scheme:dark){
-  .filter-chip{border-color:rgba(255,255,255,.2);color:#aaa;}
-  .filter-chip.active{background:#f0f0f0;color:#1a1a1a;}
-  .catalog-search{background:#2c2c2e;color:#f0f0f0;border-color:rgba(255,255,255,.15);}
-}
-
-
-/* Timer */
-.timer-tabs{display:flex;background:#f0f0ee;border-radius:8px;padding:2px;margin-bottom:14px;}
-.timer-tab{flex:1;border:none;background:none;padding:7px 4px;font-size:12px;border-radius:6px;cursor:pointer;color:#888;font-weight:500;}
-.timer-tab.active{background:#fff;color:#1a1a1a;}
-.timer-display{text-align:center;padding:24px 0 16px;}
-.timer-time{font-size:72px;font-weight:300;letter-spacing:-2px;color:#1a1a1a;line-height:1;font-variant-numeric:tabular-nums;}
-.timer-time.warning{color:#e65100;animation:pulse 1s infinite;}
-.timer-time.danger{color:#c62828;animation:pulse .4s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
-.timer-sub{font-size:13px;color:#aaa;margin-top:6px;}
-.timer-controls{display:flex;gap:8px;margin-bottom:12px;}
-.timer-btn{flex:1;padding:13px;border-radius:10px;border:0.5px solid rgba(0,0,0,.15);background:transparent;color:#1a1a1a;font-size:14px;font-weight:500;cursor:pointer;}
-.timer-btn.primary{background:#1a1a1a;color:#fff;border-color:transparent;}
-.timer-btn.danger{border-color:rgba(180,40,40,.3);color:#a33;}
-.timer-btn:active{opacity:.7;}
-.timer-setup{margin-bottom:12px;}
-.timer-preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.timer-preset{padding:6px 12px;border-radius:20px;border:0.5px solid rgba(0,0,0,.2);background:transparent;color:#888;font-size:13px;font-weight:500;cursor:pointer;}
-.timer-preset.active{background:#1a1a1a;color:#fff;border-color:transparent;}
-/* Turn timer */
-.turn-player{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:0.5px solid rgba(0,0,0,.1);margin-bottom:6px;background:#f9f9f7;cursor:grab;}
-.turn-player.active-turn{background:#1a1a1a;color:#fff;border-color:transparent;}
-.turn-player.active-turn .turn-time{color:#fff;}
-.turn-player.overtime{background:#fce4ec;}
-.turn-avatar{width:36px;height:36px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;flex-shrink:0;overflow:hidden;}
-.turn-avatar img{width:36px;height:36px;object-fit:cover;border-radius:50%;}
-.turn-name{flex:1;font-size:14px;font-weight:500;}
-.turn-time{font-size:14px;font-weight:500;color:#888;font-variant-numeric:tabular-nums;}
-.turn-rank{font-size:11px;color:#aaa;}
-.results-list{margin-top:8px;}
-.result-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
-.result-row:last-child{border:none;}
-.flash-red{animation:flashRed 0.5s ease-in-out;}
-@keyframes flashRed{0%{background:#fff;}50%{background:#ffcdd2;}100%{background:#fff;}}
-@media(prefers-color-scheme:dark){
-  .timer-time{color:#f0f0f0;}
-  .timer-tab.active{background:#3a3a3c;color:#f0f0f0;}
-  .timer-tabs{background:#2c2c2e;}
-  .timer-btn{color:#f0f0f0;border-color:rgba(255,255,255,.2);}
-  .timer-btn.primary{background:#f0f0f0;color:#1a1a1a;}
-  .turn-player{background:#2c2c2e;border-color:rgba(255,255,255,.1);}
-  .turn-player.active-turn{background:#f0f0f0;color:#1a1a1a;}
-  .turn-player.active-turn .turn-time,.turn-player.active-turn .turn-name{color:#1a1a1a;}
-}
-
-/* Dice roller */
-.dice-config{display:flex;gap:10px;margin-bottom:14px;}
-.dice-selector{flex:1;text-align:center;}
-.dice-selector label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;}
-.dice-selector select{text-align:center;}
-.dice-results{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0;}
-.die{width:64px;height:64px;border-radius:12px;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;position:relative;transition:transform .15s;}
-.die.rolling{animation:dieRoll .5s ease-out;}
-.die-label{position:absolute;bottom:-18px;font-size:10px;color:#aaa;width:100%;text-align:center;}
-@keyframes dieRoll{
-  0%{transform:rotate(0deg) scale(1);}
-  25%{transform:rotate(-15deg) scale(1.1);}
-  50%{transform:rotate(10deg) scale(1.15);}
-  75%{transform:rotate(-5deg) scale(1.1);}
-  100%{transform:rotate(0deg) scale(1);}
-}
-.dice-total{text-align:center;margin-top:24px;padding:14px;background:#f5f5f2;border-radius:12px;}
-.dice-total .total-num{font-size:42px;font-weight:500;}
-.dice-total .total-lbl{font-size:13px;color:#888;}
-.dice-history{margin-top:4px;}
-.dice-hist-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,.07);font-size:13px;color:#888;}
-.dice-hist-row:last-child{border:none;}
-.btn-roll{font-size:18px;padding:14px;border-radius:12px;margin-top:4px;}
-@media(prefers-color-scheme:dark){
-  .die{background:#f0f0f0;color:#1a1a1a;}
-  .dice-total{background:#2c2c2e;}
-}
-
-/* Expandable game cards */
-.game-expand-card{background:#f5f5f2;border-radius:10px;margin-top:6px;padding:10px 12px;font-size:13px;line-height:1.6;display:none;}
-.game-expand-card.open{display:block;}
-.game-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
-.gtag{padding:2px 8px;border-radius:5px;font-size:11px;font-weight:500;}
-.gtag-type-c{background:#e8f5e9;color:#2e7d32;}
-.gtag-type-v{background:#fce4ec;color:#880e4f;}
-.gtag-type-s{background:#fff3e0;color:#e65100;}
-.gtag-low{background:#e3f2fd;color:#1565c0;}
-.gtag-med{background:#fff8e1;color:#856a00;}
-.gtag-high{background:#fce4ec;color:#880e4f;}
-.gtag-cat{background:#f3e5f5;color:#6a1b9a;}
-.game-desc{color:#555;font-size:13px;margin-top:4px;}
-.game-expand-row{display:flex;align-items:center;gap:4px;font-size:12px;color:#888;margin-bottom:2px;}
-
-/* Player photos */
-.player-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex-shrink:0;}
-.player-avatar img{width:38px;height:38px;border-radius:50%;object-fit:cover;}
-.photo-upload-btn{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;border:2px dashed rgba(0,0,0,.2);background:#f5f5f2;cursor:pointer;flex-shrink:0;overflow:hidden;position:relative;}
-.photo-upload-btn img{width:64px;height:64px;object-fit:cover;border-radius:50%;}
-.photo-upload-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.photo-placeholder{font-size:24px;}
-.add-player-form{display:flex;align-items:center;gap:10px;margin-top:10px;}
-.add-player-form input{margin:0;flex:1;}
-
-/* Game catalog */
-.game-cat-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+/* GAME CATALOG */
+.game-cat-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;}
 .game-cat-item:last-child{border:none;}
 .game-emoji{font-size:22px;width:32px;text-align:center;}
-.game-info{flex:1;}
-.game-name{font-size:14px;font-weight:500;}
-.game-meta{font-size:12px;color:#888;}
-.game-count{font-size:13px;font-weight:500;color:#888;text-align:right;}
-/* Stats */
-.stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,.07);}
+.game-name-text{font-size:14px;font-weight:700;}
+.game-meta-text{font-size:12px;color:#555;font-weight:500;}
+.game-expand-card{background:#E8F5A3;border:2px solid #000;border-radius:8px;margin-top:6px;padding:10px 12px;font-size:13px;display:none;}
+.game-expand-card.open{display:block;}
+.nb-tag-type-c{background:#A3E635;}
+.nb-tag-type-v{background:#FF6B9D;}
+.nb-tag-type-s{background:#FFE066;}
+.nb-tag-comp-low{background:#A3E635;}
+.nb-tag-comp-med{background:#FFE066;}
+.nb-tag-comp-high{background:#FF6B9D;}
+.nb-tag-cat{background:#E8F5A3;}
+.catalog-count{font-size:11px;font-weight:700;color:#555;margin-bottom:8px;}
+
+/* FILTER CHIPS */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.filter-chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;border:2px solid #000;background:#fff;color:#000;cursor:pointer;box-shadow:2px 2px 0 #000;}
+.filter-chip.active{background:#000;color:#fff;}
+
+/* STATS */
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:2px solid #000;}
 .stat-row:last-child{border:none;}
-.stat-label{font-size:14px;}
-.stat-val{font-size:14px;font-weight:500;}
-/* Profile */
-.profile-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-.profile-avatar{width:48px;height:48px;border-radius:50%;background:#1a1a1a;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;font-weight:500;}
-.profile-name{font-size:18px;font-weight:500;}
-.profile-sub{font-size:13px;color:#888;}
 .metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.metric-box{background:#f5f5f2;border-radius:10px;padding:12px;text-align:center;}
-.metric-val{font-size:22px;font-weight:500;}
-.metric-lbl{font-size:11px;color:#888;margin-top:2px;}
-/* Archive */
-.archive-item{padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,.07);cursor:pointer;}
+.metric-box{background:#E8F5A3;border:2px solid #000;border-radius:8px;padding:12px;text-align:center;box-shadow:2px 2px 0 #000;}
+.metric-val{font-size:24px;font-weight:700;}
+.metric-lbl{font-size:11px;font-weight:700;color:#555;margin-top:2px;text-transform:uppercase;}
+.seg{display:flex;border:2px solid #000;border-radius:8px;overflow:hidden;margin-bottom:12px;box-shadow:2px 2px 0 #000;}
+.seg button{flex:1;border:none;border-right:2px solid #000;background:#fff;padding:8px;font-size:12px;font-weight:700;cursor:pointer;color:#888;font-family:inherit;text-transform:uppercase;}
+.seg button:last-child{border:none;}
+.seg button.active{background:#000;color:#fff;}
+
+/* PROFILE */
+.profile-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.profile-avatar-lg{width:52px;height:52px;border-radius:50%;border:3px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;overflow:hidden;box-shadow:3px 3px 0 #000;}
+.profile-name{font-size:18px;font-weight:700;}
+.profile-sub{font-size:13px;color:#555;font-weight:500;}
+
+/* ARCHIVE */
+.archive-item{padding:10px 0;border-bottom:2px solid #000;cursor:pointer;}
 .archive-item:last-child{border:none;}
-.archive-title{font-size:14px;font-weight:500;}
-.archive-sub{font-size:12px;color:#888;margin-top:2px;}
-/* Champion screen */
-.champ-screen{position:fixed;inset:0;background:#1a1a1a;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:32px;}
-.champ-trophy{font-size:80px;margin-bottom:16px;animation:bounce 1s infinite alternate;}
-.champ-name{font-size:36px;font-weight:500;margin-bottom:8px;}
-.champ-sub{font-size:16px;opacity:.7;margin-bottom:32px;}
-.confetti{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
-@keyframes bounce{from{transform:scale(1);}to{transform:scale(1.08);}}
-/* Toast */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;}
+.archive-title{font-size:14px;font-weight:700;}
+.archive-sub{font-size:12px;color:#555;margin-top:2px;font-weight:500;}
+
+/* CHAMPION */
+.champ-screen{position:fixed;inset:0;background:#A3E635;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000;text-align:center;padding:32px;border:4px solid #000;}
+.champ-trophy{font-size:80px;margin-bottom:16px;animation:bounce .8s infinite alternate;}
+.champ-name{font-size:36px;font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+.champ-sub{font-size:16px;font-weight:500;margin-bottom:32px;opacity:.7;}
+.confetti-canvas{position:absolute;inset:0;pointer-events:none;}
+@keyframes bounce{from{transform:scale(1);}to{transform:scale(1.1) rotate(5deg);}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:flex-end;justify-content:center;}
+.modal-sheet{background:#E8F5A3;border:3px solid #000;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 0 #000;}
+.modal-header{padding:14px 16px 10px;border-bottom:2px solid #000;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#FF6B9D;}
+.modal-header h2{font-size:16px;font-weight:700;margin:0;text-transform:uppercase;}
+.modal-close{border:2px solid #000;background:#fff;font-size:18px;color:#000;cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-weight:700;box-shadow:2px 2px 0 #000;font-family:inherit;}
+.modal-body{overflow-y:auto;padding:12px 14px 32px;flex:1;}
+
+/* RANDOM PICK */
+.pick-result{background:#000;color:#fff;border:3px solid #000;border-radius:10px;padding:16px;text-align:center;margin-bottom:14px;box-shadow:4px 4px 0 #A3E635;}
+.pick-emoji{font-size:52px;margin-bottom:8px;}
+.pick-name{font-size:20px;font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+.pick-meta{font-size:13px;opacity:.7;margin-bottom:12px;}
+.pick-desc{font-size:13px;opacity:.8;line-height:1.5;margin-bottom:12px;}
+.pick-reroll{background:#A3E635;border:2px solid #A3E635;color:#000;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;box-shadow:2px 2px 0 rgba(255,255,255,.3);}
+
+/* TIMER */
+.timer-tabs{display:flex;border:2px solid #000;border-radius:8px;overflow:hidden;margin-bottom:14px;box-shadow:2px 2px 0 #000;}
+.timer-tab{flex:1;border:none;border-right:2px solid #000;background:#fff;padding:8px 4px;font-size:11px;font-weight:700;cursor:pointer;color:#888;font-family:inherit;text-transform:uppercase;}
+.timer-tab:last-child{border:none;}
+.timer-tab.active{background:#000;color:#fff;}
+.timer-display{text-align:center;padding:20px 0 14px;}
+.timer-time{font-size:68px;font-weight:700;color:#000;line-height:1;letter-spacing:-2px;font-variant-numeric:tabular-nums;}
+.timer-time.warning{color:#c87000;}
+.timer-time.danger{color:#c00;animation:pulse .4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.timer-sub{font-size:12px;font-weight:700;color:#555;margin-top:6px;text-transform:uppercase;}
+.timer-controls{display:flex;gap:8px;margin-bottom:10px;}
+.timer-btn{flex:1;padding:12px;border:2px solid #000;border-radius:8px;background:#fff;color:#000;font-size:13px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 #000;font-family:inherit;}
+.timer-btn:active{transform:translate(2px,2px);box-shadow:none;}
+.timer-preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.timer-preset{padding:6px 12px;border-radius:20px;border:2px solid #000;background:#fff;color:#000;font-size:12px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 #000;font-family:inherit;}
+.timer-preset.active{background:#000;color:#fff;}
+
+/* TURN TIMER */
+.turn-player{display:flex;align-items:center;gap:10px;padding:10px;border:2px solid #000;border-radius:8px;margin-bottom:6px;background:#fff;box-shadow:2px 2px 0 #000;}
+.turn-player.active-turn{background:#000;color:#fff;box-shadow:4px 4px 0 #A3E635;}
+.turn-player.active-turn .turn-time{color:#A3E635;}
+.turn-name{flex:1;font-size:14px;font-weight:700;}
+.turn-time{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;}
+.result-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;}
+.result-row:last-child{border:none;}
+.flash-red{animation:flashRed .5s;}
+@keyframes flashRed{0%{background:#E8F5A3;}50%{background:#ffcdd2;}100%{background:#E8F5A3;}}
+
+/* DICE */
+.dice-config{display:flex;gap:10px;margin-bottom:12px;}
+.dice-selector{flex:1;}
+.dice-selector label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;}
+.dice-results{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0;}
+.die{width:60px;height:60px;border-radius:10px;border:3px solid #000;background:#000;color:#A3E635;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;position:relative;box-shadow:3px 3px 0 #555;}
+.die.rolling{animation:dieRoll .45s ease-out;}
+.die-lbl{position:absolute;bottom:-18px;font-size:10px;font-weight:700;color:#555;width:100%;text-align:center;}
+@keyframes dieRoll{0%{transform:rotate(-20deg) scale(.85);}30%{transform:rotate(12deg) scale(1.15);}60%{transform:rotate(-6deg) scale(1.05);}100%{transform:rotate(0) scale(1);}}
+.dice-total{text-align:center;margin-top:24px;padding:14px;background:#E8F5A3;border:2px solid #000;border-radius:8px;box-shadow:2px 2px 0 #000;}
+.dice-total .total-num{font-size:44px;font-weight:700;}
+.dice-total .total-lbl{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;margin-top:2px;}
+.dice-hist-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:2px solid #000;font-size:13px;font-weight:500;}
+.dice-hist-row:last-child{border:none;}
+
+/* EMOJI PICKER */
+.emoji-picker{background:#fff;border:2px solid #000;border-radius:8px;padding:10px;margin-top:6px;box-shadow:3px 3px 0 #000;}
+.emoji-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;max-height:160px;overflow-y:auto;}
+.emoji-btn{font-size:20px;border:none;background:none;cursor:pointer;padding:4px;border-radius:4px;text-align:center;}
+.emoji-btn:hover{background:#E8F5A3;}
+.selected-emoji{font-size:28px;text-align:center;padding:8px;border:2px solid #000;border-radius:8px;background:#E8F5A3;cursor:pointer;display:inline-block;min-width:50px;}
+
+/* MIGRATION */
+.nb-card-danger{border-color:#000;box-shadow:4px 4px 0 #ff4444;}
+
+/* EMPTY */
+.nb-empty{text-align:center;padding:28px 16px;color:#555;font-size:14px;font-weight:500;line-height:1.6;}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#000;color:#A3E635;padding:10px 20px;border:2px solid #000;border-radius:20px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;box-shadow:3px 3px 0 #555;}
 .toast.show{opacity:1;}
-.empty{text-align:center;padding:28px 16px;color:#aaa;font-size:14px;line-height:1.6;}
-/* Section tabs */
-.seg{display:flex;background:#f0f0ee;border-radius:8px;padding:2px;margin-bottom:12px;}
-.seg button{flex:1;border:none;background:none;padding:6px;font-size:13px;border-radius:6px;cursor:pointer;color:#888;}
-.seg button.active{background:#fff;color:#1a1a1a;font-weight:500;}
-@media(prefers-color-scheme:dark){
-  body{background:#111;color:#f0f0f0;}
-  .topbar,.nav,.card{background:#1c1c1e;border-color:rgba(255,255,255,.1);}
-  input[type=text],select,.pos-item select{background:#2c2c2e;color:#f0f0f0;border-color:rgba(255,255,255,.15);}
-  .pos-item,.metric-box{background:#2c2c2e;}
-  .btn{color:#f0f0f0;border-color:rgba(255,255,255,.2);}
-  .btn-primary{background:#f0f0f0;color:#1a1a1a;}
-  .chip{background:#2c2c2e;color:#ccc;}
-  .leader-row,.game-row,.player-item,.stat-row,.game-cat-item,.archive-item,.profile-item{border-color:rgba(255,255,255,.07);}
-  .nav button{color:#555;}
-  .nav button.active{color:#f0f0f0;}
-  .seg{background:#2c2c2e;}
-  .seg button.active{background:#3a3a3c;}
-  .champ-screen{background:#0a0a0a;}
-}
 </style>
 </head>
 <body>
@@ -276,39 +230,42 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
       <div class="topbar-sub"><span class="sync-dot off" id="syncDot"></span><span id="syncLabel">conectando...</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <span id="gameCount" style="font-size:13px;color:#888;">0 juegos</span>
-      <button class="btn btn-sm btn-success" onclick="closeTournament()" style="font-size:12px;padding:4px 10px;">Cerrar torneo</button>
+      <span class="game-count-badge" id="gameCount">0 juegos</span>
+      <button class="nb-btn nb-btn-sm nb-btn-green" onclick="closeTournament()" style="font-size:11px;padding:4px 8px;">🏆 Cerrar</button>
     </div>
   </div>
 
   <!-- MARCADOR -->
   <div class="page active" id="pg-board">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div class="card-title" style="margin:0;">Marcador en vivo</div>
-        <button class="btn btn-sm" onclick="openQueJugamos()" style="font-size:12px;padding:5px 10px;">🎲 ¿Qué jugamos?</button>
+    <div class="nb-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span class="nb-card-title" style="margin:0;">Marcador en vivo</span>
+        <button class="nb-btn nb-btn-sm nb-btn-pink" onclick="openQueJugamos()" style="color:#000;">🎲 ¿Qué jugamos?</button>
       </div>
-      <div id="leaderList"><div class="empty">Agrega jugadores en Ajustes.</div></div>
+      <div id="leaderList"><div class="nb-empty">Agrega jugadores en Ajustes.</div></div>
     </div>
   </div>
 
   <!-- REGISTRAR -->
   <div class="page" id="pg-add">
-    <div class="card">
-      <div class="card-title">Juego</div>
-      <select id="gameSelect" onchange="onGameSelect()">
+    <div class="nb-card">
+      <span class="nb-card-title">Juego</span>
+      <div class="search-wrap">
+        <input type="text" class="nb-search" id="gameSearch" placeholder="Buscar juego..." oninput="filterGameSelect()">
+      </div>
+      <select class="nb-select" id="gameSelect" onchange="onGameSelect()">
         <option value="">— Selecciona un juego —</option>
       </select>
-      <input type="text" id="gameCustom" placeholder="O escribe el nombre del juego..." style="display:none;">
+      <input type="text" class="nb-input" id="gameCustom" placeholder="Nombre del juego..." style="display:none;">
     </div>
-    <div class="card">
-      <div class="card-title">Posiciones (1° a último)</div>
+    <div class="nb-card">
+      <span class="nb-card-title">Posiciones</span>
       <div id="posSelect"></div>
-      <div class="btn-row">
-        <button class="btn btn-sm" onclick="addPosRow()">+ jugador</button>
-        <button class="btn btn-sm btn-danger" onclick="removePosRow()">− quitar</button>
+      <div class="nb-btn-row">
+        <button class="nb-btn nb-btn-sm nb-btn-green" onclick="addPosRow()">+ jugador</button>
+        <button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePosRow()">− quitar</button>
       </div>
-      <button class="btn btn-primary" style="margin-top:14px;" onclick="saveGame()">Guardar resultado</button>
+      <button class="nb-btn nb-btn-primary" style="margin-top:14px;" onclick="saveGame()">Guardar resultado</button>
     </div>
   </div>
 
@@ -316,57 +273,156 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
   <div class="page" id="pg-history">
     <div class="seg" id="histSeg">
       <button class="active" onclick="setHistTab('current',this)">Torneo actual</button>
-      <button onclick="setHistTab('archive',this)">Torneos anteriores</button>
+      <button onclick="setHistTab('archive',this)">Anteriores</button>
     </div>
     <div id="histCurrent">
-      <div class="card">
-        <div class="card-title">Juegos de este torneo</div>
-        <div id="historyList"><div class="empty">Sin juegos registrados.</div></div>
+      <div class="nb-card">
+        <span class="nb-card-title">Juegos de este torneo</span>
+        <div id="historyList"><div class="nb-empty">Sin juegos registrados.</div></div>
       </div>
     </div>
     <div id="histArchive" style="display:none;">
-      <div class="card">
-        <div class="card-title">Torneos archivados</div>
-        <div id="archiveList"><div class="empty">Sin torneos archivados aún.</div></div>
+      <div class="nb-card">
+        <span class="nb-card-title">Torneos archivados</span>
+        <div id="archiveList"><div class="nb-empty">Sin torneos archivados aún.</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ESTADÍSTICAS -->
+  <!-- STATS -->
   <div class="page" id="pg-stats">
     <div class="seg" id="statSeg">
       <button class="active" onclick="setStatTab('games',this)">Juegos</button>
       <button onclick="setStatTab('players',this)">Jugadores</button>
     </div>
     <div id="statsGames">
-      <div class="card">
-        <div class="card-title">Juegos más jugados</div>
-        <div id="statsGamesList"><div class="empty">Sin datos aún.</div></div>
+      <div class="nb-card">
+        <span class="nb-card-title">Más jugados</span>
+        <div id="statsGamesList"><div class="nb-empty">Sin datos aún.</div></div>
       </div>
-      <div class="card">
-        <div class="card-title">Rey de cada juego 👑</div>
-        <div id="statsKings"><div class="empty">Sin datos aún.</div></div>
+      <div class="nb-card">
+        <span class="nb-card-title">Rey de cada juego 👑</span>
+        <div id="statsKings"><div class="nb-empty">Sin datos aún.</div></div>
       </div>
     </div>
     <div id="statsPlayers" style="display:none;">
-      <div class="card">
-        <div class="card-title">Perfil — toca un jugador</div>
+      <div class="nb-card">
+        <span class="nb-card-title">Perfil de jugador</span>
         <div id="profilePicker"></div>
       </div>
       <div id="profileDetail" style="display:none;">
-        <div class="card">
+        <div class="nb-card">
           <div class="profile-header">
-            <div class="profile-avatar" id="profAvatar"></div>
-            <div>
-              <div class="profile-name" id="profName"></div>
-              <div class="profile-sub" id="profSub"></div>
-            </div>
+            <div class="profile-avatar-lg" id="profAvatar"></div>
+            <div><div class="profile-name" id="profName"></div><div class="profile-sub" id="profSub"></div></div>
           </div>
           <div class="metrics-grid" id="profMetrics"></div>
-          <div class="card-title" style="margin-top:4px;">Mejor juego</div>
-          <div id="profBestGame" style="font-size:14px;padding:4px 0;"></div>
-          <div class="card-title" style="margin-top:12px;">Historial de partidas</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Mejor juego</div>
+          <div id="profBestGame" style="font-size:14px;font-weight:500;padding:4px 0;margin-bottom:10px;"></div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Últimas partidas</div>
           <div id="profHistory"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESA -->
+  <div class="page" id="pg-dice">
+    <div class="nb-card">
+      <span class="nb-card-title">Dados</span>
+      <div class="dice-config">
+        <div class="dice-selector">
+          <label>Cantidad</label>
+          <select class="nb-select" id="diceCount" style="margin:0;">
+            <option value="1">1</option><option value="2" selected>2</option>
+            <option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option>
+          </select>
+        </div>
+        <div class="dice-selector">
+          <label>Caras</label>
+          <select class="nb-select" id="diceFaces" style="margin:0;">
+            <option value="4">d4</option><option value="6" selected>d6</option>
+            <option value="8">d8</option><option value="10">d10</option>
+            <option value="12">d12</option><option value="20">d20</option>
+            <option value="100">d100</option>
+          </select>
+        </div>
+      </div>
+      <button class="nb-btn nb-btn-primary" onclick="rollDice()">🎲 Lanzar dados</button>
+      <div id="diceResultCard" style="display:none;margin-top:12px;">
+        <div class="dice-results" id="diceResults"></div>
+        <div class="dice-total"><div class="total-num" id="diceTotal">—</div><div class="total-lbl" id="diceTotalLbl">total</div></div>
+      </div>
+      <div id="diceHistCard" style="display:none;margin-top:10px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Últimos lanzamientos</div>
+        <div id="diceHistory"></div>
+      </div>
+    </div>
+    <div class="nb-card">
+      <span class="nb-card-title">Timer</span>
+      <div class="timer-tabs">
+        <button class="timer-tab active" onclick="setTimerMode('stopwatch',this)">⏱ Crono</button>
+        <button class="timer-tab" onclick="setTimerMode('countdown',this)">⏳ Cuenta</button>
+        <button class="timer-tab" onclick="setTimerMode('turns',this)">🎯 Turnos</button>
+      </div>
+      <div id="timerStopwatch">
+        <div class="timer-display"><div class="timer-time" id="swDisplay">00:00</div><div class="timer-sub" id="swSub">listo</div></div>
+        <div class="timer-controls">
+          <button class="timer-btn nb-btn-green" id="swStartBtn" onclick="swToggle()">▶ Iniciar</button>
+          <button class="timer-btn nb-btn-red" onclick="swReset()">↺ Reset</button>
+        </div>
+      </div>
+      <div id="timerCountdown" style="display:none;">
+        <div class="timer-preset-row">
+          <button class="timer-preset" onclick="setCdPreset(1,this)">1 min</button>
+          <button class="timer-preset" onclick="setCdPreset(2,this)">2 min</button>
+          <button class="timer-preset active" onclick="setCdPreset(5,this)">5 min</button>
+          <button class="timer-preset" onclick="setCdPreset(10,this)">10 min</button>
+          <button class="timer-preset" onclick="setCdPreset(15,this)">15 min</button>
+          <button class="timer-preset" onclick="setCdPreset(30,this)">30 min</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <input type="number" class="nb-input" id="cdMinutes" value="5" min="1" max="999" style="width:80px;margin:0;text-align:center;">
+          <span style="font-size:13px;font-weight:700;">minutos</span>
+        </div>
+        <div class="timer-display"><div class="timer-time" id="cdDisplay">05:00</div><div class="timer-sub" id="cdSub">listo</div></div>
+        <div class="timer-controls">
+          <button class="timer-btn nb-btn-green" id="cdStartBtn" onclick="cdToggle()">▶ Iniciar</button>
+          <button class="timer-btn nb-btn-red" onclick="cdReset()">↺ Reset</button>
+        </div>
+      </div>
+      <div id="timerTurns" style="display:none;">
+        <div id="turnSetup">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Jugadores del juego</div>
+          <div id="turnPlayerPicker" style="margin-bottom:8px;"></div>
+          <button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="addTurnPlayers()" style="margin-bottom:8px;">+ Todos del torneo</button>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <input type="text" class="nb-input" id="turnCustomPlayer" placeholder="Agregar jugador..." style="margin:0;flex:1;font-size:13px;">
+            <button class="nb-btn nb-btn-sm nb-btn-green" onclick="addTurnCustomPlayer()">+</button>
+          </div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Orden de turnos</div>
+          <div id="turnOrderList" style="margin-bottom:8px;"></div>
+          <button class="nb-btn nb-btn-sm nb-btn-pink" onclick="shuffleTurnOrder()" style="margin-bottom:10px;color:#000;">🔀 Orden aleatorio</button>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <input type="number" class="nb-input" id="turnLimit" value="0" min="0" max="60" style="width:70px;margin:0;text-align:center;">
+            <span style="font-size:12px;font-weight:700;">min por turno (0 = sin límite)</span>
+          </div>
+          <button class="nb-btn nb-btn-primary" onclick="startTurnTimer()">▶ Iniciar partida</button>
+        </div>
+        <div id="turnActive" style="display:none;">
+          <div class="timer-display" style="padding:12px 0 8px;"><div class="timer-time" id="turnDisplay">00:00</div><div class="timer-sub" id="turnSub">turno de —</div></div>
+          <div id="turnPlayerList" style="margin-bottom:10px;"></div>
+          <div class="timer-controls">
+            <button class="timer-btn nb-btn-yellow" id="turnPauseBtn" onclick="turnPause()">⏸ Pausar</button>
+            <button class="timer-btn nb-btn-green" onclick="turnNext()">Pasar turno ›</button>
+          </div>
+          <button class="nb-btn nb-btn-red" onclick="turnEnd()" style="margin-top:8px;">Terminar partida</button>
+        </div>
+        <div id="turnResults" style="display:none;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Resultados</div>
+          <div id="turnResultsList"></div>
+          <button class="nb-btn nb-btn-yellow" onclick="turnRestart()" style="margin-top:10px;">↺ Nueva partida</button>
         </div>
       </div>
     </div>
@@ -374,246 +430,100 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
 
   <!-- AJUSTES -->
   <div class="page" id="pg-settings">
-    <div class="card">
-      <div class="card-title">Nombre del torneo</div>
-      <input type="text" id="settingName" placeholder="Ej. Juegolimpiadas 2025">
-      <button class="btn" onclick="saveName()">Guardar</button>
+    <div class="nb-card">
+      <span class="nb-card-title">Nombre del torneo</span>
+      <input type="text" class="nb-input" id="settingName" placeholder="Ej. Juegolimpiadas 2025">
+      <button class="nb-btn nb-btn-green" onclick="saveName()">Guardar</button>
     </div>
-    <div class="card">
-      <div class="card-title">Jugadores</div>
+    <div class="nb-card">
+      <span class="nb-card-title">Jugadores</span>
       <div id="playersList"></div>
-      <div class="add-player-form">
-        <div class="photo-upload-btn" id="photoUploadBtn" title="Agregar foto">
-          <span class="photo-placeholder" id="photoPlaceholder">📷</span>
-          <img id="photoPreview" style="display:none;">
-          <input type="file" accept="image/*" id="photoInput" onchange="onPhotoSelected(event)">
+      <div class="add-row">
+        <div class="photo-upload-btn" id="photoUploadBtn" title="Foto">
+          <span id="photoPlaceholder">📷</span>
+          <img id="photoPreview" style="display:none;width:48px;height:48px;border-radius:50%;object-fit:cover;">
+          <input type="file" accept="image/*" id="photoInput" onchange="onPhotoSelected(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
         </div>
-        <input type="text" id="newPlayerName" placeholder="Nombre del jugador" style="flex:1;">
-        <button class="btn btn-sm" onclick="addPlayer()">+</button>
+        <input type="text" class="nb-input" id="newPlayerName" placeholder="Nombre del jugador" style="margin:0;flex:1;">
+        <button class="nb-btn nb-btn-sm nb-btn-green" onclick="addPlayer()">+</button>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">Sistema de puntos</div>
-      <select id="settingSystem" onchange="saveSystem()">
+    <div class="nb-card">
+      <span class="nb-card-title">Sistema de puntos</span>
+      <select class="nb-select" id="settingSystem" onchange="saveSystem()">
         <option value="proportional">Proporcional (recomendado)</option>
         <option value="fibonacci">Fibonacci invertido</option>
         <option value="flat">Puntos fijos</option>
       </select>
     </div>
-    <div class="card">
-      <div class="card-title">Catálogo de juegos</div>
-      <input type="text" class="catalog-search" id="catalogSearch" placeholder="Buscar juego..." oninput="renderCatalog()">
-      <div class="filter-section">
-        <div class="filter-section-title">Tipo</div>
-        <div class="filter-bar" id="filterType">
-          <button class="filter-chip active" data-val="" onclick="setFilter('type','',this)">Todos</button>
-          <button class="filter-chip" data-val="Competitivo" onclick="setFilter('type','Competitivo',this)">⚔️ Competitivo</button>
-          <button class="filter-chip" data-val="Cooperativo" onclick="setFilter('type','Cooperativo',this)">🤝 Cooperativo</button>
-          <button class="filter-chip" data-val="Semi-cooperativo" onclick="setFilter('type','Semi-cooperativo',this)">⚖️ Semi-coop</button>
-        </div>
+    <div class="nb-card">
+      <span class="nb-card-title">Catálogo de juegos</span>
+      <div class="search-wrap">
+        <input type="text" class="nb-search" id="catalogSearch" placeholder="Buscar en catálogo..." oninput="renderCatalog()">
       </div>
-      <div class="filter-section">
-        <div class="filter-section-title">Complejidad</div>
-        <div class="filter-bar" id="filterComp">
-          <button class="filter-chip active" data-val="" onclick="setFilter('complexity','',this)">Todas</button>
-          <button class="filter-chip" data-val="Baja" onclick="setFilter('complexity','Baja',this)">🟢 Baja</button>
-          <button class="filter-chip" data-val="Media" onclick="setFilter('complexity','Media',this)">🟡 Media</button>
-          <button class="filter-chip" data-val="Alta" onclick="setFilter('complexity','Alta',this)">🔴 Alta</button>
-        </div>
+      <div class="filter-bar">
+        <button class="filter-chip active" onclick="setFilter('type','',this)">Todos</button>
+        <button class="filter-chip" onclick="setFilter('type','Competitivo',this)">⚔️ Comp.</button>
+        <button class="filter-chip" onclick="setFilter('type','Cooperativo',this)">🤝 Coop.</button>
+        <button class="filter-chip" onclick="setFilter('type','Semi-cooperativo',this)">⚖️ Semi</button>
       </div>
-      <div class="filter-section">
-        <div class="filter-section-title">Jugadores</div>
-        <div class="filter-bar" id="filterPlayers">
-          <button class="filter-chip active" data-val="" onclick="setFilter('players','',this)">Todos</button>
-          <button class="filter-chip" data-val="2" onclick="setFilter('players','2',this)">2</button>
-          <button class="filter-chip" data-val="3" onclick="setFilter('players','3',this)">3+</button>
-          <button class="filter-chip" data-val="4" onclick="setFilter('players','4',this)">4+</button>
-          <button class="filter-chip" data-val="5" onclick="setFilter('players','5',this)">5+</button>
-          <button class="filter-chip" data-val="6" onclick="setFilter('players','6',this)">6+</button>
-        </div>
+      <div class="filter-bar">
+        <button class="filter-chip active" onclick="setFilter('complexity','',this)">Dificultad</button>
+        <button class="filter-chip" onclick="setFilter('complexity','Baja',this)">🟢 Baja</button>
+        <button class="filter-chip" onclick="setFilter('complexity','Media',this)">🟡 Media</button>
+        <button class="filter-chip" onclick="setFilter('complexity','Alta',this)">🔴 Alta</button>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-chip active" onclick="setFilter('players','',this)">Jugadores</button>
+        <button class="filter-chip" onclick="setFilter('players','2',this)">2</button>
+        <button class="filter-chip" onclick="setFilter('players','3',this)">3+</button>
+        <button class="filter-chip" onclick="setFilter('players','4',this)">4+</button>
+        <button class="filter-chip" onclick="setFilter('players','5',this)">5+</button>
+        <button class="filter-chip" onclick="setFilter('players','6',this)">6+</button>
       </div>
       <div class="catalog-count" id="catalogCount"></div>
       <div id="catalogList"></div>
-      <div class="add-row" style="margin-top:8px;">
-        <input type="text" id="newGameName" placeholder="Agregar juego nuevo...">
-        <button class="btn btn-sm" onclick="addGameToCatalog()">+</button>
+      <div style="margin-top:12px;border-top:2px solid #000;padding-top:12px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Agregar juego nuevo</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div id="newGameEmoji" class="selected-emoji" onclick="toggleEmojiPicker()">🎲</div>
+          <input type="text" class="nb-input" id="newGameName" placeholder="Nombre del juego..." style="margin:0;flex:1;">
+          <button class="nb-btn nb-btn-sm nb-btn-green" onclick="addGameToCatalog()">+</button>
+        </div>
+        <div id="emojiPicker" class="emoji-picker" style="display:none;">
+          <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <button class="btn btn-danger" onclick="confirmReset()">Reiniciar torneo actual</button>
+    <div class="nb-card" id="migrationCard" style="display:none;">
+      <span class="nb-card-title">Migración de datos</span>
+      <p style="font-size:13px;font-weight:500;margin-bottom:10px;">Importa los datos de la versión anterior (v1) como torneo archivado.</p>
+      <button class="nb-btn nb-btn-yellow" onclick="migrateV1()" id="migrateBtn">📦 Importar datos v1</button>
+      <div id="migrateStatus" style="font-size:13px;font-weight:700;margin-top:8px;"></div>
     </div>
-    <div class="card" id="migrationCard">
-      <div class="card-title">Migración de datos</div>
-      <p style="font-size:13px;color:#888;margin-bottom:10px;">Importa los juegos guardados en la versión anterior (torneo v1) como un torneo archivado.</p>
-      <button class="btn" onclick="migrateV1()" id="migrateBtn">📦 Importar datos v1</button>
-      <div id="migrateStatus" style="font-size:13px;color:#888;margin-top:8px;"></div>
-    </div>
-  </div>
-
-  <!-- MESA: DADOS + TIMER -->
-  <div class="page" id="pg-dice">
-
-    <!-- DADOS -->
-    <div class="card">
-      <div class="card-title">Dados</div>
-      <div class="dice-config">
-        <div class="dice-selector">
-          <label>Cantidad</label>
-          <select id="diceCount">
-            <option value="1">1 dado</option>
-            <option value="2" selected>2 dados</option>
-            <option value="3">3 dados</option>
-            <option value="4">4 dados</option>
-            <option value="5">5 dados</option>
-            <option value="6">6 dados</option>
-          </select>
-        </div>
-        <div class="dice-selector">
-          <label>Caras</label>
-          <select id="diceFaces">
-            <option value="4">d4</option>
-            <option value="6" selected>d6</option>
-            <option value="8">d8</option>
-            <option value="10">d10</option>
-            <option value="12">d12</option>
-            <option value="20">d20</option>
-            <option value="100">d100</option>
-          </select>
-        </div>
-      </div>
-      <button class="btn btn-primary btn-roll" onclick="rollDice()">🎲 Lanzar dados</button>
-      <div id="diceResultCard" style="display:none;margin-top:12px;">
-        <div class="dice-results" id="diceResults"></div>
-        <div class="dice-total">
-          <div class="total-num" id="diceTotal">—</div>
-          <div class="total-lbl" id="diceTotalLbl">total</div>
-        </div>
-      </div>
-      <div id="diceHistCard" style="display:none;margin-top:10px;">
-        <div class="card-title" style="margin-bottom:6px;">Últimos lanzamientos</div>
-        <div class="dice-history" id="diceHistory"></div>
-      </div>
-    </div>
-
-    <!-- TIMER -->
-    <div class="card">
-      <div class="card-title">Timer</div>
-      <div class="timer-tabs">
-        <button class="timer-tab active" onclick="setTimerMode('stopwatch',this)">⏱ Cronómetro</button>
-        <button class="timer-tab" onclick="setTimerMode('countdown',this)">⏳ Cuenta regresiva</button>
-        <button class="timer-tab" onclick="setTimerMode('turns',this)">🎯 Turnos</button>
-      </div>
-
-      <!-- STOPWATCH -->
-      <div id="timerStopwatch">
-        <div class="timer-display">
-          <div class="timer-time" id="swDisplay">00:00</div>
-          <div class="timer-sub" id="swSub">listo para iniciar</div>
-        </div>
-        <div class="timer-controls">
-          <button class="timer-btn primary" id="swStartBtn" onclick="swToggle()">▶ Iniciar</button>
-          <button class="timer-btn danger" onclick="swReset()">↺ Reset</button>
-        </div>
-      </div>
-
-      <!-- COUNTDOWN -->
-      <div id="timerCountdown" style="display:none;">
-        <div class="timer-setup">
-          <div class="card-title" style="margin-bottom:6px;">Duración</div>
-          <div class="timer-preset-row">
-            <button class="timer-preset" onclick="setCdPreset(1,this)">1 min</button>
-            <button class="timer-preset" onclick="setCdPreset(2,this)">2 min</button>
-            <button class="timer-preset active" onclick="setCdPreset(5,this)">5 min</button>
-            <button class="timer-preset" onclick="setCdPreset(10,this)">10 min</button>
-            <button class="timer-preset" onclick="setCdPreset(15,this)">15 min</button>
-            <button class="timer-preset" onclick="setCdPreset(30,this)">30 min</button>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="number" id="cdMinutes" value="5" min="1" max="999" style="width:80px;margin:0;text-align:center;">
-            <span style="font-size:14px;color:#888;">minutos</span>
-          </div>
-        </div>
-        <div class="timer-display">
-          <div class="timer-time" id="cdDisplay">05:00</div>
-          <div class="timer-sub" id="cdSub">listo para iniciar</div>
-        </div>
-        <div class="timer-controls">
-          <button class="timer-btn primary" id="cdStartBtn" onclick="cdToggle()">▶ Iniciar</button>
-          <button class="timer-btn danger" onclick="cdReset()">↺ Reset</button>
-        </div>
-      </div>
-
-      <!-- TURN TIMER -->
-      <div id="timerTurns" style="display:none;">
-        <!-- Setup phase -->
-        <div id="turnSetup">
-          <div class="card-title" style="margin-bottom:6px;">Jugadores del juego</div>
-          <div id="turnPlayerPicker" style="margin-bottom:10px;"></div>
-          <button class="btn btn-sm" onclick="addTurnPlayers()" style="margin-bottom:10px;">+ Usar jugadores del torneo</button>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <input type="text" id="turnCustomPlayer" placeholder="Agregar jugador manualmente..." style="margin:0;flex:1;font-size:14px;">
-            <button class="btn btn-sm" onclick="addTurnCustomPlayer()">+</button>
-          </div>
-          <div class="card-title" style="margin-bottom:6px;">Orden de turnos</div>
-          <div id="turnOrderList" style="margin-bottom:10px;"></div>
-          <button class="btn btn-sm" onclick="shuffleTurnOrder()" style="margin-bottom:10px;">🔀 Orden aleatorio</button>
-          <div class="card-title" style="margin-bottom:6px;">Límite de tiempo por turno (opcional)</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <input type="number" id="turnLimit" value="0" min="0" max="60" style="width:70px;margin:0;text-align:center;">
-            <span style="font-size:13px;color:#888;">minutos (0 = sin límite)</span>
-          </div>
-          <button class="btn btn-primary" onclick="startTurnTimer()">▶ Iniciar partida</button>
-        </div>
-
-        <!-- Active phase -->
-        <div id="turnActive" style="display:none;">
-          <div class="timer-display" style="padding:12px 0 8px;">
-            <div class="timer-time" id="turnDisplay">00:00</div>
-            <div class="timer-sub" id="turnSub">turno de —</div>
-          </div>
-          <div id="turnPlayerList" style="margin-bottom:10px;"></div>
-          <div class="timer-controls">
-            <button class="timer-btn primary" id="turnPauseBtn" onclick="turnPause()">⏸ Pausar</button>
-            <button class="timer-btn" onclick="turnNext()" style="background:#1a7a3a;color:#fff;border-color:transparent;">Pasar turno ›</button>
-          </div>
-          <button class="btn btn-danger" onclick="turnEnd()" style="margin-top:8px;">Terminar partida</button>
-        </div>
-
-        <!-- Results phase -->
-        <div id="turnResults" style="display:none;">
-          <div class="card-title" style="margin-bottom:8px;">⏱ Resultados de la partida</div>
-          <div id="turnResultsList"></div>
-          <button class="btn" onclick="turnRestart()" style="margin-top:10px;">↺ Nueva partida</button>
-        </div>
-      </div>
-
+    <div class="nb-card">
+      <button class="nb-btn nb-btn-red" onclick="confirmReset()">Reiniciar torneo actual</button>
     </div>
   </div>
 
   <nav class="nav">
     <button class="active" onclick="goTo('board',this)">
-      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Marcador
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Marcador
     </button>
     <button onclick="goTo('add',this)">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      Registrar
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Registrar
     </button>
     <button onclick="goTo('history',this)">
-      <svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 16 3.05 11 8 11"/></svg>
-      Historial
+      <svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 16 3.05 11 8 11"/></svg>Historial
     </button>
     <button onclick="goTo('stats',this)">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Stats
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Stats
     </button>
     <button onclick="goTo('dice',this)">
-      <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>
-      Mesa
+      <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>Mesa
     </button>
     <button onclick="goTo('settings',this)">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Ajustes
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ajustes
     </button>
   </nav>
 </div>
@@ -623,52 +533,35 @@ input:focus,select:focus{border-color:rgba(0,0,0,.5);}
 <div class="modal-overlay" id="queJugamosModal" style="display:none;" onclick="closeQueJugamos(event)">
   <div class="modal-sheet">
     <div class="modal-header">
-      <h2>🎲 ¿Qué jugamos?</h2>
+      <h2>¿Qué jugamos?</h2>
       <button class="modal-close" onclick="closeQueJugamosBtn()">×</button>
     </div>
     <div class="modal-body">
       <div id="pickResult" style="display:none;"></div>
-      <button class="btn btn-primary" style="margin-bottom:12px;" onclick="pickRandomGame()">🎰 Elige por nosotros</button>
-      <div class="modal-sub" id="queJugamosSub"></div>
+      <button class="nb-btn nb-btn-primary" style="margin-bottom:12px;" onclick="pickRandomGame()">🎰 Elige por nosotros</button>
+      <div id="queJugamosSub" style="font-size:13px;font-weight:700;color:#555;margin-bottom:12px;"></div>
       <div id="queJugamosList"></div>
     </div>
   </div>
 </div>
 
+<style>
+.photo-upload-btn{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;border:2px solid #000;background:#E8F5A3;cursor:pointer;flex-shrink:0;overflow:hidden;position:relative;font-size:22px;box-shadow:2px 2px 0 #000;}
+</style>
 
 <script>
-// Bridge for onclick handlers - queues calls until module loads
 (function(){
-  var q = {};
-  var handler = function(name){
-    return function(){
-      var args = arguments;
-      if(window['_mod_'+name]) return window['_mod_'+name].apply(null, args);
-      if(!q[name]) q[name] = [];
-      q[name].push(args);
-    };
-  };
-  var fns = ['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer',
-    'removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog',
-    'confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney',
-    'setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected',
-    'updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','moveTurnPlayer','removeTurnPlayer','renderTurnPicker'];
-  fns.forEach(function(fn){ if(!window[fn]) window[fn] = handler(fn); });
-  window._resolveQueue = function(){
-    fns.forEach(function(fn){
-      if(window['_mod_'+fn] && q[fn]){
-        q[fn].forEach(function(a){ window['_mod_'+fn].apply(null,a); });
-        q[fn] = [];
-      }
-    });
-  };
+  var q={};
+  var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
+  window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
 </script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getDatabase,ref,onValue,set,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -678,11 +571,10 @@ const firebaseConfig = {
   messagingSenderId: "541715613556",
   appId: "1:541715613556:web:4a4ef8b65d707304238e21"
 };
-
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getDatabase(firebaseApp);
-const torneoRef = ref(db, 'torneo_v2');
-const torneoV1Ref = ref(db, 'torneo');
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
+const torneoRef=ref(db,'torneo_v2');
+const torneoV1Ref=ref(db,'torneo');
 
 const DEFAULT_GAMES = [
   {name:'Catan', emoji:'🏝️', type:'Competitivo', players:'3-4', duration:'60-120 min', complexity:'Media', category:'Estrategia', desc:'Construye asentamientos, recolecta recursos y comercia con otros jugadores para dominar la isla de Catan.'},
@@ -732,841 +624,447 @@ const DEFAULT_GAMES = [
   {name:'Monopoly', emoji:'🎩', type:'Competitivo', players:'2-8', duration:'60-180 min', complexity:'Baja', category:'Familiar / Clásico', desc:'Compra propiedades, construye casas y hoteles, y arruina a tus amigos con rentas. El destructor de amistades más famoso del mundo.'},
 ];
 
-let state = {
-  name: 'Torneo de Mesa',
-  players: [],
-  games: [],
-  system: 'proportional',
-  catalog: DEFAULT_GAMES,
-  archive: []
-};
+const EMOJI_LIST=['🎲', '🃏', '🎯', '🎮', '🏆', '🥇', '⚔️', '🛡️', '🗡️', '🔮', '🧩', '🎰', '🎳', '🎪', '🎭', '🃏', '🀱', '🎴', '🧸', '🪆', '🦁', '🐉', '🦊', '🐺', '🦅', '🐙', '🦈', '🦖', '🐝', '🦋', '🏰', '🏯', '⛵', '🚂', '🏎️', '🚀', '⚓', '🗺️', '🌍', '🏝️', '💎', '👑', '🔱', '⚜️', '🌟', '💥', '🔥', '❄️', '🌊', '⚡', '🧠', '🔬', '🔭', '⚗️', '🧪', '📜', '📚', '🗝️', '🔍', '🪄', '🍎', '🌮', '🍕', '☕', '🍺', '🧁', '🍄', '🌺', '🌵', '🍀', '🤝', '👻', '💀', '🎨', '🎵', '🎬', '📸', '✏️', '🖌️', '🎤'];
 
-onValue(torneoRef, (snap) => {
-  const data = snap.val();
-  if(data) {
-    state = data;
-    if(!state.players) state.players = [];
-    if(!state.games) state.games = [];
-    if(!state.catalog || !state.catalog.length) state.catalog = DEFAULT_GAMES;
-    if(!state.archive) state.archive = [];
-  }
-  render();
-  setSyncStatus('ok');
-}, () => setSyncStatus('off'));
+let state={name:'Torneo de Mesa',players:[],games:[],system:'proportional',catalog:DEFAULT_GAMES,archive:[],playerPhotos:{}};
+let catalogFilters={type:'',complexity:'',players:''};
+let selectedEmoji='🎲';
+let pendingPhoto=null;
+let diceRollHistory=[];
 
-window.saveState = async function() {
-  setSyncStatus('syncing');
-  try { await set(torneoRef, state); setSyncStatus('ok'); }
-  catch(e) { setSyncStatus('off'); showToast('Error al guardar'); }
-};
+onValue(torneoRef,(snap)=>{
+  const d=snap.val();
+  if(d){state=d;if(!state.players)state.players=[];if(!state.games)state.games=[];if(!state.catalog||!state.catalog.length)state.catalog=DEFAULT_GAMES;if(!state.archive)state.archive=[];if(!state.playerPhotos)state.playerPhotos={};}
+  render();setSyncStatus('ok');
+},()=>setSyncStatus('off'));
 
-function setSyncStatus(s) {
-  document.getElementById('syncDot').className = 'sync-dot'+(s==='off'?' off':s==='syncing'?' syncing':'');
-  document.getElementById('syncLabel').textContent = s==='ok'?'en vivo':s==='syncing'?'guardando...':'sin conexión';
+window.saveState=async function(){setSyncStatus('syncing');try{await set(torneoRef,state);setSyncStatus('ok');}catch(e){setSyncStatus('off');showToast('Error al guardar');}};
+
+function setSyncStatus(s){
+  document.getElementById('syncDot').className='sync-dot'+(s==='off'?' off':s==='syncing'?' syncing':'');
+  document.getElementById('syncLabel').textContent=s==='ok'?'en vivo':s==='syncing'?'guardando...':'sin conexión';
 }
 
-function getPoints(n, system) {
+function getPoints(n,system){
   if(system==='fibonacci'){const f=[1,2,3,5,8,13,21];const b=f.slice(0,n).reverse();const m=b[0];return b.map(v=>Math.round(v/m*100));}
-  if(system==='flat') return [100,70,50,35,20,10].slice(0,n);
+  if(system==='flat')return[100,70,50,35,20,10].slice(0,n);
   return Array.from({length:n},(_,i)=>Math.round((n-i)/n*100));
 }
 
-function computeScores(games) {
-  const scores={}, wins={}, podiums={}, gamesPlayed={};
-  state.players.forEach(p=>{scores[p]=0;wins[p]=0;podiums[p]=0;gamesPlayed[p]=0;});
+function computeScores(games){
+  const scores={},wins={},podiums={},gp={};
+  state.players.forEach(p=>{scores[p]=0;wins[p]=0;podiums[p]=0;gp[p]=0;});
   (games||[]).forEach(g=>{
     const pts=getPoints(g.positions.length,state.system);
-    g.positions.forEach((p,i)=>{
-      if(p&&scores[p]!==undefined){
-        scores[p]+=pts[i]||0;
-        if(i===0)wins[p]++;
-        if(i<3)podiums[p]++;
-        gamesPlayed[p]++;
-      }
-    });
+    g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;gp[p]++;}});
   });
-  return state.players.map(p=>({name:p,pts:scores[p],wins:wins[p],podiums:podiums[p],gamesPlayed:gamesPlayed[p]}))
+  return state.players.map(p=>({name:p,pts:scores[p],wins:wins[p],podiums:podiums[p],gamesPlayed:gp[p]}))
     .sort((a,b)=>b.pts-a.pts||b.wins-a.wins||b.podiums-a.podiums||a.name.localeCompare(b.name,'es'));
 }
 
 const medals=['🥇','🥈','🥉'];
+function gameEmoji(name){const f=(state.catalog||[]).find(g=>g.name===name);return f?f.emoji:'🎲';}
+function av(p,size=36){const photo=(state.playerPhotos||{})[p];const s=`width:${size}px;height:${size}px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:${Math.floor(size*.38)}px;font-weight:700;flex-shrink:0;overflow:hidden;`;return photo?`<img src="${photo}" style="${s}object-fit:cover;">`:`<div style="${s}">${p[0].toUpperCase()}</div>`;}
 
-function gameEmoji(name) {
-  const found = (state.catalog||[]).find(g=>g.name===name);
-  return found ? found.emoji : '🎲';
-}
-
-window.render = function() {
-  document.getElementById('tourneyName').textContent = state.name||'Torneo de Mesa';
-  document.getElementById('settingName').value = state.name||'';
-  document.getElementById('settingSystem').value = state.system||'proportional';
-  const gc = (state.games||[]).length;
-  document.getElementById('gameCount').textContent = gc+' juego'+(gc===1?'':'s');
+window.render=function(){
+  document.getElementById('tourneyName').textContent=state.name||'Torneo de Mesa';
+  document.getElementById('settingName').value=state.name||'';
+  document.getElementById('settingSystem').value=state.system||'proportional';
+  const gc=(state.games||[]).length;
+  document.getElementById('gameCount').textContent=gc+' juego'+(gc===1?'':'s');
 
   // Leaderboard
-  const board = document.getElementById('leaderList');
-  if(!(state.players||[]).length){
-    board.innerHTML='<div class="empty">Agrega jugadores en Ajustes.</div>';
-  } else {
+  const board=document.getElementById('leaderList');
+  if(!(state.players||[]).length){board.innerHTML='<div class="nb-empty">Agrega jugadores en Ajustes.</div>';}
+  else{
     const sc=computeScores(state.games);
-    board.innerHTML=sc.map((p,i)=>`
-      <div class="leader-row">
+    board.innerHTML=sc.map((p,i)=>{
+      const isFirst=i===0;
+      return `<div class="leader-row${isFirst?' first-place':''}">
         <span class="rank">${i<3?medals[i]:i+1}</span>
-        ${(()=>{const ph=(state.playerPhotos||{})[p.name];return ph?`<img src="${ph}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`:`<div style="width:34px;height:34px;border-radius:50%;background:#ddd;color:#555;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;">${p.name[0].toUpperCase()}</div>`;})()}
+        ${av(p.name,36)}
         <div style="flex:1;">
-          <div style="font-size:15px;font-weight:${i===0?'500':'400'}">${p.name}</div>
-          <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">
-            ${p.wins?`<span class="tag tag-win">${p.wins}V</span>`:''}
-            ${p.podiums>p.wins?`<span class="tag tag-pod">${p.podiums} podios</span>`:''}
-            <span class="tag" style="background:#f5f5f2;color:#999;">${p.gamesPlayed} partidas</span>
+          <div class="player-name">${p.name}</div>
+          <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;">
+            ${p.wins?`<span class="nb-tag tag-win">${p.wins}V</span>`:''}
+            ${p.podiums>p.wins?`<span class="nb-tag tag-pod">${p.podiums} pod</span>`:''}
+            <span class="nb-tag tag-games">${p.gamesPlayed} part</span>
           </div>
         </div>
-        <div class="player-pts">${p.pts} <span>pts</span></div>
-      </div>`).join('');
-  }
-
-  // Game select in registrar
-  const gs=document.getElementById('gameSelect');
-  const prev=gs.value;
-  gs.innerHTML='<option value="">— Selecciona un juego —</option>'+
-    (state.catalog||[]).map(g=>`<option value="${g.name}">${g.emoji} ${g.name}</option>`).join('')+
-    '<option value="__custom__">✏️ Otro juego...</option>';
-  if(prev) gs.value=prev;
-
-  // Players list settings
-  const pl=document.getElementById('playersList');
-  pl.innerHTML=(state.players||[]).length?(state.players||[]).map((p,i)=>{
-    const photo=(state.playerPhotos||{})[p];
-    const avatar=photo?`<img src="${photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`:`<div style="width:38px;height:38px;border-radius:50%;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;">${p[0].toUpperCase()}</div>`;
-    return `<div class="player-item">
-      ${avatar}
-      <span style="flex:1;font-size:14px;">${p}</span>
-      <label style="cursor:pointer;font-size:12px;color:#888;margin-right:6px;">📷<input type="file" accept="image/*" style="display:none;" onchange="updatePhoto('${p}',event)"></label>
-      <button class="btn btn-sm btn-danger" onclick="removePlayer(${i})">Quitar</button>
-    </div>`;
-  }).join(''):'<div style="font-size:13px;color:#aaa;padding:8px 0;">Sin jugadores.</div>';
-
-  // Catalog settings
-  renderCatalog();
-  
-
-  // History current
-  const hist=document.getElementById('historyList');
-  if(!(state.games||[]).length){
-    hist.innerHTML='<div class="empty">Sin juegos registrados.</div>';
-  } else {
-    hist.innerHTML=[...(state.games||[])].reverse().map((g,ri)=>{
-      const i=state.games.length-1-ri;
-      const pts=getPoints(g.positions.length,state.system);
-      const d=g.date?new Date(g.date).toLocaleDateString('es-CO',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
-      return `<div class="game-row">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div>
-            <div style="font-size:14px;font-weight:500;">${gameEmoji(g.name)} ${g.name}</div>
-            ${d?`<div style="font-size:11px;color:#aaa;">${d}</div>`:''}
-          </div>
-          <button class="btn btn-sm btn-danger" onclick="deleteGame(${i})" style="padding:3px 10px;font-size:12px;">Borrar</button>
-        </div>
-        <div style="margin-top:6px;">${g.positions.map((p,pi)=>`<span class="chip">${pi+1}° ${p} +${pts[pi]}</span>`).join('')}</div>
+        <div class="player-pts">${p.pts}<small> pts</small></div>
       </div>`;
     }).join('');
   }
+
+  // Game select + search
+  filterGameSelect();
+
+  // Players settings
+  const pl=document.getElementById('playersList');
+  pl.innerHTML=(state.players||[]).length?(state.players||[]).map((p,i)=>
+    `<div class="player-item">${av(p,38)}<span style="flex:1;font-size:14px;font-weight:700;">${p}</span>
+    <label style="cursor:pointer;font-size:18px;">📷<input type="file" accept="image/*" style="display:none;" onchange="updatePhoto('${p}',event)"></label>
+    <button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePlayer(${i})">×</button></div>`
+  ).join(''):'<div style="font-size:13px;color:#555;font-weight:500;padding:8px 0;">Sin jugadores.</div>';
+
+  // Catalog
+  renderCatalog();
+
+  // Emoji grid
+  const eg=document.getElementById('emojiGrid');
+  if(eg&&!eg.children.length)eg.innerHTML=EMOJI_LIST.map(e=>`<button class="emoji-btn" onclick="selectEmoji('${e}')">${e}</button>`).join('');
+
+  // History
+  const hist=document.getElementById('historyList');
+  if(!(state.games||[]).length){hist.innerHTML='<div class="nb-empty">Sin juegos registrados.</div>';}
+  else{hist.innerHTML=[...(state.games||[])].reverse().map((g,ri)=>{
+    const i=state.games.length-1-ri;
+    const pts=getPoints(g.positions.length,state.system);
+    const d=g.date?new Date(g.date).toLocaleDateString('es-CO',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    return `<div class="game-row">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div style="font-size:14px;font-weight:700;">${gameEmoji(g.name)} ${g.name}</div>${d?`<div style="font-size:11px;color:#555;">${d}</div>`:''}</div>
+        <button class="nb-btn nb-btn-sm nb-btn-red" onclick="deleteGame(${i})" style="padding:3px 8px;font-size:11px;">×</button>
+      </div>
+      <div style="margin-top:5px;">${g.positions.map((p,pi)=>`<span class="nb-chip">${pi+1}° ${p} +${pts[pi]}</span>`).join('')}</div>
+    </div>`;
+  }).join('');}
 
   // Archive
   const arch=document.getElementById('archiveList');
-  if(!(state.archive||[]).length){
-    arch.innerHTML='<div class="empty">Ningún torneo cerrado aún.</div>';
-  } else {
-    arch.innerHTML=[...(state.archive||[])].reverse().map((t,i)=>{
-      const champ=computeScores(t.games)[0];
-      const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
-      return `<div class="archive-item" onclick="showArchiveTorney(${state.archive.length-1-i})">
-        <div class="archive-title">🏆 ${t.name}</div>
-        <div class="archive-sub">${d} · ${t.games.length} juegos · Campeón: ${champ?champ.name:'—'}</div>
-      </div>`;
-    }).join('');
-  }
+  if(!(state.archive||[]).length){arch.innerHTML='<div class="nb-empty">Sin torneos cerrados aún.</div>';}
+  else{arch.innerHTML=[...(state.archive||[])].reverse().map((t,i)=>{
+    const champ=computeScores(t.games)[0];
+    const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
+    return `<div class="archive-item" onclick="showArchiveTorney(${state.archive.length-1-i})">
+      <div class="archive-title">🏆 ${t.name}</div>
+      <div class="archive-sub">${d} · ${t.games.length} juegos · Campeón: ${champ?champ.name:'—'}</div>
+    </div>`;
+  }).join('');}
 
-  // Stats - games
+  // Stats
   renderStats();
 
   // Profile picker
-  const pp=document.getElementById('profilePicker');
-  pp.innerHTML=(state.players||[]).map(p=>{
-    const photo=(state.playerPhotos||{})[p];
-    const avatar=photo?`<img src="${photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`:`<div style="width:36px;height:36px;border-radius:50%;background:#1a1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;">${p[0].toUpperCase()}</div>`;
-    return `<div class="player-item" style="cursor:pointer;" onclick="showProfile('${p}')">
-      ${avatar}
-      <span style="flex:1;font-size:14px;">${p}</span>
-      <span style="font-size:18px;">›</span>
-    </div>`;
-  }).join('') || '<div class="empty">Sin jugadores.</div>';
+  document.getElementById('profilePicker').innerHTML=(state.players||[]).map(p=>
+    `<div class="player-item" style="cursor:pointer;" onclick="showProfile('${p}')">
+      ${av(p,34)}<span style="flex:1;font-size:14px;font-weight:700;">${p}</span><span style="font-size:18px;">›</span>
+    </div>`
+  ).join('')||'<div class="nb-empty">Sin jugadores.</div>';
 
-  // Hide migration card if already done
-  const migCard = document.getElementById('migrationCard');
-  if(migCard) migCard.style.display = (state.archive||[]).find(t=>t._migratedFromV1) ? 'none' : 'block';
+  // Migration
+  const mc=document.getElementById('migrationCard');
+  if(mc)mc.style.display=(state.archive||[]).find(t=>t._migratedFromV1)?'none':'block';
 
-  // Pos selects refresh
+  // Pos selects
   refreshPosSelects();
 };
 
-function renderStats() {
-  const allGames=[...(state.games||[]),...(state.archive||[]).flatMap(t=>t.games||[])];
+window.filterGameSelect=function(){
+  const q=(document.getElementById('gameSearch')||{}).value||'';
+  const gs=document.getElementById('gameSelect');
+  if(!gs)return;
+  const prev=gs.value;
+  const filtered=(state.catalog||[]).filter(g=>!q||g.name.toLowerCase().includes(q.toLowerCase()));
+  gs.innerHTML='<option value="">— Selecciona un juego —</option>'+
+    filtered.map(g=>`<option value="${g.name}">${g.emoji||'🎲'} ${g.name}</option>`).join('')+
+    '<option value="__custom__">✏️ Otro juego...</option>';
+  if(prev&&[...gs.options].find(o=>o.value===prev))gs.value=prev;
+};
 
-  // Most played games
-  const freq={};
-  allGames.forEach(g=>{freq[g.name]=(freq[g.name]||0)+1;});
+window.renderCatalog=function(){
+  const search=(document.getElementById('catalogSearch')||{}).value||'';
+  const{type,complexity,players}=catalogFilters;
+  const filtered=(state.catalog||[]).filter(g=>{
+    if(search&&!g.name.toLowerCase().includes(search.toLowerCase()))return false;
+    if(type&&g.type!==type)return false;
+    if(complexity&&g.complexity!==complexity)return false;
+    if(players&&g.players){
+      const parts=g.players.replace(/\s/g,'').split('-');
+      const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);
+      const want=parseInt(players);
+      if(want===2){if(min>2)return false;}else{if(max<want)return false;}
+    }
+    return true;
+  });
+  const cc=document.getElementById('catalogCount');
+  if(cc)cc.textContent=filtered.length+' de '+(state.catalog||[]).length+' juegos';
+  const cl=document.getElementById('catalogList');
+  if(!cl)return;
+  const typeClass=t=>t==='Cooperativo'?'nb-tag-type-c':t==='Semi-cooperativo'?'nb-tag-type-s':'nb-tag-type-v';
+  const compClass=c=>c==='Alta'?'nb-tag-comp-high':c==='Media'?'nb-tag-comp-med':'nb-tag-comp-low';
+  cl.innerHTML=filtered.map(g=>{
+    const i=(state.catalog||[]).indexOf(g);
+    const expandId='gexp_'+i;
+    const hasInfo=!!(g.type||g.players||g.duration||g.complexity||g.category||g.desc);
+    const isCustom=i>=DEFAULT_GAMES.length;
+    let html='<div><div class="game-cat-item"'+(hasInfo?' onclick="toggleGameCard(''+expandId+'')"':'')+'>'+
+      '<span class="game-emoji">'+(g.emoji||'🎲')+'</span>'+
+      '<div style="flex:1;"><div class="game-name-text">'+g.name+'</div>'+
+      (g.players||g.duration?'<div class="game-meta-text">'+(g.players?'👥 '+g.players:'')+(g.players&&g.duration?' · ':'')+(g.duration?'⏱ '+g.duration:'')+'</div>':'')+'</div>'+
+      '<div style="display:flex;align-items:center;gap:5px;">'+
+      (isCustom?'<button class="nb-btn nb-btn-sm nb-btn-red" onclick="event.stopPropagation();removeGameFromCatalog('+i+')" style="padding:2px 7px;font-size:11px;">×</button>':'')+
+      (hasInfo?'<span style="font-size:16px;font-weight:700;color:#555;" id="arr_'+i+'">›</span>':'')+
+      '</div></div>';
+    if(hasInfo){
+      html+='<div class="game-expand-card" id="'+expandId+'">'+
+        '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">'+
+        (g.type?'<span class="nb-tag '+typeClass(g.type)+'">'+(g.type==='Cooperativo'?'🤝':'⚔️')+' '+g.type+'</span>':'')+
+        (g.complexity?'<span class="nb-tag '+compClass(g.complexity)+'">🎯 '+g.complexity+'</span>':'')+
+        (g.category?'<span class="nb-tag nb-tag-cat">🏷 '+g.category+'</span>':'')+
+        '</div>'+
+        (g.players?'<div style="font-size:12px;font-weight:700;margin-bottom:3px;">👥 '+g.players+'</div>':'')+
+        (g.duration?'<div style="font-size:12px;font-weight:700;margin-bottom:3px;">⏱ '+g.duration+'</div>':'')+
+        (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;margin-top:4px;">'+g.desc+'</div>':'')+
+        '</div>';
+    }
+    html+='</div>';
+    return html;
+  }).join('');
+};
+
+function renderStats(){
+  const allGames=[...(state.games||[]),...(state.archive||[]).flatMap(t=>t.games||[])];
+  const freq={};allGames.forEach(g=>{freq[g.name]=(freq[g.name]||0)+1;});
   const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
   const sgl=document.getElementById('statsGamesList');
-  if(!sorted.length){sgl.innerHTML='<div class="empty">Sin datos.</div>';return;}
-  sgl.innerHTML=sorted.map(([name,count])=>`
-    <div class="game-cat-item">
+  sgl.innerHTML=sorted.length?sorted.map(([name,count])=>
+    `<div class="game-cat-item" style="cursor:default;">
       <span class="game-emoji">${gameEmoji(name)}</span>
-      <div class="game-info">
-        <div class="game-name">${name}</div>
-        <div style="height:4px;background:#f0f0ee;border-radius:2px;margin-top:4px;overflow:hidden;">
-          <div style="height:100%;background:#1a1a1a;border-radius:2px;width:${Math.round(count/sorted[0][1]*100)}%;"></div>
-        </div>
-      </div>
-      <div class="game-count">${count}x</div>
-    </div>`).join('');
-
-  // King of each game
+      <div style="flex:1;"><div class="game-name-text">${name}</div>
+        <div style="height:5px;background:#f0f0f0;border:1px solid #000;border-radius:3px;margin-top:4px;overflow:hidden;">
+          <div style="height:100%;background:#A3E635;width:${Math.round(count/sorted[0][1]*100)}%;"></div></div></div>
+      <span style="font-size:14px;font-weight:700;">${count}×</span>
+    </div>`
+  ).join(''):'<div class="nb-empty">Sin datos.</div>';
   const kings={};
-  allGames.forEach(g=>{
-    if(g.positions&&g.positions[0]){
-      if(!kings[g.name]) kings[g.name]={};
-      kings[g.name][g.positions[0]]=(kings[g.name][g.positions[0]]||0)+1;
-    }
-  });
-  const sk=document.getElementById('statsKings');
-  const kingEntries=Object.entries(kings);
-  if(!kingEntries.length){sk.innerHTML='<div class="empty">Sin datos.</div>';return;}
-  sk.innerHTML=kingEntries.map(([game,players])=>{
+  allGames.forEach(g=>{if(g.positions&&g.positions[0]){if(!kings[g.name])kings[g.name]={};kings[g.name][g.positions[0]]=(kings[g.name][g.positions[0]]||0)+1;}});
+  const ke=Object.entries(kings);
+  document.getElementById('statsKings').innerHTML=ke.length?ke.map(([game,players])=>{
     const top=Object.entries(players).sort((a,b)=>b[1]-a[1])[0];
-    return `<div class="stat-row">
-      <div>${gameEmoji(game)} <span style="font-size:14px;">${game}</span></div>
-      <div class="stat-val">👑 ${top[0]} <span style="font-size:12px;color:#888;">${top[1]}V</span></div>
-    </div>`;
-  }).join('');
+    return `<div class="stat-row"><div>${gameEmoji(game)} <span style="font-size:14px;font-weight:700;">${game}</span></div>
+      <div style="font-size:14px;font-weight:700;">👑 ${top[0]} <span style="font-size:11px;font-weight:500;">${top[1]}V</span></div></div>`;
+  }).join(''):'<div class="nb-empty">Sin datos.</div>';
 }
 
-window.showProfile = function(name) {
+window.showProfile=function(name){
   document.getElementById('profileDetail').style.display='block';
   const allGames=[...(state.games||[]),...(state.archive||[]).flatMap(t=>t.games||[])];
   const myGames=allGames.filter(g=>g.positions.includes(name));
-  let wins=0,podiums=0,pts=0;
-  const gamePts={};
+  let wins=0,podiums=0,pts=0;const gamePts={};
   myGames.forEach(g=>{
-    const i=g.positions.indexOf(name);
-    const p=getPoints(g.positions.length,state.system);
-    const earned=p[i]||0;
-    pts+=earned;
-    if(i===0)wins++;
-    if(i<3)podiums++;
+    const i=g.positions.indexOf(name);const p=getPoints(g.positions.length,state.system);const earned=p[i]||0;
+    pts+=earned;if(i===0)wins++;if(i<3)podiums++;
     if(!gamePts[g.name])gamePts[g.name]={pts:0,games:0,wins:0};
-    gamePts[g.name].pts+=earned;
-    gamePts[g.name].games++;
-    if(i===0)gamePts[g.name].wins++;
+    gamePts[g.name].pts+=earned;gamePts[g.name].games++;if(i===0)gamePts[g.name].wins++;
   });
   const winRate=myGames.length?Math.round(wins/myGames.length*100):0;
+  const profAv=document.getElementById('profAvatar');
   const photo=(state.playerPhotos||{})[name];
-  const avatarEl=document.getElementById('profAvatar');
-  if(photo){avatarEl.innerHTML=`<img src="${photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">`;avatarEl.style.background='none';}
-  else{avatarEl.textContent=name[0].toUpperCase();avatarEl.style.background='#1a1a1a';}
+  if(photo){profAv.innerHTML=`<img src="${photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;profAv.style.background='none';}
+  else{profAv.textContent=name[0].toUpperCase();profAv.style.background='#A3E635';}
   document.getElementById('profName').textContent=name;
-  document.getElementById('profSub').textContent=`${myGames.length} partidas jugadas`;
-  document.getElementById('profMetrics').innerHTML=`
-    <div class="metric-box"><div class="metric-val">${pts}</div><div class="metric-lbl">Puntos totales</div></div>
+  document.getElementById('profSub').textContent=myGames.length+' partidas jugadas';
+  document.getElementById('profMetrics').innerHTML=
+    `<div class="metric-box"><div class="metric-val">${pts}</div><div class="metric-lbl">Puntos</div></div>
     <div class="metric-box"><div class="metric-val">${wins}</div><div class="metric-lbl">Victorias</div></div>
     <div class="metric-box"><div class="metric-val">${podiums}</div><div class="metric-lbl">Podios</div></div>
-    <div class="metric-box"><div class="metric-val">${winRate}%</div><div class="metric-lbl">Tasa de victoria</div></div>`;
-  const bestEntry=Object.entries(gamePts).sort((a,b)=>b[1].wins-a[1].wins)[0];
-  document.getElementById('profBestGame').innerHTML=bestEntry?
-    `${gameEmoji(bestEntry[0])} ${bestEntry[0]} — ${bestEntry[1].wins} victorias en ${bestEntry[1].games} partidas`:'Sin datos';
+    <div class="metric-box"><div class="metric-val">${winRate}%</div><div class="metric-lbl">Win rate</div></div>`;
+  const best=Object.entries(gamePts).sort((a,b)=>b[1].wins-a[1].wins)[0];
+  document.getElementById('profBestGame').innerHTML=best?`${gameEmoji(best[0])} ${best[0]} — ${best[1].wins}V en ${best[1].games} partidas`:'Sin datos';
   document.getElementById('profHistory').innerHTML=myGames.slice(-10).reverse().map(g=>{
-    const i=g.positions.indexOf(name);
-    const p=getPoints(g.positions.length,state.system);
-    const medal=i<3?medals[i]:`${i+1}°`;
-    return `<div class="stat-row">
-      <div>${gameEmoji(g.name)} <span style="font-size:13px;">${g.name}</span></div>
-      <div>${medal} <span class="tag tag-blue">+${p[i]||0}</span></div>
-    </div>`;
-  }).join('')||'<div class="empty">Sin partidas.</div>';
+    const i=g.positions.indexOf(name);const p=getPoints(g.positions.length,state.system);
+    return `<div class="stat-row"><div>${gameEmoji(g.name)} <span style="font-size:13px;font-weight:700;">${g.name}</span></div>
+      <div>${i<3?medals[i]:(i+1)+'°'} <span class="nb-tag tag-win">+${p[i]||0}</span></div></div>`;
+  }).join('')||'<div class="nb-empty">Sin partidas.</div>';
 };
 
-window.showArchiveTorney = function(i) {
-  const t=state.archive[i];
-  if(!t)return;
+window.showArchiveTorney=function(i){
+  const t=state.archive[i];if(!t)return;
   const sc=computeScores(t.games);
   const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
-  alert(`🏆 ${t.name}\n${d}\n\nResultados:\n${sc.map((p,i)=>`${i+1}. ${p.name} — ${p.pts} pts`).join('\n')}`);
+  alert('🏆 '+t.name+'
+'+d+'
+
+Resultados:
+'+sc.map((p,i)=>`${i+1}. ${p.name} — ${p.pts} pts`).join('
+'));
 };
 
-window.closeTournament = async function() {
+window.closeTournament=async function(){
   if(!(state.games||[]).length){showToast('No hay juegos registrados aún');return;}
-  const sc=computeScores(state.games);
-  const champ=sc[0];
-  if(!confirm(`¿Cerrar el torneo "${state.name}"?\n\n🏆 Campeón: ${champ.name} con ${champ.pts} pts\n\nSe archivará y empezará uno nuevo.`))return;
+  const sc=computeScores(state.games);const champ=sc[0];
+  if(!confirm('¿Cerrar el torneo "'+state.name+'"?
+
+🏆 Campeón: '+champ.name+' con '+champ.pts+' pts
+
+Se archivará y empezará uno nuevo.'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
-  state.games=[];
-  await window.saveState();
+  state.games=[];await window.saveState();
   showChampionScreen(champ.name,champ.pts);
 };
 
-function showChampionScreen(name, pts) {
-  const div=document.createElement('div');
-  div.className='champ-screen';
-  div.innerHTML=`
-    <canvas class="confetti" id="confettiCanvas"></canvas>
-    <div class="champ-trophy">🏆</div>
-    <div style="font-size:14px;opacity:.6;margin-bottom:8px;">CAMPEÓN DEL TORNEO</div>
-    <div class="champ-name">${name}</div>
-    <div class="champ-sub">${pts} puntos</div>
-    <button class="btn btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3);margin-top:16px;" onclick="this.parentElement.remove()">Cerrar</button>`;
+function showChampionScreen(name,pts){
+  const div=document.createElement('div');div.className='champ-screen';
+  div.innerHTML=`<canvas class="confetti-canvas" id="confetti"></canvas><div class="champ-trophy">🏆</div>
+    <div style="font-size:13px;font-weight:700;opacity:.6;margin-bottom:8px;text-transform:uppercase;">Campeón del torneo</div>
+    <div class="champ-name">${name}</div><div class="champ-sub">${pts} puntos</div>
+    <button class="nb-btn nb-btn-primary" style="margin-top:16px;" onclick="this.parentElement.remove()">Cerrar</button>`;
   document.body.appendChild(div);
-  runConfetti(div.querySelector('#confettiCanvas'));
+  const c=div.querySelector('#confetti');c.width=window.innerWidth;c.height=window.innerHeight;
+  const ctx=c.getContext('2d');
+  const pieces=Array.from({length:80},()=>({x:Math.random()*c.width,y:Math.random()*-c.height,r:Math.random()*6+3,col:`hsl(${Math.random()*360},80%,60%)`,v:Math.random()*3+2,a:Math.random()*Math.PI*2,va:Math.random()*.1-.05}));
+  let fr;function draw(){ctx.clearRect(0,0,c.width,c.height);pieces.forEach(p=>{p.y+=p.v;p.x+=Math.sin(p.a)*1.5;p.a+=p.va;if(p.y>c.height){p.y=-10;p.x=Math.random()*c.width;}ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();});fr=requestAnimationFrame(draw);}
+  draw();setTimeout(()=>cancelAnimationFrame(fr),6000);
 }
 
-function runConfetti(canvas) {
-  const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
-  const pieces=Array.from({length:80},()=>({x:Math.random()*canvas.width,y:Math.random()*-canvas.height,r:Math.random()*6+3,c:`hsl(${Math.random()*360},80%,60%)`,v:Math.random()*3+2,a:Math.random()*Math.PI*2,va:Math.random()*.1-.05}));
-  let frame;
-  function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);pieces.forEach(p=>{p.y+=p.v;p.x+=Math.sin(p.a)*1.5;p.a+=p.va;if(p.y>canvas.height){p.y=-10;p.x=Math.random()*canvas.width;}ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();});frame=requestAnimationFrame(draw);}
-  draw();
-  setTimeout(()=>cancelAnimationFrame(frame),6000);
-}
+// Emoji picker
+window.toggleEmojiPicker=function(){
+  const p=document.getElementById('emojiPicker');p.style.display=p.style.display==='none'?'block':'none';
+};
+window.selectEmoji=function(e){
+  selectedEmoji=e;
+  document.getElementById('newGameEmoji').textContent=e;
+  document.getElementById('emojiPicker').style.display='none';
+};
 
-// Pos select helpers
-function buildPlayerOpts(){return '<option value="">— jugador —</option>'+(state.players||[]).map(p=>`<option value="${p}">${p}</option>`).join('');}
+// Pos selects
+function buildPlayerOpts(){return'<option value="">— jugador —</option>'+(state.players||[]).map(p=>'<option value="'+p+'">'+p+'</option>').join('');}
 function refreshPosSelects(){[...document.querySelectorAll('#posSelect select')].forEach(s=>{const v=s.value;s.innerHTML=buildPlayerOpts();if(v)s.value=v;});}
-window.addPosRow=function(){const cont=document.getElementById('posSelect');const i=cont.children.length;const div=document.createElement('div');div.className='pos-item';div.innerHTML=`<span class="pos-label">${i+1}°</span><select>${buildPlayerOpts()}</select>`;cont.appendChild(div);};
+window.addPosRow=function(){const cont=document.getElementById('posSelect');const i=cont.children.length;const d=document.createElement('div');d.className='pos-item';d.innerHTML='<span class="pos-label">'+(i+1)+'°</span><select>'+buildPlayerOpts()+'</select>';cont.appendChild(d);};
 window.removePosRow=function(){const cont=document.getElementById('posSelect');if(cont.children.length>1)cont.removeChild(cont.lastChild);};
 
-window.onGameSelect=function(){
-  const v=document.getElementById('gameSelect').value;
-  document.getElementById('gameCustom').style.display=v==='__custom__'?'block':'none';
-};
+window.onGameSelect=function(){const v=document.getElementById('gameSelect').value;document.getElementById('gameCustom').style.display=v==='__custom__'?'block':'none';};
 
 window.saveGame=async function(){
   let name=document.getElementById('gameSelect').value;
-  if(name==='__custom__') name=document.getElementById('gameCustom').value.trim();
+  if(name==='__custom__')name=document.getElementById('gameCustom').value.trim();
   if(!name||name==='__custom__'){showToast('Selecciona o escribe el juego');return;}
   const sels=document.querySelectorAll('#posSelect select');
   const positions=[...sels].map(s=>s.value).filter(Boolean);
   const unique=[...new Set(positions)];
   if(unique.length<1){showToast('Asigna al menos 1 jugador');return;}
-  if(unique.length!==positions.length){showToast('Jugadores repetidos en posiciones');return;}
+  if(unique.length!==positions.length){showToast('Jugadores repetidos');return;}
   if(!state.games)state.games=[];
   state.games.push({name,positions:unique,date:new Date().toISOString()});
   await window.saveState();
-  document.getElementById('gameSelect').value='';
-  document.getElementById('gameCustom').value='';
-  document.getElementById('gameCustom').style.display='none';
-  document.getElementById('posSelect').innerHTML='';
-  window.addPosRow();window.addPosRow();
-  goTo('board',document.querySelector('.nav button'));
-  showToast('✓ Resultado guardado');
+  document.getElementById('gameSelect').value='';document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';
+  document.getElementById('posSelect').innerHTML='';window.addPosRow();window.addPosRow();
+  goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');
 };
 
 window.deleteGame=async function(i){if(!confirm('¿Borrar este resultado?'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');};
-window.addPlayer=async function(){
-  const inp=document.getElementById('newPlayerName');
-  const n=inp.value.trim();
-  if(!n)return;
-  if((state.players||[]).includes(n)){showToast('Ya existe');return;}
-  if(!state.players)state.players=[];
-  state.players.push(n);
-  if(pendingPhoto){
-    if(!state.playerPhotos)state.playerPhotos={};
-    state.playerPhotos[n]=pendingPhoto;
-    pendingPhoto=null;
-    document.getElementById('photoPreview').style.display='none';
-    document.getElementById('photoPlaceholder').style.display='block';
-    document.getElementById('photoInput').value='';
-  }
-  inp.value='';
-  await window.saveState();
-  showToast(n+' agregado ✓');
-};
-window.removePlayer=async function(i){
-  const name=state.players[i];
-  if(!confirm('¿Quitar a '+name+'?'))return;
-  state.players.splice(i,1);
-  if(state.playerPhotos&&state.playerPhotos[name])delete state.playerPhotos[name];
-  await window.saveState();
-};
+window.addPlayer=async function(){const inp=document.getElementById('newPlayerName');const n=inp.value.trim();if(!n)return;if((state.players||[]).includes(n)){showToast('Ya existe');return;}if(!state.players)state.players=[];state.players.push(n);if(pendingPhoto){if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[n]=pendingPhoto;pendingPhoto=null;document.getElementById('photoPreview').style.display='none';document.getElementById('photoPlaceholder').style.display='block';}inp.value='';await window.saveState();showToast(n+' agregado ✓');};
+window.removePlayer=async function(i){const name=state.players[i];if(!confirm('¿Quitar a '+name+'?'))return;state.players.splice(i,1);if(state.playerPhotos&&state.playerPhotos[name])delete state.playerPhotos[name];await window.saveState();};
 window.saveName=async function(){state.name=document.getElementById('settingName').value.trim()||'Torneo de Mesa';await window.saveState();showToast('Guardado ✓');};
 window.saveSystem=async function(){state.system=document.getElementById('settingSystem').value;await window.saveState();};
-window.addGameToCatalog=async function(){const inp=document.getElementById('newGameName');const n=inp.value.trim();if(!n)return;if((state.catalog||[]).find(g=>g.name===n)){showToast('Ya está en el catálogo');return;}if(!state.catalog)state.catalog=[...DEFAULT_GAMES];state.catalog.push({name:n,emoji:'🎲'});inp.value='';await window.saveState();showToast(n+' agregado al catálogo ✓');};
-window.removeGameFromCatalog=async function(i){if(!confirm('¿Quitar este juego del catálogo?'))return;state.catalog.splice(i,1);await window.saveState();};
-window.confirmReset=async function(){if(!confirm('¿Reiniciar el torneo actual? Los torneos archivados no se borran.'))return;state.games=[];await window.saveState();showToast('Torneo reiniciado');};
+window.addGameToCatalog=async function(){const inp=document.getElementById('newGameName');const n=inp.value.trim();if(!n)return;if((state.catalog||[]).find(g=>g.name===n)){showToast('Ya está en el catálogo');return;}if(!state.catalog)state.catalog=[...DEFAULT_GAMES];state.catalog.push({name:n,emoji:selectedEmoji});inp.value='';selectedEmoji='🎲';document.getElementById('newGameEmoji').textContent='🎲';await window.saveState();showToast(n+' agregado al catálogo ✓');};
+window.removeGameFromCatalog=async function(i){if(!confirm('¿Quitar este juego?'))return;state.catalog.splice(i,1);await window.saveState();};
+window.confirmReset=async function(){if(!confirm('¿Reiniciar el torneo actual?'))return;state.games=[];await window.saveState();showToast('Torneo reiniciado');};
+
+window.setFilter=function(key,val,btn){
+  catalogFilters[key]=val;
+  const bar=btn.closest('.filter-bar');
+  bar.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderCatalog();
+};
+
+window.toggleGameCard=function(id){
+  const card=document.getElementById(id);const arr=document.getElementById('arr_'+id.replace('gexp_',''));
+  if(!card)return;const isOpen=card.classList.contains('open');
+  document.querySelectorAll('.game-expand-card').forEach(c=>c.classList.remove('open'));
+  document.querySelectorAll('[id^="arr_"]').forEach(a=>a.textContent='›');
+  if(!isOpen){card.classList.add('open');if(arr)arr.textContent='⌄';}
+};
 
 window.goTo=function(pg,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-  document.getElementById('pg-'+pg).classList.add('active');
-  btn.classList.add('active');
-  if(pg==='add'){const cont=document.getElementById('posSelect');if(!cont.children.length){window.addPosRow();window.addPosRow();}else refreshPosSelects();}
+  document.getElementById('pg-'+pg).classList.add('active');btn.classList.add('active');
+  if(pg==='add'){const cont=document.getElementById('posSelect');if(!cont.children.length){window.addPosRow();window.addPosRow();}else refreshPosSelects();filterGameSelect();}
   if(pg==='stats')renderStats();
 };
 
-window.setHistTab=function(tab,btn){
-  document.querySelectorAll('#histSeg button').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('histCurrent').style.display=tab==='current'?'block':'none';
-  document.getElementById('histArchive').style.display=tab==='archive'?'block':'none';
-};
+window.setHistTab=function(tab,btn){document.querySelectorAll('#histSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('histCurrent').style.display=tab==='current'?'block':'none';document.getElementById('histArchive').style.display=tab==='archive'?'block':'none';};
+window.setStatTab=function(tab,btn){document.querySelectorAll('#statSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('statsGames').style.display=tab==='games'?'block':'none';document.getElementById('statsPlayers').style.display=tab==='players'?'block':'none';};
 
-window.setStatTab=function(tab,btn){
-  document.querySelectorAll('#statSeg button').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('statsGames').style.display=tab==='games'?'block':'none';
-  document.getElementById('statsPlayers').style.display=tab==='players'?'block':'none';
-};
-
-
-// Photo compression
-let pendingPhoto = null;
-
-function compressImage(file, maxSize=100, quality=0.72) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = maxSize; canvas.height = maxSize;
-        const ctx = canvas.getContext('2d');
-        // Crop to square from center
-        const min = Math.min(img.width, img.height);
-        const sx = (img.width - min) / 2;
-        const sy = (img.height - min) / 2;
-        ctx.drawImage(img, sx, sy, min, min, 0, 0, maxSize, maxSize);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-window.onPhotoSelected = async function(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const compressed = await compressImage(file);
-  pendingPhoto = compressed;
-  document.getElementById('photoPreview').src = compressed;
-  document.getElementById('photoPreview').style.display = 'block';
-  document.getElementById('photoPlaceholder').style.display = 'none';
-};
-
-window.updatePhoto = async function(playerName, event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  showToast('Comprimiendo foto...');
-  const compressed = await compressImage(file);
-  if (!state.playerPhotos) state.playerPhotos = {};
-  state.playerPhotos[playerName] = compressed;
-  await window.saveState();
-  showToast('Foto actualizada ✓');
-};
-
-
-window.migrateV1 = async function() {
-  const statusEl = document.getElementById('migrateStatus');
-  const btn = document.getElementById('migrateBtn');
-  
-  // Check if already migrated
-  if((state.archive||[]).find(t=>t._migratedFromV1)) {
-    statusEl.textContent = '✓ Los datos v1 ya fueron importados anteriormente.';
-    return;
-  }
-
-  statusEl.textContent = 'Leyendo datos anteriores...';
-  btn.disabled = true;
-
-  try {
-    const { get } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-    const snap = await get(torneoV1Ref);
-    const v1 = snap.val();
-
-    if(!v1 || !v1.games || !v1.games.length) {
-      statusEl.textContent = '⚠️ No se encontraron juegos en v1.';
-      btn.disabled = false;
-      return;
-    }
-
-    // Build player list from game positions
-    const playersSet = new Set();
-    v1.games.forEach(g => (g.positions||[]).forEach(p => p && playersSet.add(p)));
-    const players = v1.players || [...playersSet];
-
-    const archivedTorney = {
-      name: v1.name || 'Juegolimpiadas (v1)',
-      date: v1.games[0].date || new Date().toISOString(),
-      games: v1.games,
-      players: players,
-      _migratedFromV1: true
-    };
-
-    if(!state.archive) state.archive = [];
-    state.archive.push(archivedTorney);
-
-    // Also merge players into current if they don't exist
-    const newPlayers = players.filter(p => !(state.players||[]).includes(p));
-    if(newPlayers.length && confirm(`¿Agregar también estos jugadores al torneo actual?
-${newPlayers.join(', ')}`)) {
-      if(!state.players) state.players = [];
-      state.players.push(...newPlayers);
-    }
-
-    await window.saveState();
-    statusEl.textContent = `✓ Importados ${v1.games.length} juegos con ${players.length} jugadores.`;
-    document.getElementById('migrationCard').style.display = 'none';
-    showToast('Datos v1 importados ✓');
-    goTo('history', document.querySelectorAll('.nav button')[2]);
-
-  } catch(e) {
-    statusEl.textContent = '✗ Error al leer datos: ' + e.message;
-    btn.disabled = false;
-  }
-};
-
-// Dice roller
-let diceRollHistory = [];
-
-window.rollDice = function() {
-  const count = parseInt(document.getElementById('diceCount').value);
-  const faces = parseInt(document.getElementById('diceFaces').value);
-  const resultsEl = document.getElementById('diceResults');
-  const totalEl = document.getElementById('diceTotal');
-  const totalLblEl = document.getElementById('diceTotalLbl');
-  const resultCard = document.getElementById('diceResultCard');
-  const histCard = document.getElementById('diceHistCard');
-
-  resultCard.style.display = 'block';
-
-  // Generate results
-  const rolls = Array.from({length: count}, () => Math.floor(Math.random() * faces) + 1);
-  const total = rolls.reduce((a, b) => a + b, 0);
-
-  // Animate dice
-  resultsEl.innerHTML = rolls.map((r, i) => `
-    <div style="position:relative;margin-bottom:20px;">
-      <div class="die rolling" id="die_${i}">${r}</div>
-      <div class="die-label">d${faces}</div>
-    </div>`).join('');
-
-  // Remove animation class after it plays
-  setTimeout(() => {
-    rolls.forEach((_, i) => {
-      const d = document.getElementById('die_' + i);
-      if(d) d.classList.remove('rolling');
-    });
-  }, 550);
-
-  totalEl.textContent = total;
-  const avg = (faces + 1) / 2 * count;
-  totalLblEl.textContent = count > 1
-    ? `total de ${count}d${faces} · promedio esperado: ${avg.toFixed(1)}`
-    : `resultado de 1d${faces}`;
-
-  // History
-  diceRollHistory.unshift({
-    count, faces, rolls, total,
-    time: new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'})
-  });
-  if(diceRollHistory.length > 8) diceRollHistory.pop();
-
-  histCard.style.display = 'block';
-  document.getElementById('diceHistory').innerHTML = diceRollHistory.map(h => `
-    <div class="dice-hist-row">
-      <span>${h.count}d${h.faces}: [${h.rolls.join(', ')}]</span>
-      <span style="font-weight:500;color:var(--c-text,#1a1a1a);">${h.total} <span style="font-weight:400;font-size:11px;">${h.time}</span></span>
-    </div>`).join('');
-};
+// Photo
+let pendingPhotoData=null;
+function compressImage(file,maxSize=100,quality=.72){return new Promise(res=>{const reader=new FileReader();reader.onload=e=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');canvas.width=maxSize;canvas.height=maxSize;const ctx=canvas.getContext('2d');const min=Math.min(img.width,img.height);const sx=(img.width-min)/2;const sy=(img.height-min)/2;ctx.drawImage(img,sx,sy,min,min,0,0,maxSize,maxSize);res(canvas.toDataURL('image/jpeg',quality));};img.src=e.target.result;};reader.readAsDataURL(file);});}
+window.onPhotoSelected=async function(event){const file=event.target.files[0];if(!file)return;const compressed=await compressImage(file);pendingPhoto=compressed;document.getElementById('photoPreview').src=compressed;document.getElementById('photoPreview').style.display='block';document.getElementById('photoPlaceholder').style.display='none';};
+window.updatePhoto=async function(playerName,event){const file=event.target.files[0];if(!file)return;showToast('Comprimiendo...');const compressed=await compressImage(file);if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[playerName]=compressed;await window.saveState();showToast('Foto actualizada ✓');};
 
 // ¿Qué jugamos?
-window.openQueJugamos = function() {
-  const count = (state.players||[]).length;
-  if(!count) { showToast('Agrega jugadores primero'); return; }
-
-  const sub = document.getElementById('queJugamosSub');
-  const list = document.getElementById('queJugamosList');
-
-  // Filter catalog by player count
-  const compatible = (state.catalog||[]).filter(g => {
-    if(!g.players) return true;
-    const parts = g.players.replace(/\s/g,'').split('-');
-    const min = parseInt(parts[0]);
-    const max = parseInt(parts[parts.length-1]);
-    return count >= min && count <= max;
-  });
-
-  // Sort: by complexity (Baja first), then alphabetical
-  const order = {Baja:0, Media:1, Alta:2};
-  compatible.sort((a,b) => {
-    const ca = order[a.complexity]??1;
-    const cb = order[b.complexity]??1;
-    return ca-cb || a.name.localeCompare(b.name,'es');
-  });
-
-  sub.innerHTML = `Con <strong>${count} jugador${count>1?'es':''}</strong> pueden jugar <strong>${compatible.length}</strong> de los ${(state.catalog||[]).length} juegos del catálogo.`;
-
-  // Group by complexity
-  const groups = {Baja:[], Media:[], Alta:[], '':[]};
-  compatible.forEach(g => (groups[g.complexity||'']||groups['']).push(g));
-
-  const complexLabel = {Baja:'🟢 Fácil de aprender', Media:'🟡 Complejidad media', Alta:'🔴 Para expertos'};
-  let html = '';
-  ['Baja','Media','Alta',''].forEach(comp => {
-    const games = groups[comp];
-    if(!games.length) return;
-    html += `<div style="font-size:11px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.05em;padding:10px 0 6px;">${complexLabel[comp]||'Sin clasificar'}</div>`;
-    games.forEach((g,i) => {
-      const idx = 'qj_'+comp+'_'+i;
-      html += `<div class="modal-game-item" style="cursor:pointer;flex-direction:column;align-items:stretch;" onclick="toggleQJCard('${idx}')">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:22px;">${g.emoji||'🎲'}</span>
-          <div style="flex:1;">
-            <div style="font-size:14px;font-weight:500;">${g.name}</div>
-            <div style="font-size:12px;color:#888;">${g.players?'👥 '+g.players:''}${g.players&&g.duration?' · ':''}${g.duration?'⏱ '+g.duration:''}</div>
-          </div>
-          <span style="font-size:14px;color:#aaa;" id="arr_${idx}">›</span>
-        </div>
-        <div class="modal-game-expand" id="${idx}">
-          ${g.type?`<span class="gtag ${g.type==='Cooperativo'?'gtag-type-c':g.type==='Semi-cooperativo'?'gtag-type-s':'gtag-type-v'}" style="margin-right:4px;">${g.type==='Cooperativo'?'🤝':'⚔️'} ${g.type}</span>`:''}
-          ${g.category?`<span class="gtag gtag-cat">🏷 ${g.category}</span>`:''}
-          ${g.desc?`<div class="game-desc" style="margin-top:6px;">${g.desc}</div>`:''}
-        </div>
-      </div>`;
+window.openQueJugamos=function(){
+  const count=(state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
+  const sub=document.getElementById('queJugamosSub');const list=document.getElementById('queJugamosList');
+  const compatible=(state.catalog||[]).filter(g=>{if(!g.players)return true;const parts=g.players.replace(/\s/g,'').split('-');const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);return count>=min&&count<=max;});
+  const order={Baja:0,Media:1,Alta:2};compatible.sort((a,b)=>(order[a.complexity]??1)-(order[b.complexity]??1)||a.name.localeCompare(b.name,'es'));
+  sub.innerHTML='Con <strong>'+count+' jugador'+(count>1?'es':'')+'</strong> pueden jugar <strong>'+compatible.length+'</strong> de los '+(state.catalog||[]).length+' juegos.';
+  const groups={Baja:[],Media:[],Alta:[],'':[]};compatible.forEach(g=>(groups[g.complexity||'']||groups['']).push(g));
+  const complexLabel={Baja:'🟢 Fácil de aprender',Media:'🟡 Complejidad media',Alta:'🔴 Para expertos'};
+  let html='';
+  ['Baja','Media','Alta',''].forEach(comp=>{
+    const games=groups[comp];if(!games.length)return;
+    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:10px 0 6px;color:#555;">'+(complexLabel[comp]||'Sin clasificar')+'</div>';
+    games.forEach((g,i)=>{
+      const idx='qj_'+comp+'_'+i;
+      html+='<div class="game-cat-item" style="flex-direction:column;align-items:stretch;" onclick="toggleQJCard(''+idx+'')">'+
+        '<div style="display:flex;align-items:center;gap:10px;">'+
+        '<span style="font-size:22px;">'+(g.emoji||'🎲')+'</span>'+
+        '<div style="flex:1;"><div class="game-name-text">'+g.name+'</div>'+
+        '<div class="game-meta-text">'+(g.players?'👥 '+g.players:'')+(g.players&&g.duration?' · ':'')+(g.duration?'⏱ '+g.duration:'')+'</div></div>'+
+        '<span style="font-size:16px;font-weight:700;color:#555;" id="arr_'+idx+'">›</span></div>'+
+        '<div class="game-expand-card" id="'+idx+'">'+
+        (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;">'+g.desc+'</div>':'')+
+        '</div></div>';
     });
   });
-
-  list.innerHTML = html || '<div class="empty">Ningún juego compatible encontrado.</div>';
-  document.getElementById('queJugamosModal').style.display = 'flex';
+  list.innerHTML=html||'<div class="nb-empty">Ningún juego compatible.</div>';
+  document.getElementById('queJugamosModal').style.display='flex';
 };
 
-window.toggleQJCard = function(id) {
-  const card = document.getElementById(id);
-  const arr = document.getElementById('arr_'+id);
-  if(!card) return;
-  const isOpen = card.classList.contains('open');
-  document.querySelectorAll('.modal-game-expand').forEach(c=>c.classList.remove('open'));
-  document.querySelectorAll('[id^="arr_qj"]').forEach(a=>a.textContent='›');
-  if(!isOpen) { card.classList.add('open'); if(arr) arr.textContent='⌄'; }
+window.toggleQJCard=function(id){const card=document.getElementById(id);const arr=document.getElementById('arr_'+id);if(!card)return;const isOpen=card.classList.contains('open');document.querySelectorAll('.game-expand-card').forEach(c=>c.classList.remove('open'));document.querySelectorAll('[id^="arr_qj"]').forEach(a=>a.textContent='›');if(!isOpen){card.classList.add('open');if(arr)arr.textContent='⌄';}};
+window.closeQueJugamos=function(e){if(e.target===document.getElementById('queJugamosModal'))document.getElementById('queJugamosModal').style.display='none';};
+window.closeQueJugamosBtn=function(){document.getElementById('queJugamosModal').style.display='none';};
+window.pickRandomGame=function(){
+  const count=(state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
+  const playedNames=new Set((state.games||[]).map(g=>g.name));
+  const compatible=(state.catalog||[]).filter(g=>{if(!g.players)return true;const parts=g.players.replace(/\s/g,'').split('-');const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);return count>=min&&count<=max;});
+  const unplayed=compatible.filter(g=>!playedNames.has(g.name));
+  const pool=unplayed.length>0?unplayed:compatible;
+  const alreadyPlayed=unplayed.length===0&&compatible.length>0;
+  if(!pool.length){document.getElementById('pickResult').innerHTML='<div class="nb-empty">No hay juegos compatibles.</div>';document.getElementById('pickResult').style.display='block';return;}
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  const el=document.getElementById('pickResult');el.style.display='block';
+  el.innerHTML=`<div class="pick-result">
+    ${alreadyPlayed?'<div style="font-size:10px;font-weight:700;opacity:.5;margin-bottom:6px;text-transform:uppercase;">Ya jugaron todos — nueva selección</div>':'<div style="font-size:10px;font-weight:700;opacity:.5;margin-bottom:6px;text-transform:uppercase;">Selección aleatoria</div>'}
+    <div class="pick-emoji">${pick.emoji||'🎲'}</div>
+    <div class="pick-name">${pick.name}</div>
+    <div class="pick-meta">${pick.players?'👥 '+pick.players:''}${pick.players&&pick.duration?' · ':''}${pick.duration?'⏱ '+pick.duration:''}</div>
+    ${pick.desc?'<div class="pick-desc">'+pick.desc+'</div>':''}
+    <button class="pick-reroll" onclick="pickRandomGame()">🔀 Otra opción</button>
+  </div>${!alreadyPlayed&&unplayed.length>1?'<div style="font-size:12px;font-weight:700;color:#555;text-align:center;margin-bottom:8px;">Quedan '+(unplayed.length-1)+' juegos sin jugar</div>':''}`;
 };
 
-window.pickRandomGame = function() {
-  const count = (state.players||[]).length;
-  if(!count) { showToast('Agrega jugadores primero'); return; }
-
-  // Games played in current tournament
-  const playedNames = new Set((state.games||[]).map(g => g.name));
-
-  // Compatible games with current player count
-  const compatible = (state.catalog||[]).filter(g => {
-    if(!g.players) return true;
-    const parts = g.players.replace(/\s/g,'').split('-');
-    const min = parseInt(parts[0]);
-    const max = parseInt(parts[parts.length-1]);
-    return count >= min && count <= max;
-  });
-
-  // Prefer unplayed games
-  const unplayed = compatible.filter(g => !playedNames.has(g.name));
-  const pool = unplayed.length > 0 ? unplayed : compatible;
-  const alreadyPlayed = unplayed.length === 0 && compatible.length > 0;
-
-  if(!pool.length) {
-    document.getElementById('pickResult').innerHTML = '<div style="text-align:center;padding:16px;color:#aaa;font-size:14px;">No hay juegos compatibles en el catálogo.</div>';
-    document.getElementById('pickResult').style.display = 'block';
-    return;
-  }
-
-  // Pick random
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  const typeClass = pick.type==='Cooperativo'?'gtag-type-c':pick.type==='Semi-cooperativo'?'gtag-type-s':'gtag-type-v';
-
-  const resultEl = document.getElementById('pickResult');
-  resultEl.style.display = 'block';
-  resultEl.innerHTML = `
-    <div class="pick-result">
-      ${alreadyPlayed ? '<div style="font-size:11px;opacity:.5;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Ya jugaron todos — eligiendo de nuevo entre los disponibles</div>' : '<div style="font-size:11px;opacity:.5;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Juego seleccionado al azar</div>'}
-      <div class="pick-emoji">${pick.emoji||'🎲'}</div>
-      <div class="pick-name">${pick.name}</div>
-      <div class="pick-meta">
-        ${pick.players?'👥 '+pick.players:''}${pick.players&&pick.duration?' · ':''}${pick.duration?'⏱ '+pick.duration:''}
-        ${pick.type?` · <span class="gtag ${typeClass}" style="font-size:11px;">${pick.type}</span>`:''}
-      </div>
-      ${pick.desc?`<div class="pick-desc">${pick.desc}</div>`:''}
-      <button class="pick-reroll" onclick="pickRandomGame()">🔀 Otra opción</button>
-    </div>
-    ${!alreadyPlayed && unplayed.length > 1 ? `<div style="font-size:12px;color:#aaa;text-align:center;margin-bottom:8px;">Quedan ${unplayed.length-1} juegos sin jugar en este torneo</div>` : ''}
-  `;
-
-  // Scroll to top of modal body
-  resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
-};
-
-window.closeQueJugamos = function(e) {
-  if(e.target === document.getElementById('queJugamosModal'))
-    document.getElementById('queJugamosModal').style.display='none';
-};
-
-window.pickRandomGame = function() {
-  const count = (state.players||[]).length;
-  if(!count) { showToast('Agrega jugadores primero'); return; }
-
-  // Games played in current tournament
-  const playedNames = new Set((state.games||[]).map(g => g.name));
-
-  // Compatible games with current player count
-  const compatible = (state.catalog||[]).filter(g => {
-    if(!g.players) return true;
-    const parts = g.players.replace(/\s/g,'').split('-');
-    const min = parseInt(parts[0]);
-    const max = parseInt(parts[parts.length-1]);
-    return count >= min && count <= max;
-  });
-
-  // Prefer unplayed games
-  const unplayed = compatible.filter(g => !playedNames.has(g.name));
-  const pool = unplayed.length > 0 ? unplayed : compatible;
-  const alreadyPlayed = unplayed.length === 0 && compatible.length > 0;
-
-  if(!pool.length) {
-    document.getElementById('pickResult').innerHTML = '<div style="text-align:center;padding:16px;color:#aaa;font-size:14px;">No hay juegos compatibles en el catálogo.</div>';
-    document.getElementById('pickResult').style.display = 'block';
-    return;
-  }
-
-  // Pick random
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  const typeClass = pick.type==='Cooperativo'?'gtag-type-c':pick.type==='Semi-cooperativo'?'gtag-type-s':'gtag-type-v';
-
-  const resultEl = document.getElementById('pickResult');
-  resultEl.style.display = 'block';
-  resultEl.innerHTML = `
-    <div class="pick-result">
-      ${alreadyPlayed ? '<div style="font-size:11px;opacity:.5;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Ya jugaron todos — eligiendo de nuevo entre los disponibles</div>' : '<div style="font-size:11px;opacity:.5;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Juego seleccionado al azar</div>'}
-      <div class="pick-emoji">${pick.emoji||'🎲'}</div>
-      <div class="pick-name">${pick.name}</div>
-      <div class="pick-meta">
-        ${pick.players?'👥 '+pick.players:''}${pick.players&&pick.duration?' · ':''}${pick.duration?'⏱ '+pick.duration:''}
-        ${pick.type?` · <span class="gtag ${typeClass}" style="font-size:11px;">${pick.type}</span>`:''}
-      </div>
-      ${pick.desc?`<div class="pick-desc">${pick.desc}</div>`:''}
-      <button class="pick-reroll" onclick="pickRandomGame()">🔀 Otra opción</button>
-    </div>
-    ${!alreadyPlayed && unplayed.length > 1 ? `<div style="font-size:12px;color:#aaa;text-align:center;margin-bottom:8px;">Quedan ${unplayed.length-1} juegos sin jugar en este torneo</div>` : ''}
-  `;
-
-  // Scroll to top of modal body
-  resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
-};
-
-window.closeQueJugamosBtn = function() {
-  document.getElementById('queJugamosModal').style.display='none';
-};
-
-// Catalog filters
-let catalogFilters = { type: '', complexity: '', players: '' };
-
-window.setFilter = function(key, val, btn) {
-  catalogFilters[key] = val;
-  const bar = btn.closest('.filter-bar');
-  bar.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderCatalog();
-};
-
-window.renderCatalog = function() {
-  const search = (document.getElementById('catalogSearch')||{}).value || '';
-  const {type, complexity, players} = catalogFilters;
-
-  const filtered = (state.catalog||[]).filter((g) => {
-    if(search && !g.name.toLowerCase().includes(search.toLowerCase())) return false;
-    if(type && g.type !== type) return false;
-    if(complexity && g.complexity !== complexity) return false;
-    if(players && g.players) {
-      const parts = g.players.replace(/\s/g,'').split('-');
-      const min = parseInt(parts[0]);
-      const max = parseInt(parts[parts.length-1]);
-      const want = parseInt(players);
-      if(want === 2){ if(min > 2) return false; }
-      else { if(max < want) return false; }
-    }
-    return true;
-  });
-
-  const countEl = document.getElementById('catalogCount');
-  if(countEl) countEl.textContent = filtered.length + ' de ' + (state.catalog||[]).length + ' juegos';
-
-  const cl = document.getElementById('catalogList');
-  if(!cl) return;
-
-  const typeClass = (t) => t==='Cooperativo'?'gtag-type-c':t==='Semi-cooperativo'?'gtag-type-s':'gtag-type-v';
-  const compClass = (c) => c==='Alta'?'gtag-high':c==='Media'?'gtag-med':'gtag-low';
-
-  cl.innerHTML = filtered.map((g) => {
-    const i = (state.catalog||[]).indexOf(g);
-    const expandId = 'gexp_' + i;
-    const hasInfo = !!(g.type||g.players||g.duration||g.complexity||g.category||g.desc);
-    const isCustom = i >= DEFAULT_GAMES.length;
-
-    let html = '<div>';
-    html += '<div class="game-cat-item" style="cursor:' + (hasInfo?'pointer':'default') + ';"';
-    if(hasInfo) html += ' onclick="toggleGameCard(' + "'" + expandId + "'" + ')"';
-    html += '>';
-    html += '<span class="game-emoji">' + (g.emoji||'🎲') + '</span>';
-    html += '<div class="game-info">';
-    html += '<div class="game-name">' + g.name + '</div>';
-    if(g.players||g.duration){
-      html += '<div class="game-meta">';
-      if(g.players) html += '👥 ' + g.players;
-      if(g.players&&g.duration) html += ' · ';
-      if(g.duration) html += '⏱ ' + g.duration;
-      html += '</div>';
-    }
-    html += '</div>';
-    html += '<div style="display:flex;align-items:center;gap:6px;">';
-    if(isCustom) html += '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removeGameFromCatalog(' + i + ')" style="padding:3px 8px;">×</button>';
-    if(hasInfo) html += '<span style="font-size:14px;color:#aaa;" id="arr_' + i + '">›</span>';
-    html += '</div></div>';
-
-    html += '<div class="game-expand-card" id="' + expandId + '">';
-    html += '<div class="game-tags">';
-    if(g.type) html += '<span class="gtag ' + typeClass(g.type) + '">' + (g.type==='Cooperativo'?'🤝':'⚔️') + ' ' + g.type + '</span>';
-    if(g.complexity) html += '<span class="gtag ' + compClass(g.complexity) + '">🎯 ' + g.complexity + '</span>';
-    if(g.category) html += '<span class="gtag gtag-cat">🏷 ' + g.category + '</span>';
-    html += '</div>';
-    if(g.players) html += '<div class="game-expand-row">👥 <b>Jugadores:</b> ' + g.players + '</div>';
-    if(g.duration) html += '<div class="game-expand-row">⏱ <b>Duración:</b> ' + g.duration + '</div>';
-    if(g.desc) html += '<div class="game-desc">' + g.desc + '</div>';
-    html += '</div></div>';
-    return html;
-  }).join('');
-};
-
-window.toggleGameCard = function(id) {
-  const card = document.getElementById(id);
-  if(!card) return;
-  const isOpen = card.classList.contains('open');
-  // Close all
-  document.querySelectorAll('.game-expand-card').forEach(c => {
-    c.classList.remove('open');
-  });
-  document.querySelectorAll('[id^="arr_"]').forEach(a => a.textContent = '›');
-  if(!isOpen) {
-    card.classList.add('open');
-    const idx = id.replace('gexp_','');
-    const arr = document.getElementById('arr_'+idx);
-    if(arr) arr.textContent = '⌄';
-  }
+// Migration
+window.migrateV1=async function(){
+  const statusEl=document.getElementById('migrateStatus');const btn=document.getElementById('migrateBtn');
+  if((state.archive||[]).find(t=>t._migratedFromV1)){statusEl.textContent='✓ Ya importado anteriormente.';return;}
+  statusEl.textContent='Leyendo datos anteriores...';btn.disabled=true;
+  try{
+    const snap=await get(torneoV1Ref);const v1=snap.val();
+    if(!v1||!v1.games||!v1.games.length){statusEl.textContent='⚠️ No se encontraron juegos.';btn.disabled=false;return;}
+    const playersSet=new Set();v1.games.forEach(g=>(g.positions||[]).forEach(p=>p&&playersSet.add(p)));
+    const players=v1.players||[...playersSet];
+    const archived={name:v1.name||'Juegolimpiadas (v1)',date:v1.games[0].date||new Date().toISOString(),games:v1.games,players,_migratedFromV1:true};
+    if(!state.archive)state.archive=[];state.archive.push(archived);
+    const newPlayers=players.filter(p=>!(state.players||[]).includes(p));
+    if(newPlayers.length&&confirm('¿Agregar también estos jugadores?
+'+newPlayers.join(', '))){if(!state.players)state.players=[];state.players.push(...newPlayers);}
+    await window.saveState();statusEl.textContent='✓ Importados '+v1.games.length+' juegos.';document.getElementById('migrationCard').style.display='none';showToast('Datos v1 importados ✓');
+  }catch(e){statusEl.textContent='✗ Error: '+e.message;btn.disabled=false;}
 };
 
 // ==================== TIMER ====================
@@ -1693,7 +1191,7 @@ var turnRunning = false;
 var turnLimit = 0;
 var turnLimitReached = false;
 
-window.renderTurnPicker = function() {
+window._renderTurnPicker = function() {
   var picker = document.getElementById('turnPlayerPicker');
   if(!picker) return;
   var selected = {};
@@ -1905,18 +1403,32 @@ window.turnRestart = function() {
   renderTurnPicker();
 };
 
+window.renderTurnPicker = function() {
+  var picker = document.getElementById('turnPlayerPicker');
+  if(!picker) return;
+  var selected = {};
+  turnPlayers.forEach(function(p){ selected[p]=true; });
+  picker.innerHTML = (state.players||[]).map(function(p) {
+    var photo = (state.playerPhotos||{})[p];
+    var avHtml = photo
+      ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
+      : '<div style="width:28px;height:28px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">'+p[0]+'</div>';
+    var sel = !!selected[p];
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+p+'">'
+      + avHtml
+      + '<span style="flex:1;font-size:14px;font-weight:700;">'+p+'</span>'
+      + '<span style="font-size:18px;font-weight:700;color:'+(sel?'#000':'#ccc')+';">'+(sel?'✓':'○')+'</span>'
+      + '</div>';
+  }).join('') || '<div class="nb-empty">Sin jugadores en el torneo.</div>';
+  renderTurnOrder();
+};
+
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
 // Init
+Object.keys(window).forEach(function(k){if(window['_m_'+k]===undefined&&typeof window[k]==='function'){window['_m_'+k]=window[k];}});
+if(window._resolveQ)window._resolveQ();
 window.addPosRow();window.addPosRow();
-
-// Resolve any queued onclick calls that fired before module loaded
-Object.keys(window).forEach(function(k){
-  if(k.indexOf('_mod_') === -1 && typeof window[k] === 'function'){
-    window['_mod_'+k] = window[k];
-  }
-});
-if(window._resolveQueue) window._resolveQueue();
 </script>
 </body>
 </html>
