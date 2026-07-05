@@ -672,7 +672,7 @@ let diceRollHistory=[];
 onValue(torneoRef,(snap)=>{
   const d=snap.val();
   if(d){state=d;if(!state.players)state.players=[];if(!state.games)state.games=[];if(!state.catalog||!state.catalog.length)state.catalog=DEFAULT_GAMES;if(!state.archive)state.archive=[];if(!state.playerPhotos)state.playerPhotos={};}
-  render();setSyncStatus('ok');
+  window.render();setSyncStatus('ok');
 },()=>setSyncStatus('off'));
 
 window.saveState=async function(){setSyncStatus('syncing');try{await set(torneoRef,state);setSyncStatus('ok');}catch(e){setSyncStatus('off');showToast('Error al guardar');}};
@@ -715,8 +715,10 @@ window.render=function(){
   if(!(state.players||[]).length){board.innerHTML='<div class="nb-empty">Agrega jugadores en Ajustes.</div>';}
   else{
     const sc=computeScores(state.games);
+    const streaks=getStreaks();
     board.innerHTML=sc.map((p,i)=>{
       const isFirst=i===0;
+      const streak=streaks[p.name];
       return `<div class="leader-row${isFirst?' first-place':''}">
         <span class="rank">${i<3?medals[i]:i+1}</span>
         ${av(p.name,36)}
@@ -1004,7 +1006,7 @@ window.saveGame=async function(){
   await window.saveState();
   document.getElementById('gameSelect').value='';document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';
   document.getElementById('posSelect').innerHTML='';window.addPosRow();window.addPosRow();
-  goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');playSound('success');
+  window.goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');playSound('success');
 };
 
 window.deleteGame=async function(i){if(!await nbConfirm('Se eliminará este resultado y sus puntos.','¿Borrar resultado?','Borrar'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');playSound('delete');};
