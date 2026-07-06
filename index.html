@@ -634,7 +634,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','filterGameResults','selectGame','selectCustomGame','clearGameSelection','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','tsrFilterGames','obUpdateBtn','obRenderExisting','tsrRenderStep2','tsrRenderStep1','filterGameResults','selectGame','selectCustomGame','clearGameSelection','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
@@ -1368,7 +1368,7 @@ window.setTimerMode = function(mode, btn) {
 // ---- STOPWATCH ----
 let swInterval = null, swSeconds = 0, swRunning = false;
 
-function fmtTime(s) {
+var fmtTime = window.fmtTime = function(s) {
   const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
   if(h>0) return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
   return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
@@ -1486,7 +1486,7 @@ window._renderTurnPicker = function() {
   var turnPlayerList = state._tournamentStarted ? (state.activePlayers || []) : [];
   if(!turnPlayerList.length) {
     picker.innerHTML = '<div class="nb-empty">' + (state._tournamentStarted ? 'Sin jugadores activos.' : 'Inicia un torneo para seleccionar jugadores.') + '</div>';
-    renderTurnOrder();
+    if(window._renderTurnOrder) window._renderTurnOrder();
     var countEl = document.getElementById('turnOrderCount');
     if(countEl) countEl.textContent = '';
     return;
@@ -1722,7 +1722,7 @@ window.renderTurnPicker = function() {
   var turnPlayerList = state._tournamentStarted ? (state.activePlayers || []) : [];
   if(!turnPlayerList.length) {
     picker.innerHTML = '<div class="nb-empty">' + (state._tournamentStarted ? 'Sin jugadores activos.' : 'Inicia un torneo para seleccionar jugadores.') + '</div>';
-    renderTurnOrder();
+    if(window._renderTurnOrder) window._renderTurnOrder();
     var countEl = document.getElementById('turnOrderCount');
     if(countEl) countEl.textContent = '';
     return;
@@ -1849,8 +1849,8 @@ window.obNext = function(step) {
     document.getElementById('obStep1').style.display = 'none';
     document.getElementById('obStep2').style.display = 'block';
     document.getElementById('obTitle').textContent = 'Paso 2 de 3';
-    obRenderExisting();
-    obUpdateBtn();
+    window.obRenderExisting();
+    window.obUpdateBtn();
   } else if(step === 3) {
     document.getElementById('obStep2').style.display = 'none';
     document.getElementById('obStep3').style.display = 'block';
@@ -1894,12 +1894,12 @@ window.obAddPlayer = function() {
   obPlayers.push(name);
   inp.value = '';
   inp.focus();
-  obRenderExisting();
-  obUpdateBtn();
+  window.obRenderExisting();
+  window.obUpdateBtn();
   playSound('tap');
 };
 
-function obRenderExisting() {
+window.obRenderExisting = function() {
   var list = document.getElementById('obExistingPlayers');
   if(!list) return;
   var allPlayers = state.players || [];
@@ -1926,7 +1926,7 @@ function obRenderExisting() {
   }
 }
 
-function obUpdateBtn() {
+window.obUpdateBtn = function() {
   var btn = document.getElementById('obStep2Btn');
   if(obPlayers.length >= 2) {
     btn.disabled = false;
@@ -1946,8 +1946,8 @@ window.obTogglePlayer = function(name) {
     obPlayers.push(name);
   }
   playSound('tap');
-  obRenderExisting();
-  obUpdateBtn();
+  window.obRenderExisting();
+  window.obUpdateBtn();
 };
 
 window.obRemovePlayer = function(name) {
@@ -2011,7 +2011,7 @@ window.turnSaveResult = function() {
     modal.style.display = 'flex';
   }
   
-  tsrRenderStep1();
+  window.tsrRenderStep1();
 };
 
 window.closeTurnGameModal = function() {
@@ -2019,24 +2019,35 @@ window.closeTurnGameModal = function() {
   if(m) m.style.display = 'none';
 };
 
-function tsrRenderStep1() {
-  // Step 1: select game
+window.tsrRenderStep1 = function() {
   var body = document.getElementById('turnSaveBody');
   body.innerHTML = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;color:#555;">Paso 1: Selecciona el juego</div>' +
-    (state.catalog||[]).map(function(g) {
-      return '<button class="nb-btn" style="margin-bottom:6px;text-align:left;padding:10px 14px;" ' +
-        'onclick="tsrSelectGame(this.dataset.gn)" data-gn="' + g.name + '">' +
-        (g.emoji||'🎲') + ' ' + g.name + '</button>';
-    }).join('');
+    '<div class="search-wrap"><input type="text" class="nb-search" id="tsrGameSearch" placeholder="Buscar juego..." oninput="tsrFilterGames()" autocomplete="off"></div>' +
+    '<div id="tsrGameList"></div>';
+  window.tsrFilterGames();
 }
+
+window.tsrFilterGames = function() {
+  var q = (document.getElementById('tsrGameSearch')||{}).value || '';
+  var listEl = document.getElementById('tsrGameList');
+  if(!listEl) return;
+  var filtered = (state.catalog||[]).filter(function(g) {
+    return !q || g.name.toLowerCase().indexOf(q.toLowerCase()) >= 0;
+  });
+  listEl.innerHTML = filtered.map(function(g) {
+    return '<button class="nb-btn" style="margin-bottom:6px;text-align:left;padding:10px 14px;" ' +
+      'onclick="tsrSelectGame(this.dataset.gn)" data-gn="' + g.name + '">' +
+      (g.emoji||'🎲') + ' ' + g.name + '</button>';
+  }).join('') || '<div class="nb-empty">Sin resultados</div>';
+};
 
 window.tsrSelectGame = function(gameName) {
   window._tsr_game = gameName;
   window._tsr_positions = [];
-  tsrRenderStep2();
+  window.tsrRenderStep2();
 };
 
-function tsrRenderStep2() {
+window.tsrRenderStep2 = function() {
   var body = document.getElementById('turnSaveBody');
   var positions = window._tsr_positions || [];
   var players = window._tsr_players || [];
@@ -2054,7 +2065,7 @@ function tsrRenderStep2() {
       html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#A3E635;border:2px solid #000;border-radius:8px;margin-bottom:4px;">' +
         '<span style="font-weight:700;">' + medal + '</span>' +
         '<span style="flex:1;font-weight:700;">' + p + '</span>' +
-        '<span style="font-size:12px;color:#555;">' + fmtTime(times[p]||0) + '</span>' +
+        '<span style="font-size:12px;color:#555;">' + window.fmtTime(times[p]||0) + '</span>' +
         '</div>';
     });
     html += '</div>';
@@ -2068,7 +2079,7 @@ function tsrRenderStep2() {
         'onclick="tsrAssignPlayer(this.dataset.pn)" data-pn="' + p + '">' +
         '<span style="font-size:18px;color:#ccc;font-weight:700;">+</span>' +
         '<span style="flex:1;font-weight:700;">' + p + '</span>' +
-        '<span style="font-size:12px;color:#555;">' + fmtTime(times[p]||0) + '</span>' +
+        '<span style="font-size:12px;color:#555;">' + window.fmtTime(times[p]||0) + '</span>' +
         '</div>';
     });
   }
@@ -2090,12 +2101,12 @@ function tsrRenderStep2() {
 window.tsrAssignPlayer = function(name) {
   window._tsr_positions.push(name);
   playSound('tap');
-  tsrRenderStep2();
+  window.tsrRenderStep2();
 };
 
 window.tsrUndoLast = function() {
   window._tsr_positions.pop();
-  tsrRenderStep2();
+  window.window.tsrRenderStep2();
 };
 
 window.tsrSave = function() {
@@ -2274,6 +2285,32 @@ window['_m_toggleEmojiPicker'] = window.toggleEmojiPicker;
 window['_m_selectEmoji'] = window.selectEmoji;
 window['_m_render'] = window.render;
 window['_m_saveState'] = window.saveState;
+window['_m_clearTurnOrder'] = window.clearTurnOrder;
+window['_m_shareScoreboard'] = window.shareScoreboard;
+window['_m_toggleDiceHist'] = window.toggleDiceHist;
+window['_m_startOnboarding'] = window.startOnboarding;
+window['_m_obNext'] = window.obNext;
+window['_m_obAddPlayer'] = window.obAddPlayer;
+window['_m_obRemovePlayer'] = window.obRemovePlayer;
+window['_m_obTogglePlayer'] = window.obTogglePlayer;
+window['_m_obPhotoSelected'] = window.obPhotoSelected;
+window['_m_obFinish'] = window.obFinish;
+window['_m_turnSaveResult'] = window.turnSaveResult;
+window['_m_tsrSelectGame'] = window.tsrSelectGame;
+window['_m_tsrAssignPlayer'] = window.tsrAssignPlayer;
+window['_m_tsrUndoLast'] = window.tsrUndoLast;
+window['_m_tsrSave'] = window.tsrSave;
+window['_m_closeTurnGameModal'] = window.closeTurnGameModal;
+window['_m_tsrFilterGames'] = window.tsrFilterGames;
+window['_m_obUpdateBtn'] = window.obUpdateBtn;
+window['_m_obRenderExisting'] = window.obRenderExisting;
+window['_m_tsrRenderStep2'] = window.tsrRenderStep2;
+window['_m_tsrRenderStep1'] = window.tsrRenderStep1;
+window['_m_filterGameResults'] = window.filterGameResults;
+window['_m_selectGame'] = window.selectGame;
+window['_m_selectCustomGame'] = window.selectCustomGame;
+window['_m_clearGameSelection'] = window.clearGameSelection;
+window['_m_cancelTournament'] = window.cancelTournament;
 if(window._resolveQ)window._resolveQ();
 window.addPosRow();window.addPosRow();
 
