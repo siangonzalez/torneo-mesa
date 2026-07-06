@@ -1018,7 +1018,7 @@ window.closeTournament=async function(){
   if(!await nbConfirm('🏆 Campeón: '+champ.name+' con '+champ.pts+' pts\n\nEl torneo se archivará y empezará uno nuevo.','¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
-  state.games=[];state._tournamentStarted=false;state.activePlayers=null;window._turnPlayers.length=0;window._turnOrder.length=0;await window.saveState();
+  state.games=[];state._tournamentStarted=false;state.activePlayers=null;if(window._turnPlayers)window._turnPlayers.length=0;if(window._turnOrder)window._turnOrder.length=0;await window.saveState();
   playSound('fanfare');showChampionScreen(champ.name,champ.pts);
 };
 
@@ -2119,7 +2119,11 @@ window.cancelTournament = async function() {
   state.games = [];
   state._tournamentStarted = false;
   state.activePlayers = null;
-  window._turnPlayers.length=0;window._turnOrder.length=0;
+  if(window._turnPlayers)window._turnPlayers.length=0;
+  if(window._turnOrder)window._turnOrder.length=0;
+  var ts=document.getElementById('turnSetup');if(ts)ts.style.display='block';
+  var ta=document.getElementById('turnActive');if(ta)ta.style.display='none';
+  var tr=document.getElementById('turnResults');if(tr)tr.style.display='none';
   await window.saveState();
   playSound('delete');
   showToast('Torneo cancelado');
