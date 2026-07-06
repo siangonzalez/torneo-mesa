@@ -244,10 +244,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
     <div class="nb-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <span class="nb-card-title" style="margin:0;">Marcador en vivo</span>
-        <div style="display:flex;gap:6px;">
-          <button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="shareScoreboard()" style="font-size:11px;padding:4px 8px;">📤</button>
-          <button class="nb-btn nb-btn-sm nb-btn-pink" onclick="openQueJugamos()" style="color:#000;">🎲 ¿Qué jugamos?</button>
-        </div>
+        <div style="display:flex;gap:6px;" id="boardActions"></div>
       </div>
       <div id="leaderList"><div class="nb-empty">Agrega jugadores en Ajustes.</div></div>
     </div>
@@ -258,11 +255,15 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
     <div class="nb-card">
       <span class="nb-card-title">Juego</span>
       <div class="search-wrap">
-        <input type="text" class="nb-search" id="gameSearch" placeholder="Buscar juego..." oninput="filterGameSelect()">
+        <input type="text" class="nb-search" id="gameSearch" placeholder="Buscar juego..." oninput="filterGameResults()" onfocus="filterGameResults()" autocomplete="off">
       </div>
-      <select class="nb-select" id="gameSelect" onchange="onGameSelect()">
-        <option value="">— Selecciona un juego —</option>
-      </select>
+      <div id="gameResultsList" style="display:none;max-height:240px;overflow-y:auto;border:2px solid #000;border-radius:8px;margin-bottom:8px;box-shadow:2px 2px 0 #000;"></div>
+      <div id="gameSelected" style="display:none;padding:10px 12px;background:#A3E635;border:2px solid #000;border-radius:8px;margin-bottom:8px;box-shadow:2px 2px 0 #000;display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span id="gameSelectedName" style="font-size:14px;font-weight:700;"></span>
+          <button class="nb-btn nb-btn-sm nb-btn-red" onclick="clearGameSelection()" style="padding:3px 8px;">×</button>
+        </div>
+      </div>
       <input type="text" class="nb-input" id="gameCustom" placeholder="Nombre del juego..." style="display:none;">
     </div>
     <div class="nb-card">
@@ -445,9 +446,9 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
   <!-- AJUSTES -->
   <div class="page" id="pg-settings">
     <div class="nb-card">
-      <span class="nb-card-title">Nombre del torneo</span>
-      <input type="text" class="nb-input" id="settingName" placeholder="Ej. Juegolimpiadas 2025">
-      <button class="nb-btn nb-btn-green" onclick="saveName()">Guardar</button>
+      <span class="nb-card-title">Renombrar torneo</span>
+      <input type="text" class="nb-input" id="settingName" placeholder="Nuevo nombre del torneo">
+      <button class="nb-btn nb-btn-green" onclick="saveName()">Guardar nombre</button>
     </div>
     <div class="nb-card">
       <span class="nb-card-title">Jugadores</span>
@@ -633,7 +634,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','filterGameResults','selectGame','selectCustomGame','clearGameSelection','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
@@ -756,6 +757,16 @@ window.render=function(){
   document.getElementById('gameCount').textContent=gc+' juego'+(gc===1?'':'s');
 
   // Leaderboard
+  // Show action buttons only with active tournament
+  const ba=document.getElementById('boardActions');
+  if(ba){
+    if(state._tournamentStarted&&(state.activePlayers||[]).length){
+      ba.innerHTML='<button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="shareScoreboard()" style="font-size:11px;padding:4px 8px;">📤</button>'+
+        '<button class="nb-btn nb-btn-sm nb-btn-pink" onclick="openQueJugamos()" style="color:#000;">🎲 ¿Qué jugamos?</button>';
+    } else {
+      ba.innerHTML='';
+    }
+  }
   const board=document.getElementById('leaderList');
   if(!(state.players||[]).length || (!(state.games||[]).length && !state._tournamentStarted)){board.innerHTML=`<div style="text-align:center;padding:24px 16px;">
       <div style="font-size:48px;margin-bottom:12px;">🎲</div>
@@ -1007,7 +1018,7 @@ window.closeTournament=async function(){
   if(!await nbConfirm('🏆 Campeón: '+champ.name+' con '+champ.pts+' pts\n\nEl torneo se archivará y empezará uno nuevo.','¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
-  state.games=[];state._tournamentStarted=false;state.activePlayers=null;await window.saveState();
+  state.games=[];state._tournamentStarted=false;state.activePlayers=null;window._turnPlayers.length=0;window._turnOrder.length=0;await window.saveState();
   playSound('fanfare');showChampionScreen(champ.name,champ.pts);
 };
 
@@ -1044,7 +1055,7 @@ window.removePosRow=function(){const cont=document.getElementById('posSelect');i
 window.onGameSelect=function(){const v=document.getElementById('gameSelect').value;document.getElementById('gameCustom').style.display=v==='__custom__'?'block':'none';};
 
 window.saveGame=async function(){
-  let name=document.getElementById('gameSelect').value;
+  let name=selectedGame;
   if(name==='__custom__')name=document.getElementById('gameCustom').value.trim();
   if(!name||name==='__custom__'){showToast('Selecciona o escribe el juego');return;}
   const sels=document.querySelectorAll('#posSelect select');
@@ -1055,7 +1066,7 @@ window.saveGame=async function(){
   if(!state.games)state.games=[];
   state.games.push({name,positions:unique,date:new Date().toISOString()});
   await window.saveState();
-  document.getElementById('gameSelect').value='';document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';
+  selectedGame=null;document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';document.getElementById('gameSelected').style.display='none';document.getElementById('gameResultsList').style.display='none';
   document.getElementById('posSelect').innerHTML='';window.addPosRow();window.addPosRow();
   window.goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');playSound('success');
 };
@@ -1109,7 +1120,7 @@ window.updatePhoto=async function(playerName,event){const file=event.target.file
 
 // ¿Qué jugamos?
 window.openQueJugamos=function(){
-  const count=(state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
+  const count=(state.activePlayers||state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
   const sub=document.getElementById('queJugamosSub');const list=document.getElementById('queJugamosList');
   const compatible=(state.catalog||[]).filter(g=>{if(!g.players)return true;const parts=g.players.replace(/\s/g,'').split('-');const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);return count>=min&&count<=max;});
   const order={Baja:0,Media:1,Alta:2};compatible.sort((a,b)=>(order[a.complexity]??1)-(order[b.complexity]??1)||a.name.localeCompare(b.name,'es'));
@@ -1141,7 +1152,7 @@ window.toggleQJCard=function(id){const card=document.getElementById(id);const ar
 window.closeQueJugamos=function(e){if(e.target===document.getElementById('queJugamosModal'))document.getElementById('queJugamosModal').style.display='none';};
 window.closeQueJugamosBtn=function(){document.getElementById('queJugamosModal').style.display='none';};
 window.pickRandomGame=function(){
-  const count=(state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
+  const count=(state.activePlayers||state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
   const playedNames=new Set((state.games||[]).map(g=>g.name));
   const compatible=(state.catalog||[]).filter(g=>{if(!g.players)return true;const parts=g.players.replace(/\s/g,'').split('-');const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);return count>=min&&count<=max;});
   const unplayed=compatible.filter(g=>!playedNames.has(g.name));
@@ -1349,7 +1360,9 @@ window.setTimerMode = function(mode, btn) {
   document.getElementById('timerStopwatch').style.display  = mode==='stopwatch' ? 'block' : 'none';
   document.getElementById('timerCountdown').style.display  = mode==='countdown' ? 'block' : 'none';
   document.getElementById('timerTurns').style.display      = mode==='turns'     ? 'block' : 'none';
-  if(mode==='turns') renderTurnPicker();
+  if(mode==='turns') {
+    renderTurnPicker();
+  }
 };
 
 // ---- STOPWATCH ----
@@ -1470,7 +1483,14 @@ window._renderTurnPicker = function() {
   if(!picker) return;
   var selected = {};
   turnPlayers.forEach(function(p){ selected[p]=true; });
-  var turnPlayerList = state.activePlayers || state.players || [];
+  var turnPlayerList = state._tournamentStarted ? (state.activePlayers || []) : [];
+  if(!turnPlayerList.length) {
+    picker.innerHTML = '<div class="nb-empty">' + (state._tournamentStarted ? 'Sin jugadores activos.' : 'Inicia un torneo para seleccionar jugadores.') + '</div>';
+    renderTurnOrder();
+    var countEl = document.getElementById('turnOrderCount');
+    if(countEl) countEl.textContent = '';
+    return;
+  }
   picker.innerHTML = turnPlayerList.map(function(p) {
     var photo = (state.playerPhotos||{})[p];
     var av = photo
@@ -1501,7 +1521,8 @@ window.toggleTurnPlayer = function(name) {
 };
 
 window.addTurnPlayers = function() {
-  var list = state.activePlayers || state.players || [];
+  var list = state._tournamentStarted ? (state.activePlayers || []) : [];
+  if(!list.length) { showToast('Inicia un torneo primero'); return; }
   list.forEach(function(p) {
     if(turnPlayers.indexOf(p)<0) { turnPlayers.push(p); turnOrder.push(p); }
   });
@@ -1698,7 +1719,14 @@ window.renderTurnPicker = function() {
   var posMap = {};
   turnOrder.forEach(function(p, i){ posMap[p] = i+1; });
 
-  var turnPlayerList = state.activePlayers || state.players || [];
+  var turnPlayerList = state._tournamentStarted ? (state.activePlayers || []) : [];
+  if(!turnPlayerList.length) {
+    picker.innerHTML = '<div class="nb-empty">' + (state._tournamentStarted ? 'Sin jugadores activos.' : 'Inicia un torneo para seleccionar jugadores.') + '</div>';
+    renderTurnOrder();
+    var countEl = document.getElementById('turnOrderCount');
+    if(countEl) countEl.textContent = '';
+    return;
+  }
   picker.innerHTML = turnPlayerList.map(function(p) {
     var photo = (state.playerPhotos||{})[p];
     var avHtml = photo
@@ -2091,11 +2119,77 @@ window.cancelTournament = async function() {
   state.games = [];
   state._tournamentStarted = false;
   state.activePlayers = null;
+  window._turnPlayers.length=0;window._turnOrder.length=0;
   await window.saveState();
   playSound('delete');
   showToast('Torneo cancelado');
   window.goTo('board', document.querySelector('.nav button'));
 };
+
+// ==================== GAME AUTOCOMPLETE ====================
+var selectedGame = null;
+
+window.filterGameResults = function() {
+  var q = (document.getElementById('gameSearch')||{}).value || '';
+  var listEl = document.getElementById('gameResultsList');
+  if(!listEl) return;
+  
+  var catalog = state.catalog || [];
+  var filtered = q 
+    ? catalog.filter(function(g){ return g.name.toLowerCase().indexOf(q.toLowerCase()) >= 0; })
+    : catalog;
+  
+  if(selectedGame) { listEl.style.display = 'none'; return; }
+  
+  var html = filtered.map(function(g) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:2px solid #000;cursor:pointer;background:#fff;" onclick="selectGame(this.dataset.gn)" data-gn="' + g.name + '">' +
+      '<span style="font-size:20px;">' + (g.emoji||'🎲') + '</span>' +
+      '<div style="flex:1;"><div style="font-size:14px;font-weight:700;">' + g.name + '</div>' +
+      (g.players||g.duration ? '<div style="font-size:11px;color:#555;font-weight:500;">' + (g.players?'👥 '+g.players:'') + (g.players&&g.duration?' · ':'') + (g.duration?'⏱ '+g.duration:'') + '</div>' : '') +
+      '</div></div>';
+  }).join('');
+  
+  html += '<div style="padding:10px 12px;border-bottom:none;cursor:pointer;background:#FFE066;" onclick="selectCustomGame()"><span style="font-size:14px;font-weight:700;">✏️ Otro juego no listado...</span></div>';
+  
+  listEl.innerHTML = html;
+  listEl.style.display = filtered.length || q ? 'block' : 'none';
+};
+
+window.selectGame = function(name) {
+  selectedGame = name;
+  document.getElementById('gameSearch').value = '';
+  document.getElementById('gameResultsList').style.display = 'none';
+  document.getElementById('gameCustom').style.display = 'none';
+  var selEl = document.getElementById('gameSelected');
+  selEl.style.display = 'block';
+  document.getElementById('gameSelectedName').textContent = (gameEmoji(name)||'🎲') + ' ' + name;
+  playSound('tap');
+};
+
+window.selectCustomGame = function() {
+  selectedGame = '__custom__';
+  document.getElementById('gameSearch').value = '';
+  document.getElementById('gameResultsList').style.display = 'none';
+  document.getElementById('gameSelected').style.display = 'none';
+  document.getElementById('gameCustom').style.display = 'block';
+  document.getElementById('gameCustom').focus();
+};
+
+window.clearGameSelection = function() {
+  selectedGame = null;
+  document.getElementById('gameSelected').style.display = 'none';
+  document.getElementById('gameCustom').style.display = 'none';
+  document.getElementById('gameSearch').value = '';
+  document.getElementById('gameSearch').focus();
+};
+
+document.addEventListener('click', function(e) {
+  var list = document.getElementById('gameResultsList');
+  var search = document.getElementById('gameSearch');
+  if(list && search && !list.contains(e.target) && e.target !== search) {
+    list.style.display = 'none';
+  }
+});
 
 // Enter key support for inputs
 document.addEventListener('DOMContentLoaded', function() {
