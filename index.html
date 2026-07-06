@@ -218,6 +218,10 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 .nb-empty{text-align:center;padding:28px 16px;color:#555;font-size:14px;font-weight:500;line-height:1.6;}
 
 /* TOAST */
+
+.fab{position:fixed;bottom:76px;right:16px;width:56px;height:56px;border-radius:50%;background:#000;color:#A3E635;border:3px solid #000;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9;box-shadow:4px 4px 0 #555;transition:transform .1s;font-family:inherit;}
+.fab:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #555;}
+
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#000;color:#A3E635;padding:10px 20px;border:2px solid #000;border-radius:20px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;box-shadow:3px 3px 0 #555;}
 .toast.show{opacity:1;}
 </style>
@@ -275,8 +279,9 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
   <!-- HISTORIAL -->
   <div class="page" id="pg-history">
     <div class="seg" id="histSeg">
-      <button class="active" onclick="setHistTab('current',this)">Torneo actual</button>
+      <button class="active" onclick="setHistTab('current',this)">Actual</button>
       <button onclick="setHistTab('archive',this)">Anteriores</button>
+      <button onclick="setHistTab('stats',this)">Stats</button>
     </div>
     <div id="histCurrent">
       <div class="nb-card">
@@ -290,40 +295,38 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
         <div id="archiveList"><div class="nb-empty">Sin torneos archivados aún.</div></div>
       </div>
     </div>
-  </div>
-
-  <!-- STATS -->
-  <div class="page" id="pg-stats">
-    <div class="seg" id="statSeg">
-      <button class="active" onclick="setStatTab('games',this)">Juegos</button>
-      <button onclick="setStatTab('players',this)">Jugadores</button>
-    </div>
-    <div id="statsGames">
-      <div class="nb-card">
-        <span class="nb-card-title">Más jugados</span>
-        <div id="statsGamesList"><div class="nb-empty">Sin datos aún.</div></div>
+    <div id="histStats" style="display:none;">
+      <div class="seg" id="statSeg">
+        <button class="active" onclick="setStatTab('games',this)">Juegos</button>
+        <button onclick="setStatTab('players',this)">Jugadores</button>
       </div>
-      <div class="nb-card">
-        <span class="nb-card-title">Rey de cada juego 👑</span>
-        <div id="statsKings"><div class="nb-empty">Sin datos aún.</div></div>
-      </div>
-    </div>
-    <div id="statsPlayers" style="display:none;">
-      <div class="nb-card">
-        <span class="nb-card-title">Perfil de jugador</span>
-        <div id="profilePicker"></div>
-      </div>
-      <div id="profileDetail" style="display:none;">
+      <div id="statsGames">
         <div class="nb-card">
-          <div class="profile-header">
-            <div class="profile-avatar-lg" id="profAvatar"></div>
-            <div><div class="profile-name" id="profName"></div><div class="profile-sub" id="profSub"></div></div>
+          <span class="nb-card-title">Más jugados</span>
+          <div id="statsGamesList"><div class="nb-empty">Sin datos aún.</div></div>
+        </div>
+        <div class="nb-card">
+          <span class="nb-card-title">Rey de cada juego 👑</span>
+          <div id="statsKings"><div class="nb-empty">Sin datos aún.</div></div>
+        </div>
+      </div>
+      <div id="statsPlayers" style="display:none;">
+        <div class="nb-card">
+          <span class="nb-card-title">Perfil de jugador</span>
+          <div id="profilePicker"></div>
+        </div>
+        <div id="profileDetail" style="display:none;">
+          <div class="nb-card">
+            <div class="profile-header">
+              <div class="profile-avatar-lg" id="profAvatar"></div>
+              <div><div class="profile-name" id="profName"></div><div class="profile-sub" id="profSub"></div></div>
+            </div>
+            <div class="metrics-grid" id="profMetrics"></div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Mejor juego</div>
+            <div id="profBestGame" style="font-size:14px;font-weight:500;padding:4px 0;margin-bottom:10px;"></div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Últimas partidas</div>
+            <div id="profHistory"></div>
           </div>
-          <div class="metrics-grid" id="profMetrics"></div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Mejor juego</div>
-          <div id="profBestGame" style="font-size:14px;font-weight:500;padding:4px 0;margin-bottom:10px;"></div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Últimas partidas</div>
-          <div id="profHistory"></div>
         </div>
       </div>
     </div>
@@ -432,7 +435,8 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
         <div id="turnResults" style="display:none;">
           <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Resultados</div>
           <div id="turnResultsList"></div>
-          <button class="nb-btn nb-btn-yellow" onclick="turnRestart()" style="margin-top:10px;">↺ Nueva partida</button>
+          <button class="nb-btn nb-btn-green" onclick="turnSaveResult()" style="margin-top:10px;">💾 Guardar como resultado del torneo</button>
+          <button class="nb-btn nb-btn-yellow" onclick="turnRestart()" style="margin-top:6px;">↺ Nueva partida sin guardar</button>
         </div>
       </div>
     </div>
@@ -526,17 +530,48 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
     <button onclick="goTo('history',this)">
       <svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/><polyline points="3 16 3.05 11 8 11"/></svg>Historial
     </button>
-    <button onclick="goTo('stats',this)">
-      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Stats
-    </button>
-    <button onclick="goTo('dice',this)">
-      <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>Mesa
-    </button>
     <button onclick="goTo('settings',this)">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ajustes
     </button>
   </nav>
 </div>
+
+<div class="modal-overlay" id="onboardingModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-sheet" style="max-height:92vh;">
+    <div class="modal-header">
+      <h2 id="obTitle">Paso 1 de 3</h2>
+      <button class="modal-close" onclick="document.getElementById('onboardingModal').style.display='none'">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="obStep1">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;">Nombre del torneo</div>
+        <input type="text" class="nb-input" id="obTorneoName" placeholder="Ej. Juegolimpiadas 2026" value="">
+        <button class="nb-btn nb-btn-primary" style="margin-top:8px;" onclick="obNext(2)">Siguiente →</button>
+      </div>
+      <div id="obStep2" style="display:none;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Agrega los jugadores</div>
+        <div style="font-size:13px;font-weight:500;color:#555;margin-bottom:10px;">Mínimo 2 para empezar. Puedes agregar más después.</div>
+        <div id="obPlayersList" style="margin-bottom:10px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" class="nb-input" id="obPlayerName" placeholder="Nombre del jugador" style="margin:0;flex:1;">
+          <button class="nb-btn nb-btn-sm nb-btn-green" onclick="obAddPlayer()">+</button>
+        </div>
+        <button class="nb-btn nb-btn-primary" style="margin-top:12px;" onclick="obNext(3)" id="obStep2Btn" disabled>Necesitas al menos 2 jugadores</button>
+      </div>
+      <div id="obStep3" style="display:none;">
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-size:48px;margin-bottom:12px;">🏆</div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:4px;" id="obFinalName">Torneo</div>
+          <div style="font-size:14px;font-weight:500;color:#555;margin-bottom:4px;" id="obFinalPlayers">0 jugadores</div>
+          <div style="font-size:13px;font-weight:500;color:#555;margin-bottom:20px;">Todo listo. A jugar!</div>
+          <button class="nb-btn nb-btn-primary" onclick="obFinish()">🎲 Empezar torneo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="fab" onclick="goTo('dice',this)" title="Mesa: Dados + Timer">🎲</button>
 
 <div class="toast" id="toast"></div>
 
@@ -589,7 +624,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
@@ -712,7 +747,12 @@ window.render=function(){
 
   // Leaderboard
   const board=document.getElementById('leaderList');
-  if(!(state.players||[]).length){board.innerHTML='<div class="nb-empty">Agrega jugadores en Ajustes.</div>';}
+  if(!(state.players||[]).length){board.innerHTML=`<div style="text-align:center;padding:24px 16px;">
+      <div style="font-size:48px;margin-bottom:12px;">🎲</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:6px;">Bienvenido al torneo</div>
+      <div style="font-size:14px;font-weight:500;color:#555;margin-bottom:20px;">Configura tu primer torneo en 3 pasos</div>
+      <button class="nb-btn nb-btn-primary" style="margin-bottom:10px;" onclick="startOnboarding()">🏆 Crear torneo</button>
+    </div>`;}
   else{
     const sc=computeScores(state.games);
     const streaks=getStreaks();
@@ -898,7 +938,8 @@ window.showProfile=function(name){
     if(!gamePts[g.name])gamePts[g.name]={pts:0,games:0,wins:0};
     gamePts[g.name].pts+=earned;gamePts[g.name].games++;if(i===0)gamePts[g.name].wins++;
   });
-  const winRate=myGames.length?Math.round(wins/myGames.length*100):0;
+  const totalTourneyGames=(state.games||[]).length+(state.archive||[]).flatMap(t=>t.games||[]).length;
+  const winRate=totalTourneyGames?Math.round(wins/totalTourneyGames*100):0;
   const profAv=document.getElementById('profAvatar');
   const photo=(state.playerPhotos||{})[name];
   if(photo){profAv.innerHTML=`<img src="${photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;profAv.style.background='none';}
@@ -909,7 +950,7 @@ window.showProfile=function(name){
     `<div class="metric-box"><div class="metric-val">${pts}</div><div class="metric-lbl">Puntos</div></div>
     <div class="metric-box"><div class="metric-val">${wins}</div><div class="metric-lbl">Victorias</div></div>
     <div class="metric-box"><div class="metric-val">${podiums}</div><div class="metric-lbl">Podios</div></div>
-    <div class="metric-box"><div class="metric-val">${winRate}%</div><div class="metric-lbl">Win rate</div></div>`;
+    <div class="metric-box"><div class="metric-val">${winRate}%</div><div class="metric-lbl">Win rate global</div></div>`;
   const best=Object.entries(gamePts).sort((a,b)=>b[1].wins-a[1].wins)[0];
   document.getElementById('profBestGame').innerHTML=best?`${gameEmoji(best[0])} ${best[0]} — ${best[1].wins}V en ${best[1].games} partidas`:'Sin datos';
   document.getElementById('profHistory').innerHTML=myGames.slice(-10).reverse().map(g=>{
@@ -1041,7 +1082,7 @@ window.goTo=function(pg,btn){
   if(pg==='stats')renderStats();
 };
 
-window.setHistTab=function(tab,btn){document.querySelectorAll('#histSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('histCurrent').style.display=tab==='current'?'block':'none';document.getElementById('histArchive').style.display=tab==='archive'?'block':'none';};
+window.setHistTab=function(tab,btn){document.querySelectorAll('#histSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('histCurrent').style.display=tab==='current'?'block':'none';document.getElementById('histArchive').style.display=tab==='archive'?'block':'none';document.getElementById('histStats').style.display=tab==='stats'?'block':'none';if(tab==='stats')renderStats();};
 window.setStatTab=function(tab,btn){document.querySelectorAll('#statSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('statsGames').style.display=tab==='games'?'block':'none';document.getElementById('statsPlayers').style.display=tab==='players'?'block':'none';};
 
 // Photo
@@ -1125,8 +1166,15 @@ window.migrateV1=async function(){
 var audioCtx = null;
 function getAudioCtx() {
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
+
+// iOS audio unlock — resume AudioContext on first tap
+document.addEventListener('touchstart', function iosUnlock() {
+  getAudioCtx();
+  document.removeEventListener('touchstart', iosUnlock);
+}, {once: true});
 
 function playSound(type) {
   try {
@@ -1726,6 +1774,227 @@ function nbConfirm(msg, title, okLabel) {
 window.resolveConfirm = function(val) {
   document.getElementById('confirmModal').style.display = 'none';
   if(confirmResolver) { confirmResolver(val); confirmResolver = null; }
+};
+
+// ==================== ONBOARDING ====================
+var obPlayers = [];
+
+window.startOnboarding = function() {
+  obPlayers = [];
+  document.getElementById('obTorneoName').value = '';
+  document.getElementById('obStep1').style.display = 'block';
+  document.getElementById('obStep2').style.display = 'none';
+  document.getElementById('obStep3').style.display = 'none';
+  document.getElementById('obTitle').textContent = 'Paso 1 de 3';
+  document.getElementById('onboardingModal').style.display = 'flex';
+  playSound('tap');
+};
+
+window.obNext = function(step) {
+  playSound('success');
+  if(step === 2) {
+    var name = document.getElementById('obTorneoName').value.trim() || 'Torneo de Mesa';
+    state.name = name;
+    document.getElementById('obStep1').style.display = 'none';
+    document.getElementById('obStep2').style.display = 'block';
+    document.getElementById('obTitle').textContent = 'Paso 2 de 3';
+    obRenderPlayers();
+  } else if(step === 3) {
+    document.getElementById('obStep2').style.display = 'none';
+    document.getElementById('obStep3').style.display = 'block';
+    document.getElementById('obTitle').textContent = 'Paso 3 de 3';
+    document.getElementById('obFinalName').textContent = state.name;
+    document.getElementById('obFinalPlayers').textContent = obPlayers.length + ' jugadores';
+  }
+};
+
+window.obAddPlayer = function() {
+  var inp = document.getElementById('obPlayerName');
+  var name = inp.value.trim();
+  if(!name) return;
+  if(obPlayers.indexOf(name) >= 0) { showToast('Ya existe'); return; }
+  obPlayers.push(name);
+  inp.value = '';
+  inp.focus();
+  obRenderPlayers();
+  playSound('tap');
+};
+
+function obRenderPlayers() {
+  var list = document.getElementById('obPlayersList');
+  list.innerHTML = obPlayers.map(function(p, i) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:2px solid #000;">' +
+      '<div style="width:32px;height:32px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">' + p[0] + '</div>' +
+      '<span style="flex:1;font-size:14px;font-weight:700;">' + p + '</span>' +
+      '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="obRemovePlayer(' + i + ')" style="padding:3px 8px;">×</button>' +
+      '</div>';
+  }).join('');
+  var btn = document.getElementById('obStep2Btn');
+  if(obPlayers.length >= 2) {
+    btn.disabled = false;
+    btn.textContent = 'Siguiente → (' + obPlayers.length + ' jugadores)';
+  } else {
+    btn.disabled = true;
+    btn.textContent = 'Necesitas al menos ' + (2 - obPlayers.length) + ' jugador' + (obPlayers.length === 1 ? '' : 'es') + ' más';
+  }
+}
+
+window.obRemovePlayer = function(i) {
+  obPlayers.splice(i, 1);
+  obRenderPlayers();
+};
+
+window.obFinish = async function() {
+  state.players = obPlayers.slice();
+  state.games = [];
+  await window.saveState();
+  document.getElementById('onboardingModal').style.display = 'none';
+  playSound('fanfare');
+  showToast('Torneo creado!');
+};
+
+// Enter key for onboarding inputs
+document.addEventListener('DOMContentLoaded', function() {
+  var obNameEl = document.getElementById('obPlayerName');
+  if(obNameEl) obNameEl.addEventListener('keydown', function(e) {
+    if(e.key === 'Enter') { e.preventDefault(); window.obAddPlayer(); }
+  });
+  var obTorneoEl = document.getElementById('obTorneoName');
+  if(obTorneoEl) obTorneoEl.addEventListener('keydown', function(e) {
+    if(e.key === 'Enter') { e.preventDefault(); window.obNext(2); }
+  });
+});
+
+// ==================== TIMER → REGISTRAR ====================
+window.turnSaveResult = function() {
+  var players = (window._turnOrder||[]).slice();
+  if(!players.length) { showToast('Sin resultados para guardar'); return; }
+  
+  // Show modal with game selection + position assignment
+  window._tsr_players = players;
+  window._tsr_positions = [];
+  
+  var modal = document.getElementById('turnGameModal');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.id = 'turnGameModal';
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.onclick = function(e) { if(e.target === modal) modal.style.display = 'none'; };
+    modal.innerHTML = '<div class="modal-sheet" style="max-height:85vh;">' +
+      '<div class="modal-header"><h2>Guardar resultado</h2>' +
+      '<button class="modal-close" onclick="closeTurnGameModal()">×</button></div>' +
+      '<div class="modal-body" id="turnSaveBody"></div></div>';
+    document.body.appendChild(modal);
+  } else {
+    modal.style.display = 'flex';
+  }
+  
+  tsrRenderStep1();
+};
+
+window.closeTurnGameModal = function() {
+  var m = document.getElementById('turnGameModal');
+  if(m) m.style.display = 'none';
+};
+
+function tsrRenderStep1() {
+  // Step 1: select game
+  var body = document.getElementById('turnSaveBody');
+  body.innerHTML = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;color:#555;">Paso 1: Selecciona el juego</div>' +
+    (state.catalog||[]).map(function(g) {
+      return '<button class="nb-btn" style="margin-bottom:6px;text-align:left;padding:10px 14px;" ' +
+        'onclick="tsrSelectGame(this.dataset.gn)" data-gn="' + g.name + '">' +
+        (g.emoji||'🎲') + ' ' + g.name + '</button>';
+    }).join('');
+}
+
+window.tsrSelectGame = function(gameName) {
+  window._tsr_game = gameName;
+  window._tsr_positions = [];
+  tsrRenderStep2();
+};
+
+function tsrRenderStep2() {
+  var body = document.getElementById('turnSaveBody');
+  var positions = window._tsr_positions || [];
+  var players = window._tsr_players || [];
+  var remaining = players.filter(function(p) { return positions.indexOf(p) < 0; });
+  var times = window._turnTimes || {};
+  
+  var html = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;color:#555;">Paso 2: Toca jugadores en orden de posición</div>';
+  html += '<div style="font-size:12px;font-weight:500;color:#555;margin-bottom:10px;">1° = ganador. El orden en que los toques es su posición.</div>';
+  
+  // Show assigned positions
+  if(positions.length) {
+    html += '<div style="margin-bottom:10px;">';
+    positions.forEach(function(p, i) {
+      var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'°';
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#A3E635;border:2px solid #000;border-radius:8px;margin-bottom:4px;">' +
+        '<span style="font-weight:700;">' + medal + '</span>' +
+        '<span style="flex:1;font-weight:700;">' + p + '</span>' +
+        '<span style="font-size:12px;color:#555;">' + fmtTime(times[p]||0) + '</span>' +
+        '</div>';
+    });
+    html += '</div>';
+  }
+  
+  // Show remaining players to assign
+  if(remaining.length) {
+    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;color:#555;">Sin asignar</div>';
+    remaining.forEach(function(p) {
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:2px solid #000;border-radius:8px;margin-bottom:4px;cursor:pointer;" ' +
+        'onclick="tsrAssignPlayer(this.dataset.pn)" data-pn="' + p + '">' +
+        '<span style="font-size:18px;color:#ccc;font-weight:700;">+</span>' +
+        '<span style="flex:1;font-weight:700;">' + p + '</span>' +
+        '<span style="font-size:12px;color:#555;">' + fmtTime(times[p]||0) + '</span>' +
+        '</div>';
+    });
+  }
+  
+  // Action buttons
+  html += '<div style="display:flex;gap:6px;margin-top:12px;">';
+  if(positions.length > 0) {
+    html += '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="tsrUndoLast()">↩ Deshacer</button>';
+  }
+  html += '</div>';
+  
+  if(positions.length >= 1) {
+    html += '<button class="nb-btn nb-btn-primary" style="margin-top:10px;" onclick="tsrSave()">💾 Guardar (' + positions.length + ' posiciones)</button>';
+  }
+  
+  body.innerHTML = html;
+}
+
+window.tsrAssignPlayer = function(name) {
+  window._tsr_positions.push(name);
+  playSound('tap');
+  tsrRenderStep2();
+};
+
+window.tsrUndoLast = function() {
+  window._tsr_positions.pop();
+  tsrRenderStep2();
+};
+
+window.tsrSave = function() {
+  var positions = window._tsr_positions || [];
+  var gameName = window._tsr_game;
+  if(!positions.length || !gameName) return;
+  
+  if(!state.games) state.games = [];
+  state.games.push({
+    name: gameName,
+    positions: positions,
+    date: new Date().toISOString()
+  });
+  
+  window.saveState().then(function() {
+    document.getElementById('turnGameModal').style.display = 'none';
+    playSound('success');
+    showToast('Resultado guardado!');
+    window.goTo('board', document.querySelector('.nav button'));
+  });
 };
 
 // Enter key support for inputs
