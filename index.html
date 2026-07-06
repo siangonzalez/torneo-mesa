@@ -516,7 +516,8 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
       <div id="migrateStatus" style="font-size:13px;font-weight:700;margin-top:8px;"></div>
     </div>
     <div class="nb-card">
-      <button class="nb-btn nb-btn-red" onclick="confirmReset()">Reiniciar torneo actual</button>
+      <button class="nb-btn nb-btn-yellow" onclick="confirmReset()" style="margin-bottom:8px;">↺ Reiniciar torneo (borrar juegos)</button>
+      <button class="nb-btn nb-btn-red" onclick="cancelTournament()">✕ Cancelar torneo sin guardar</button>
     </div>
   </div>
 
@@ -549,12 +550,20 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
         <button class="nb-btn nb-btn-primary" style="margin-top:8px;" onclick="obNext(2)">Siguiente →</button>
       </div>
       <div id="obStep2" style="display:none;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Agrega los jugadores</div>
-        <div style="font-size:13px;font-weight:500;color:#555;margin-bottom:10px;">Mínimo 2 para empezar. Puedes agregar más después.</div>
-        <div id="obPlayersList" style="margin-bottom:10px;"></div>
-        <div style="display:flex;gap:8px;">
-          <input type="text" class="nb-input" id="obPlayerName" placeholder="Nombre del jugador" style="margin:0;flex:1;">
-          <button class="nb-btn nb-btn-sm nb-btn-green" onclick="obAddPlayer()">+</button>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">¿Quién juega hoy?</div>
+        <div style="font-size:13px;font-weight:500;color:#555;margin-bottom:10px;">Toca para seleccionar. Mínimo 2 jugadores.</div>
+        <div id="obExistingPlayers" style="margin-bottom:10px;"></div>
+        <div style="border-top:2px solid #000;padding-top:10px;margin-top:8px;">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#555;margin-bottom:6px;">Agregar jugador nuevo</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:44px;height:44px;border-radius:50%;border:2px solid #000;background:#E8F5A3;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;overflow:hidden;position:relative;flex-shrink:0;box-shadow:2px 2px 0 #000;" id="obPhotoBtn">
+              <span id="obPhotoPlaceholder">📷</span>
+              <img id="obPhotoPreview" style="display:none;width:44px;height:44px;border-radius:50%;object-fit:cover;position:absolute;inset:0;">
+              <input type="file" accept="image/*" id="obPhotoInput" onchange="obPhotoSelected(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;">
+            </div>
+            <input type="text" class="nb-input" id="obPlayerName" placeholder="Nombre nuevo" style="margin:0;flex:1;">
+            <button class="nb-btn nb-btn-sm nb-btn-green" onclick="obAddPlayer()">+</button>
+          </div>
         </div>
         <button class="nb-btn nb-btn-primary" style="margin-top:12px;" onclick="obNext(3)" id="obStep2Btn" disabled>Necesitas al menos 2 jugadores</button>
       </div>
@@ -571,7 +580,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
   </div>
 </div>
 
-<button class="fab" onclick="goTo('dice',this)" title="Mesa: Dados + Timer">🎲</button>
+<button class="fab" onclick="goTo('dice',this)" title="Mesa: Dados + Timer" id="fabBtn">🎲</button>
 
 <div class="toast" id="toast"></div>
 
@@ -624,7 +633,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
@@ -725,12 +734,13 @@ function getPoints(n,system){
 
 function computeScores(games){
   const scores={},wins={},podiums={},gp={};
-  state.players.forEach(p=>{scores[p]=0;wins[p]=0;podiums[p]=0;gp[p]=0;});
+  var playerList = state.activePlayers || state.players || [];
+  playerList.forEach(p=>{scores[p]=0;wins[p]=0;podiums[p]=0;gp[p]=0;});
   (games||[]).forEach(g=>{
     const pts=getPoints(g.positions.length,state.system);
     g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;gp[p]++;}});
   });
-  return state.players.map(p=>({name:p,pts:scores[p],wins:wins[p],podiums:podiums[p],gamesPlayed:gp[p]}))
+  return playerList.map(p=>({name:p,pts:scores[p],wins:wins[p],podiums:podiums[p],gamesPlayed:gp[p]}))
     .sort((a,b)=>b.pts-a.pts||b.wins-a.wins||b.podiums-a.podiums||a.name.localeCompare(b.name,'es'));
 }
 
@@ -747,11 +757,11 @@ window.render=function(){
 
   // Leaderboard
   const board=document.getElementById('leaderList');
-  if(!(state.players||[]).length){board.innerHTML=`<div style="text-align:center;padding:24px 16px;">
+  if(!(state.players||[]).length || (!(state.games||[]).length && !state._tournamentStarted)){board.innerHTML=`<div style="text-align:center;padding:24px 16px;">
       <div style="font-size:48px;margin-bottom:12px;">🎲</div>
-      <div style="font-size:20px;font-weight:700;margin-bottom:6px;">Bienvenido al torneo</div>
-      <div style="font-size:14px;font-weight:500;color:#555;margin-bottom:20px;">Configura tu primer torneo en 3 pasos</div>
-      <button class="nb-btn nb-btn-primary" style="margin-bottom:10px;" onclick="startOnboarding()">🏆 Crear torneo</button>
+      <div style="font-size:20px;font-weight:700;margin-bottom:6px;">${(state.players||[]).length ? 'Nuevo torneo' : 'Bienvenido'}</div>
+      <div style="font-size:14px;font-weight:500;color:#555;margin-bottom:20px;">${(state.players||[]).length ? 'Elige quién juega hoy' : 'Configura tu primer torneo'}</div>
+      <button class="nb-btn nb-btn-primary" style="margin-bottom:10px;" onclick="startOnboarding()">🏆 ${(state.players||[]).length ? 'Configurar torneo' : 'Crear torneo'}</button>
     </div>`;}
   else{
     const sc=computeScores(state.games);
@@ -997,7 +1007,7 @@ window.closeTournament=async function(){
   if(!await nbConfirm('🏆 Campeón: '+champ.name+' con '+champ.pts+' pts\n\nEl torneo se archivará y empezará uno nuevo.','¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
-  state.games=[];await window.saveState();
+  state.games=[];state._tournamentStarted=false;state.activePlayers=null;await window.saveState();
   playSound('fanfare');showChampionScreen(champ.name,champ.pts);
 };
 
@@ -1026,7 +1036,7 @@ window.selectEmoji=function(e){
 };
 
 // Pos selects
-function buildPlayerOpts(){return'<option value="">— jugador —</option>'+(state.players||[]).map(p=>'<option value="'+p+'">'+p+'</option>').join('');}
+function buildPlayerOpts(){return'<option value="">— jugador —</option>'+((state.activePlayers||state.players)||[]).map(p=>'<option value="'+p+'">'+p+'</option>').join('');}
 function refreshPosSelects(){[...document.querySelectorAll('#posSelect select')].forEach(s=>{const v=s.value;s.innerHTML=buildPlayerOpts();if(v)s.value=v;});}
 window.addPosRow=function(){const cont=document.getElementById('posSelect');const i=cont.children.length;const d=document.createElement('div');d.className='pos-item';d.innerHTML='<span class="pos-label">'+(i+1)+'°</span><select>'+buildPlayerOpts()+'</select>';cont.appendChild(d);};
 window.removePosRow=function(){const cont=document.getElementById('posSelect');if(cont.children.length>1)cont.removeChild(cont.lastChild);};
@@ -1075,6 +1085,12 @@ window.toggleGameCard=function(id){
 };
 
 window.goTo=function(pg,btn){
+  // Block Registrar if no active tournament
+  if(pg === 'add' && !state._tournamentStarted && !(state.activePlayers||[]).length) {
+    showToast('Configura el torneo primero');
+    playSound('tap');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-'+pg).classList.add('active');btn.classList.add('active');
@@ -1454,7 +1470,8 @@ window._renderTurnPicker = function() {
   if(!picker) return;
   var selected = {};
   turnPlayers.forEach(function(p){ selected[p]=true; });
-  picker.innerHTML = (state.players||[]).map(function(p) {
+  var turnPlayerList = state.activePlayers || state.players || [];
+  picker.innerHTML = turnPlayerList.map(function(p) {
     var photo = (state.playerPhotos||{})[p];
     var av = photo
       ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">'
@@ -1484,7 +1501,8 @@ window.toggleTurnPlayer = function(name) {
 };
 
 window.addTurnPlayers = function() {
-  (state.players||[]).forEach(function(p) {
+  var list = state.activePlayers || state.players || [];
+  list.forEach(function(p) {
     if(turnPlayers.indexOf(p)<0) { turnPlayers.push(p); turnOrder.push(p); }
   });
   renderTurnPicker();
@@ -1680,7 +1698,8 @@ window.renderTurnPicker = function() {
   var posMap = {};
   turnOrder.forEach(function(p, i){ posMap[p] = i+1; });
 
-  picker.innerHTML = (state.players||[]).map(function(p) {
+  var turnPlayerList = state.activePlayers || state.players || [];
+  picker.innerHTML = turnPlayerList.map(function(p) {
     var photo = (state.playerPhotos||{})[p];
     var avHtml = photo
       ? '<img src="'+photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
@@ -1694,7 +1713,7 @@ window.renderTurnPicker = function() {
         ? '<span style="width:28px;height:28px;border-radius:50%;background:#000;color:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">'+pos+'</span>'
         : '<span style="width:28px;height:28px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#ccc;">+</span>')
       + '</div>';
-  }).join('') || '<div class="nb-empty">Sin jugadores en el torneo.</div>';
+  }).join('') || '<div class="nb-empty">' + (state._tournamentStarted ? 'Sin jugadores en el torneo.' : 'Inicia un torneo para seleccionar jugadores.') + '</div>';
 
   // Update order count
   var countEl = document.getElementById('turnOrderCount');
@@ -1781,7 +1800,7 @@ var obPlayers = [];
 
 window.startOnboarding = function() {
   obPlayers = [];
-  document.getElementById('obTorneoName').value = '';
+  document.getElementById('obTorneoName').value = state.name || '';
   document.getElementById('obStep1').style.display = 'block';
   document.getElementById('obStep2').style.display = 'none';
   document.getElementById('obStep3').style.display = 'none';
@@ -1798,7 +1817,8 @@ window.obNext = function(step) {
     document.getElementById('obStep1').style.display = 'none';
     document.getElementById('obStep2').style.display = 'block';
     document.getElementById('obTitle').textContent = 'Paso 2 de 3';
-    obRenderPlayers();
+    obRenderExisting();
+    obUpdateBtn();
   } else if(step === 3) {
     document.getElementById('obStep2').style.display = 'none';
     document.getElementById('obStep3').style.display = 'block';
@@ -1808,45 +1828,114 @@ window.obNext = function(step) {
   }
 };
 
+var obPendingPhoto = null;
+
+window.obPhotoSelected = async function(event) {
+  var file = event.target.files[0];
+  if(!file) return;
+  var compressed = await compressImage(file);
+  obPendingPhoto = compressed;
+  document.getElementById('obPhotoPreview').src = compressed;
+  document.getElementById('obPhotoPreview').style.display = 'block';
+  document.getElementById('obPhotoPlaceholder').style.display = 'none';
+};
+
 window.obAddPlayer = function() {
   var inp = document.getElementById('obPlayerName');
   var name = inp.value.trim();
   if(!name) return;
-  if(obPlayers.indexOf(name) >= 0) { showToast('Ya existe'); return; }
+  if(obPlayers.indexOf(name) >= 0) { showToast('Ya seleccionado'); return; }
+  // Add to permanent roster if new
+  if((state.players||[]).indexOf(name) < 0) {
+    if(!state.players) state.players = [];
+    state.players.push(name);
+  }
+  // Save photo if provided
+  if(obPendingPhoto) {
+    if(!state.playerPhotos) state.playerPhotos = {};
+    state.playerPhotos[name] = obPendingPhoto;
+    obPendingPhoto = null;
+    document.getElementById('obPhotoPreview').style.display = 'none';
+    document.getElementById('obPhotoPlaceholder').style.display = 'block';
+    document.getElementById('obPhotoInput').value = '';
+  }
   obPlayers.push(name);
   inp.value = '';
   inp.focus();
-  obRenderPlayers();
+  obRenderExisting();
+  obUpdateBtn();
   playSound('tap');
 };
 
-function obRenderPlayers() {
-  var list = document.getElementById('obPlayersList');
-  list.innerHTML = obPlayers.map(function(p, i) {
-    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:2px solid #000;">' +
-      '<div style="width:32px;height:32px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">' + p[0] + '</div>' +
-      '<span style="flex:1;font-size:14px;font-weight:700;">' + p + '</span>' +
-      '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="obRemovePlayer(' + i + ')" style="padding:3px 8px;">×</button>' +
-      '</div>';
-  }).join('');
+function obRenderExisting() {
+  var list = document.getElementById('obExistingPlayers');
+  if(!list) return;
+  var allPlayers = state.players || [];
+  var selectedSet = {};
+  obPlayers.forEach(function(p){ selectedSet[p] = true; });
+  
+  if(allPlayers.length) {
+    list.innerHTML = allPlayers.map(function(p) {
+      var photo = (state.playerPhotos||{})[p];
+      var avHtml = photo
+        ? '<img src="'+photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
+        : '<div style="width:36px;height:36px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">'+p[0]+'</div>';
+      var sel = !!selectedSet[p];
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="obTogglePlayer(this.dataset.pn)" data-pn="'+p+'">' +
+        avHtml +
+        '<span style="flex:1;font-size:14px;font-weight:700;">'+p+'</span>' +
+        (sel
+          ? '<span style="width:30px;height:30px;border-radius:50%;background:#000;color:#A3E635;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">✓</span>'
+          : '<span style="width:30px;height:30px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:16px;color:#ccc;">+</span>') +
+        '</div>';
+    }).join('');
+  } else {
+    list.innerHTML = '<div style="font-size:13px;font-weight:500;color:#555;padding:8px 0;">No hay jugadores guardados. Agrega nuevos abajo.</div>';
+  }
+}
+
+function obUpdateBtn() {
   var btn = document.getElementById('obStep2Btn');
   if(obPlayers.length >= 2) {
     btn.disabled = false;
     btn.textContent = 'Siguiente → (' + obPlayers.length + ' jugadores)';
   } else {
     btn.disabled = true;
-    btn.textContent = 'Necesitas al menos ' + (2 - obPlayers.length) + ' jugador' + (obPlayers.length === 1 ? '' : 'es') + ' más';
+    var need = 2 - obPlayers.length;
+    btn.textContent = 'Necesitas al menos ' + need + ' jugador' + (need===1?'':'es') + ' más';
   }
 }
 
-window.obRemovePlayer = function(i) {
-  obPlayers.splice(i, 1);
-  obRenderPlayers();
+window.obTogglePlayer = function(name) {
+  var idx = obPlayers.indexOf(name);
+  if(idx >= 0) {
+    obPlayers.splice(idx, 1);
+  } else {
+    obPlayers.push(name);
+  }
+  playSound('tap');
+  obRenderExisting();
+  obUpdateBtn();
+};
+
+window.obRemovePlayer = function(name) {
+  var idx = obPlayers.indexOf(name);
+  if(idx >= 0) obPlayers.splice(idx, 1);
+  obRenderExisting();
+  obUpdateBtn();
 };
 
 window.obFinish = async function() {
-  state.players = obPlayers.slice();
+  state.activePlayers = obPlayers.slice();
   state.games = [];
+  state._tournamentStarted = true;
+  // Make sure all selected players are in the permanent roster
+  obPlayers.forEach(function(p) {
+    if((state.players||[]).indexOf(p) < 0) {
+      if(!state.players) state.players = [];
+      state.players.push(p);
+    }
+  });
   await window.saveState();
   document.getElementById('onboardingModal').style.display = 'none';
   playSound('fanfare');
@@ -1995,6 +2084,17 @@ window.tsrSave = function() {
     showToast('Resultado guardado!');
     window.goTo('board', document.querySelector('.nav button'));
   });
+};
+
+window.cancelTournament = async function() {
+  if(!await nbConfirm('Se descartarán todos los juegos de este torneo. No se archivará nada. Los jugadores y fotos se conservan.','¿Cancelar torneo?','Cancelar torneo')) return;
+  state.games = [];
+  state._tournamentStarted = false;
+  state.activePlayers = null;
+  await window.saveState();
+  playSound('delete');
+  showToast('Torneo cancelado');
+  window.goTo('board', document.querySelector('.nav button'));
 };
 
 // Enter key support for inputs
