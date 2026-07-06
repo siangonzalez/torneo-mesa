@@ -1018,7 +1018,7 @@ window.closeTournament=async function(){
   if(!await nbConfirm('🏆 Campeón: '+champ.name+' con '+champ.pts+' pts\n\nEl torneo se archivará y empezará uno nuevo.','¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
-  state.games=[];state._tournamentStarted=false;state.activePlayers=null;if(window._turnPlayers)window._turnPlayers.length=0;if(window._turnOrder)window._turnOrder.length=0;await window.saveState();
+  state.games=[];state._tournamentStarted=false;state.activePlayers=null;if(window._turnPlayers)window._turnPlayers.length=0;if(window._turnOrder)window._turnOrder.length=0;var _tol=document.getElementById('turnOrderList');if(_tol)_tol.innerHTML='';var _tpp=document.getElementById('turnPlayerPicker');if(_tpp)_tpp.innerHTML='';await window.saveState();
   playSound('fanfare');showChampionScreen(champ.name,champ.pts);
 };
 
@@ -1751,8 +1751,12 @@ window.renderTurnPicker = function() {
 };
 
 window.clearTurnOrder = function() {
-  window._turnPlayers.length = 0;
-  window._turnOrder.length = 0;
+  if(window._turnPlayers) window._turnPlayers.length = 0;
+  if(window._turnOrder) window._turnOrder.length = 0;
+  var orderList = document.getElementById('turnOrderList');
+  if(orderList) orderList.innerHTML = '';
+  var countEl = document.getElementById('turnOrderCount');
+  if(countEl) countEl.textContent = '';
   window.renderTurnPicker();
 };
 
@@ -2124,6 +2128,9 @@ window.cancelTournament = async function() {
   var ts=document.getElementById('turnSetup');if(ts)ts.style.display='block';
   var ta=document.getElementById('turnActive');if(ta)ta.style.display='none';
   var tr=document.getElementById('turnResults');if(tr)tr.style.display='none';
+  var tol=document.getElementById('turnOrderList');if(tol)tol.innerHTML='';
+  var toc=document.getElementById('turnOrderCount');if(toc)toc.textContent='';
+  var tpp=document.getElementById('turnPlayerPicker');if(tpp)tpp.innerHTML='';
   await window.saveState();
   playSound('delete');
   showToast('Torneo cancelado');
