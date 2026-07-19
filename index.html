@@ -268,10 +268,21 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
     </div>
     <div class="nb-card">
       <span class="nb-card-title">Posiciones</span>
-      <div id="posSelect"></div>
-      <div class="nb-btn-row">
-        <button class="nb-btn nb-btn-sm nb-btn-green" onclick="addPosRow()">+ jugador</button>
-        <button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePosRow()">− quitar</button>
+      <div class="seg" style="margin-bottom:10px;">
+        <button class="active" onclick="setGameMode('individual',this)">👤 Individual</button>
+        <button onclick="setGameMode('teams',this)">👥 Equipos</button>
+      </div>
+      <div id="modeIndividual">
+        <div id="posSelect"></div>
+        <div class="nb-btn-row">
+          <button class="nb-btn nb-btn-sm nb-btn-green" onclick="addPosRow()">+ jugador</button>
+          <button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePosRow()">− quitar</button>
+        </div>
+      </div>
+      <div id="modeTeams" style="display:none;">
+        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">Arma los equipos y asígnalos por posición.</div>
+        <div id="teamsList"></div>
+        <button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="addTeam()" style="margin-top:8px;">+ Agregar equipo</button>
       </div>
       <button class="nb-btn nb-btn-primary" style="margin-top:14px;" onclick="saveGame()">Guardar resultado</button>
     </div>
@@ -384,19 +395,32 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
         </div>
       </div>
       <div id="timerCountdown" style="display:none;">
-        <div class="timer-preset-row">
-          <button class="timer-preset" onclick="setCdPreset(1,this)">1 min</button>
-          <button class="timer-preset" onclick="setCdPreset(2,this)">2 min</button>
-          <button class="timer-preset active" onclick="setCdPreset(5,this)">5 min</button>
-          <button class="timer-preset" onclick="setCdPreset(10,this)">10 min</button>
-          <button class="timer-preset" onclick="setCdPreset(15,this)">15 min</button>
-          <button class="timer-preset" onclick="setCdPreset(30,this)">30 min</button>
+        <div class="seg" id="cdModeSeg" style="margin-bottom:10px;">
+          <button class="active" onclick="setCdMode('preset',this)">⏱ Rápido</button>
+          <button onclick="setCdMode('custom',this)">✏️ Personalizado</button>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <input type="number" class="nb-input" id="cdMinutes" value="5" min="1" max="999" style="width:80px;margin:0;text-align:center;">
-          <span style="font-size:13px;font-weight:700;">minutos</span>
+        <div id="cdPresetMode">
+          <div class="timer-preset-row">
+            <button class="timer-preset" onclick="setCdPreset(1,this)">1 min</button>
+            <button class="timer-preset" onclick="setCdPreset(2,this)">2 min</button>
+            <button class="timer-preset active" onclick="setCdPreset(5,this)">5 min</button>
+            <button class="timer-preset" onclick="setCdPreset(10,this)">10 min</button>
+            <button class="timer-preset" onclick="setCdPreset(15,this)">15 min</button>
+            <button class="timer-preset" onclick="setCdPreset(30,this)">30 min</button>
+          </div>
         </div>
-        <div class="timer-display"><div class="timer-time" id="cdDisplay">05:00</div><div class="timer-sub" id="cdSub">listo</div></div>
+        <div id="cdCustomMode" style="display:none;">
+          <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:20px 0 8px;">
+            <button onclick="cdAdjust(-1)" style="width:52px;height:52px;border-radius:50%;border:2px solid #000;background:#fff;font-size:24px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:3px 3px 0 #000;color:#000;font-family:inherit;">−</button>
+            <div style="text-align:center;">
+              <div id="cdCustomDisplay" style="font-size:56px;font-weight:700;color:#000;font-family:inherit;line-height:1;">05:00</div>
+              <div style="font-size:13px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.1em;">minutos</div>
+              <input type="hidden" id="cdMinutes" value="5">
+            </div>
+            <button onclick="cdAdjust(1)" style="width:52px;height:52px;border-radius:50%;border:2px solid #000;background:#fff;font-size:24px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:3px 3px 0 #000;color:#000;font-family:inherit;">+</button>
+          </div>
+        </div>
+        <div class="timer-display" id="cdTimerDisplay"><div class="timer-time" id="cdDisplay">05:00</div><div class="timer-sub" id="cdSub">listo</div></div>
         <div class="timer-controls">
           <button class="timer-btn nb-btn-green" id="cdStartBtn" onclick="cdToggle()">▶ Iniciar</button>
           <button class="timer-btn nb-btn-red" onclick="cdReset()">↺ Reset</button>
@@ -620,7 +644,10 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
     <div class="modal-body">
       <div id="pickResult" style="display:none;"></div>
       <button class="nb-btn nb-btn-primary" style="margin-bottom:12px;" onclick="pickRandomGame()">🎰 Elige por nosotros</button>
-      <div id="queJugamosSub" style="font-size:13px;font-weight:700;color:#555;margin-bottom:12px;"></div>
+      <div id="queJugamosSub" style="font-size:13px;font-weight:700;color:#555;margin-bottom:10px;"></div>
+      <div class="search-wrap">
+        <input type="text" class="nb-search" id="queJugamosSearch" placeholder="Buscar juego..." oninput="filterQueJugamos()" autocomplete="off">
+      </div>
       <div id="queJugamosList"></div>
     </div>
   </div>
@@ -634,7 +661,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','tsrFilterGames','obUpdateBtn','obRenderExisting','tsrRenderStep2','tsrRenderStep1','filterGameResults','selectGame','selectCustomGame','clearGameSelection','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','setCdMode','setCdCustom','cdAdjust','cdFromInput','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','tsrFilterGames','obUpdateBtn','obRenderExisting','tsrRenderStep2','tsrRenderStep1','filterGameResults','filterQueJugamos','playThisGame','renderTeams','removePlayerFromTeam','addPlayerToTeam','removeTeam','addTeam','setGameMode','renderQueJugamosList','selectGame','selectCustomGame','clearGameSelection','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
@@ -738,8 +765,19 @@ function computeScores(games){
   var playerList = state.activePlayers || state.players || [];
   playerList.forEach(p=>{scores[p]=0;wins[p]=0;podiums[p]=0;gp[p]=0;});
   (games||[]).forEach(g=>{
-    const pts=getPoints(g.positions.length,state.system);
-    g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;gp[p]++;}});
+    if(g.teams&&g.teams.length){
+      // Team game: all members of same team get same points
+      const pts=getPoints(g.teams.length,state.system);
+      g.teams.forEach((team,ti)=>{
+        team.forEach(p=>{
+          if(scores[p]!==undefined){scores[p]+=pts[ti]||0;if(ti===0)wins[p]++;if(ti<3)podiums[p]++;gp[p]++;}
+        });
+      });
+    } else {
+      // Individual game
+      const pts=getPoints(g.positions.length,state.system);
+      g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;gp[p]++;}});
+    }
   });
   return playerList.map(p=>({name:p,pts:scores[p],wins:wins[p],podiums:podiums[p],gamesPlayed:gp[p]}))
     .sort((a,b)=>b.pts-a.pts||b.wins-a.wins||b.podiums-a.podiums||a.name.localeCompare(b.name,'es'));
@@ -757,6 +795,20 @@ window.render=function(){
   document.getElementById('gameCount').textContent=gc+' juego'+(gc===1?'':'s');
 
   // Leaderboard
+  // Dynamic nav button: Crear torneo vs Registrar
+  var navBtns=document.querySelectorAll('.nav button');
+  if(navBtns[1]) {
+    var hasTorneo=state._tournamentStarted&&(state.activePlayers||[]).length;
+    navBtns[1].classList.remove('disabled');
+    if(hasTorneo) {
+      navBtns[1].innerHTML='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Registrar';
+      navBtns[1].onclick=function(){window.goTo("add",this);};
+    } else {
+      navBtns[1].innerHTML='<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Crear';
+      navBtns[1].onclick=function(){window.startOnboarding();};
+    }
+  }
+
   // Show action buttons only with active tournament
   const ba=document.getElementById('boardActions');
   if(ba){
@@ -1058,15 +1110,30 @@ window.saveGame=async function(){
   let name=selectedGame;
   if(name==='__custom__')name=document.getElementById('gameCustom').value.trim();
   if(!name||name==='__custom__'){showToast('Selecciona o escribe el juego');return;}
-  const sels=document.querySelectorAll('#posSelect select');
-  const positions=[...sels].map(s=>s.value).filter(Boolean);
-  const unique=[...new Set(positions)];
-  if(unique.length<1){showToast('Asigna al menos 1 jugador');return;}
-  if(unique.length!==positions.length){showToast('Jugadores repetidos');return;}
+  
+  var positions, teamPositions;
+  
+  if(gameMode==='teams') {
+    var validTeams=teams.filter(function(t){return t.members.length>0;});
+    if(validTeams.length<1){showToast('Necesitas al menos 1 equipo con jugadores');return;}
+    positions=[];
+    teamPositions=validTeams.map(function(t){return t.members;});
+    validTeams.forEach(function(t){t.members.forEach(function(m){positions.push(m);});});
+  } else {
+    const sels=document.querySelectorAll('#posSelect select');
+    positions=[...sels].map(s=>s.value).filter(Boolean);
+    const unique=[...new Set(positions)];
+    if(unique.length<1){showToast('Asigna al menos 1 jugador');return;}
+    if(unique.length!==positions.length){showToast('Jugadores repetidos');return;}
+    positions=unique;
+  }
+  
   if(!state.games)state.games=[];
-  state.games.push({name,positions:unique,date:new Date().toISOString()});
+  var gameEntry={name:name,positions:positions,date:new Date().toISOString()};
+  if(teamPositions){gameEntry.teams=teamPositions;}
+  state.games.push(gameEntry);
   await window.saveState();
-  selectedGame=null;document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';document.getElementById('gameSelected').style.display='none';document.getElementById('gameResultsList').style.display='none';
+  selectedGame=null;if(gameMode==='teams'){teams=[{name:'Equipo 1',members:[]},{name:'Equipo 2',members:[]}];}document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';document.getElementById('gameSelected').style.display='none';document.getElementById('gameResultsList').style.display='none';
   document.getElementById('posSelect').innerHTML='';window.addPosRow();window.addPosRow();
   window.goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');playSound('success');
 };
@@ -1096,12 +1163,7 @@ window.toggleGameCard=function(id){
 };
 
 window.goTo=function(pg,btn){
-  // Block Registrar if no active tournament
-  if(pg === 'add' && !state._tournamentStarted && !(state.activePlayers||[]).length) {
-    showToast('Configura el torneo primero');
-    playSound('tap');
-    return;
-  }
+
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-'+pg).classList.add('active');btn.classList.add('active');
@@ -1119,32 +1181,52 @@ window.onPhotoSelected=async function(event){const file=event.target.files[0];if
 window.updatePhoto=async function(playerName,event){const file=event.target.files[0];if(!file)return;showToast('Comprimiendo...');const compressed=await compressImage(file);if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[playerName]=compressed;await window.saveState();showToast('Foto actualizada ✓');};
 
 // ¿Qué jugamos?
+window._queCompatible = [];
+window.filterQueJugamos = function() {
+  var q = (document.getElementById('queJugamosSearch')||{}).value || '';
+  var filtered = window._queCompatible.filter(function(g) {
+    return !q || g.name.toLowerCase().indexOf(q.toLowerCase()) >= 0;
+  });
+  renderQueJugamosList(filtered);
+};
+
+
+window.renderQueJugamosList = function(games) {
+  var list = document.getElementById('queJugamosList');
+  if(!list) return;
+  var groups = {Baja:[],Media:[],Alta:[],'':[]};
+  games.forEach(function(g){ (groups[g.complexity||'']||groups['']).push(g); });
+  var complexLabel = {Baja:'🟢 Fácil',Media:'🟡 Media',Alta:'🔴 Experto'};
+  var html = '';
+  ['Baja','Media','Alta',''].forEach(function(comp) {
+    var gms = groups[comp]; if(!gms.length) return;
+    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:10px 0 6px;color:#555;">' + (complexLabel[comp]||'Sin clasificar') + '</div>';
+    gms.forEach(function(g, i) {
+      var idx = 'qj_' + comp + '_' + i;
+      html += '<div class="game-cat-item" style="flex-direction:column;align-items:stretch;" onclick="toggleQJCard(this.dataset.qid)" data-qid="' + idx + '">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<span style="font-size:22px;">' + (g.emoji||'🎲') + '</span>' +
+        '<div style="flex:1;"><div class="game-name-text">' + g.name + '</div>' +
+        '<div class="game-meta-text">' + (g.players?'👥 '+g.players:'') + (g.players&&g.duration?' · ':'') + (g.duration?'⏱ '+g.duration:'') + '</div></div>' +
+        '<span style="font-size:16px;font-weight:700;color:#555;" id="arr_' + idx + '">›</span></div>' +
+        '<div class="game-expand-card" id="' + idx + '">' +
+        (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;margin-bottom:10px;">' + g.desc + '</div>':'') +
+        '<button class="nb-btn nb-btn-sm nb-btn-primary" style="width:100%;" onclick="event.stopPropagation();playThisGame(this.dataset.gn)" data-gn="' + g.name + '">🎮 Jugar este</button>' +
+        '</div></div>';
+    });
+  });
+  list.innerHTML = html || '<div class="nb-empty">Sin juegos encontrados.</div>';
+};
 window.openQueJugamos=function(){
   const count=(state.activePlayers||state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
+  var searchEl = document.getElementById('queJugamosSearch');
+  if(searchEl) searchEl.value = '';
   const sub=document.getElementById('queJugamosSub');const list=document.getElementById('queJugamosList');
   const compatible=(state.catalog||[]).filter(g=>{if(!g.players)return true;const parts=g.players.replace(/\s/g,'').split('-');const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);return count>=min&&count<=max;});
   const order={Baja:0,Media:1,Alta:2};compatible.sort((a,b)=>(order[a.complexity]??1)-(order[b.complexity]??1)||a.name.localeCompare(b.name,'es'));
   sub.innerHTML='Con <strong>'+count+' jugador'+(count>1?'es':'')+'</strong> pueden jugar <strong>'+compatible.length+'</strong> de los '+(state.catalog||[]).length+' juegos.';
-  const groups={Baja:[],Media:[],Alta:[],'':[]};compatible.forEach(g=>(groups[g.complexity||'']||groups['']).push(g));
-  const complexLabel={Baja:'🟢 Fácil de aprender',Media:'🟡 Complejidad media',Alta:'🔴 Para expertos'};
-  let html='';
-  ['Baja','Media','Alta',''].forEach(comp=>{
-    const games=groups[comp];if(!games.length)return;
-    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:10px 0 6px;color:#555;">'+(complexLabel[comp]||'Sin clasificar')+'</div>';
-    games.forEach((g,i)=>{
-      const idx='qj_'+comp+'_'+i;
-      html+='<div class="game-cat-item" style="flex-direction:column;align-items:stretch;" onclick="toggleQJCard(this.dataset.qid)" data-qid="'+idx+'">'+
-        '<div style="display:flex;align-items:center;gap:10px;">'+
-        '<span style="font-size:22px;">'+(g.emoji||'🎲')+'</span>'+
-        '<div style="flex:1;"><div class="game-name-text">'+g.name+'</div>'+
-        '<div class="game-meta-text">'+(g.players?'👥 '+g.players:'')+(g.players&&g.duration?' · ':'')+(g.duration?'⏱ '+g.duration:'')+'</div></div>'+
-        '<span style="font-size:16px;font-weight:700;color:#555;" id="arr_'+idx+'">›</span></div>'+
-        '<div class="game-expand-card" id="'+idx+'">'+
-        (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;">'+g.desc+'</div>':'')+
-        '</div></div>';
-    });
-  });
-  list.innerHTML=html||'<div class="nb-empty">Ningún juego compatible.</div>';
+  window._queCompatible = compatible;
+  renderQueJugamosList(compatible);
   document.getElementById('queJugamosModal').style.display='flex';
 };
 
@@ -1399,6 +1481,7 @@ window.swReset = function() {
 
 // ---- COUNTDOWN ----
 let cdInterval = null, cdSeconds = 300, cdTotal = 300, cdRunning = false;
+window._cd = {get s(){return cdSeconds;},set s(v){cdSeconds=v;},get t(){return cdTotal;},set t(v){cdTotal=v;},get r(){return cdRunning;},set r(v){cdRunning=v;}};
 
 window.setCdPreset = function(mins, btn) {
   document.querySelectorAll('.timer-preset').forEach(function(b) { b.classList.remove('active'); });
@@ -1412,11 +1495,32 @@ window.cdToggle = function() {
     clearInterval(cdInterval); cdRunning = false;
     document.getElementById('cdStartBtn').textContent = 'Continuar';
     document.getElementById('cdSub').textContent = 'pausado';
+    // Show controls - restore whichever mode was active
+    var seg=document.getElementById('cdModeSeg');if(seg)seg.style.display='';
+    var cm=document.getElementById('cdCustomMode');
+    var pm=document.getElementById('cdPresetMode');
+    if(cm&&cm.dataset.wasOpen==='1'){
+      cm.style.display='block';
+      if(pm)pm.style.display='none';
+      document.getElementById('cdTimerDisplay').style.display='none';
+      // Sync custom display with current remaining time
+      var customDisp=document.getElementById('cdCustomDisplay');
+      if(customDisp)customDisp.textContent=window.fmtTime(window._cd.s);
+    } else {
+      if(pm)pm.style.display='block';
+      if(cm)cm.style.display='none';
+    }
   } else {
-    if(cdSeconds <= 0) cdReset();
+    if(cdSeconds <= 0) window.cdReset();
     cdRunning = true;
     document.getElementById('cdStartBtn').textContent = 'Pausar';
     document.getElementById('cdSub').textContent = 'en curso';
+    // Hide controls, show timer
+    var seg=document.getElementById('cdModeSeg');if(seg)seg.style.display='none';
+    var pm=document.getElementById('cdPresetMode');if(pm)pm.style.display='none';
+    var cm=document.getElementById('cdCustomMode');
+    if(cm){cm.dataset.wasOpen=cm.style.display!=='none'?'1':'';cm.style.display='none';}
+    var td=document.getElementById('cdTimerDisplay');if(td)td.style.display='block';
     cdInterval = setInterval(function() {
       cdSeconds--;
       var pct = cdSeconds / cdTotal;
@@ -2213,6 +2317,128 @@ document.addEventListener('click', function(e) {
   }
 });
 
+window.playThisGame = function(gameName) {
+  // Close the modal
+  document.getElementById('queJugamosModal').style.display = 'none';
+  // Pre-select the game in Registrar
+  selectedGame = gameName;
+  document.getElementById('gameSearch').value = '';
+  document.getElementById('gameResultsList').style.display = 'none';
+  document.getElementById('gameCustom').style.display = 'none';
+  var selEl = document.getElementById('gameSelected');
+  selEl.style.display = 'block';
+  document.getElementById('gameSelectedName').textContent = (gameEmoji(gameName)||'🎲') + ' ' + gameName;
+  // Navigate to Registrar
+  window.goTo('add', document.querySelectorAll('.nav button')[1]);
+  playSound('tap');
+};
+
+window.setCdMode = function(mode, btn) {
+  document.querySelectorAll('#cdModeSeg button').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('cdPresetMode').style.display = mode==='preset' ? 'block' : 'none';
+  document.getElementById('cdCustomMode').style.display = mode==='custom' ? 'block' : 'none';
+  // In custom mode, hide the big timer display (the +/- IS the display)
+  document.getElementById('cdTimerDisplay').style.display = mode==='custom' ? 'none' : 'block';
+  if(mode==='preset') window.cdReset();
+};
+
+window.setCdCustom = function() {
+  window.cdReset();
+  playSound('tap');
+};
+
+// ==================== TEAM MODE ====================
+var gameMode = 'individual';
+var teams = [];
+
+window.setGameMode = function(mode, btn) {
+  gameMode = mode;
+  var seg = btn.parentElement;
+  seg.querySelectorAll('button').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('modeIndividual').style.display = mode==='individual' ? 'block' : 'none';
+  document.getElementById('modeTeams').style.display = mode==='teams' ? 'block' : 'none';
+  if(mode==='teams' && !teams.length) {
+    teams = [{name:'Equipo 1',members:[]},{name:'Equipo 2',members:[]}];
+    window.renderTeams();
+  }
+};
+
+window.addTeam = function() {
+  teams.push({name:'Equipo '+(teams.length+1), members:[]});
+  window.renderTeams();
+  playSound('tap');
+};
+
+window.removeTeam = function(i) {
+  if(teams.length <= 2) { showToast('Mínimo 2 equipos'); return; }
+  teams.splice(i,1);
+  window.renderTeams();
+};
+
+window.addPlayerToTeam = function(teamIdx, playerName) {
+  if(!playerName) return;
+  teams.forEach(function(t){ t.members = t.members.filter(function(m){return m!==playerName;}); });
+  teams[teamIdx].members.push(playerName);
+  window.renderTeams();
+  playSound('tap');
+};
+
+window.removePlayerFromTeam = function(teamIdx, playerName) {
+  teams[teamIdx].members = teams[teamIdx].members.filter(function(m){return m!==playerName;});
+  window.renderTeams();
+};
+
+window.renderTeams = function() {
+  var list = document.getElementById('teamsList');
+  if(!list) return;
+  var activePlayers = state.activePlayers || state.players || [];
+  var assigned = {};
+  teams.forEach(function(t){ t.members.forEach(function(m){ assigned[m]=true; }); });
+  var unassigned = activePlayers.filter(function(p){ return !assigned[p]; });
+
+  list.innerHTML = teams.map(function(t, ti) {
+    var posLabel = ti===0?'🥇 1°':ti===1?'🥈 2°':ti===2?'🥉 3°':(ti+1)+'°';
+    return '<div style="border:2px solid #000;border-radius:8px;padding:10px;margin-bottom:8px;box-shadow:2px 2px 0 #000;background:#fff;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
+      '<span style="font-size:14px;font-weight:700;">' + posLabel + ' ' + t.name + '</span>' +
+      (teams.length>2?'<button class="nb-btn nb-btn-sm nb-btn-red" onclick="removeTeam('+ti+')" style="padding:2px 6px;">×</button>':'') +
+      '</div>' +
+      t.members.map(function(m) {
+        var photo = (state.playerPhotos||{})[m];
+        var avHtml = photo
+          ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
+          : '<div style="width:28px;height:28px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">'+m[0]+'</div>';
+        return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">' + avHtml +
+          '<span style="flex:1;font-size:13px;font-weight:700;">' + m + '</span>' +
+          '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePlayerFromTeam('+ti+',this.dataset.pn)" data-pn="'+m+'" style="padding:2px 6px;font-size:10px;">×</button>' +
+          '</div>';
+      }).join('') +
+      '<select class="nb-select" style="margin:4px 0 0;font-size:13px;padding:6px 8px;" onchange="addPlayerToTeam('+ti+',this.value);this.value=\'\';">' +
+      '<option value="">+ Agregar jugador...</option>' +
+      unassigned.map(function(p){ return '<option value="'+p+'">'+p+'</option>'; }).join('') +
+      '</select>' +
+      '</div>';
+  }).join('');
+};
+
+window.cdAdjust = function(delta) {
+  var secs = window._cd.t + (delta * 30);
+  secs = Math.max(30, Math.min(5940, secs));
+  window._cd.t = secs;
+  window._cd.s = secs;
+  document.getElementById('cdMinutes').value = Math.ceil(secs/60);
+  var customDisp = document.getElementById('cdCustomDisplay');
+  if(customDisp) customDisp.textContent = window.fmtTime(secs);
+  document.getElementById('cdDisplay').textContent = window.fmtTime(secs);
+  playSound('tap');
+};
+
+window.cdFromInput = function() {
+  window.cdReset();
+};
+
 // Enter key support for inputs
 document.addEventListener('DOMContentLoaded', function() {
   var enterMap = {
@@ -2268,6 +2494,10 @@ window['_m_swReset'] = window.swReset;
 window['_m_cdToggle'] = window.cdToggle;
 window['_m_cdReset'] = window.cdReset;
 window['_m_setCdPreset'] = window.setCdPreset;
+window['_m_setCdMode'] = window.setCdMode;
+window['_m_setCdCustom'] = window.setCdCustom;
+window['_m_cdAdjust'] = window.cdAdjust;
+window['_m_cdFromInput'] = window.cdFromInput;
 window['_m_startTurnTimer'] = window.startTurnTimer;
 window['_m_turnPause'] = window.turnPause;
 window['_m_turnNext'] = window.turnNext;
@@ -2307,6 +2537,15 @@ window['_m_obRenderExisting'] = window.obRenderExisting;
 window['_m_tsrRenderStep2'] = window.tsrRenderStep2;
 window['_m_tsrRenderStep1'] = window.tsrRenderStep1;
 window['_m_filterGameResults'] = window.filterGameResults;
+window['_m_filterQueJugamos'] = window.filterQueJugamos;
+window['_m_playThisGame'] = window.playThisGame;
+window['_m_renderTeams'] = window.renderTeams;
+window['_m_removePlayerFromTeam'] = window.removePlayerFromTeam;
+window['_m_addPlayerToTeam'] = window.addPlayerToTeam;
+window['_m_removeTeam'] = window.removeTeam;
+window['_m_addTeam'] = window.addTeam;
+window['_m_setGameMode'] = window.setGameMode;
+window['_m_renderQueJugamosList'] = window.renderQueJugamosList;
 window['_m_selectGame'] = window.selectGame;
 window['_m_selectCustomGame'] = window.selectCustomGame;
 window['_m_clearGameSelection'] = window.clearGameSelection;
