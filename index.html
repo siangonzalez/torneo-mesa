@@ -248,6 +248,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
       </div>
       <div id="leaderList"><div class="nb-empty">Agrega jugadores en Ajustes.</div></div>
     </div>
+    <div id="lastChampCard" style="display:none;"></div>
   </div>
 
   <!-- REGISTRAR -->
@@ -277,6 +278,10 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
         <div class="nb-btn-row">
           <button class="nb-btn nb-btn-sm nb-btn-green" onclick="addPosRow()">+ jugador</button>
           <button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePosRow()">− quitar</button>
+        </div>
+        <div id="otherParticipantsWrap" style="margin-top:14px;">
+          <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:6px;">¿Jugaron otros que no llegaron a podio? (opcional)</div>
+          <div id="otherParticipantsList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
         </div>
       </div>
       <div id="modeTeams" style="display:none;">
@@ -329,19 +334,6 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
         <div class="nb-card">
           <span class="nb-card-title">Perfil de jugador</span>
           <div id="profilePicker"></div>
-        </div>
-        <div id="profileDetail" style="display:none;">
-          <div class="nb-card">
-            <div class="profile-header">
-              <div class="profile-avatar-lg" id="profAvatar"></div>
-              <div><div class="profile-name" id="profName"></div><div class="profile-sub" id="profSub"></div></div>
-            </div>
-            <div class="metrics-grid" id="profMetrics"></div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Mejor juego</div>
-            <div id="profBestGame" style="font-size:14px;font-weight:500;padding:4px 0;margin-bottom:10px;"></div>
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Últimas partidas</div>
-            <div id="profHistory"></div>
-          </div>
         </div>
       </div>
     </div>
@@ -626,6 +618,27 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
   </div>
 </div>
 
+<!-- Player profile modal -->
+<div class="modal-overlay" id="profileModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2>👤 Perfil</h2>
+      <button class="modal-close" onclick="document.getElementById('profileModal').style.display='none'">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-header">
+        <div class="profile-avatar-lg" id="profAvatar"></div>
+        <div><div class="profile-name" id="profName"></div><div class="profile-sub" id="profSub"></div></div>
+      </div>
+      <div class="metrics-grid" id="profMetrics"></div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Mejor juego</div>
+      <div id="profBestGame" style="font-size:14px;font-weight:500;padding:4px 0;margin-bottom:10px;"></div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Últimas partidas</div>
+      <div id="profHistory"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Custom confirm modal -->
 <div class="modal-overlay" id="confirmModal" style="display:none;align-items:center;">
   <div style="background:#fff;border:3px solid #000;border-radius:12px;box-shadow:6px 6px 0 #000;max-width:340px;width:90%;padding:20px;margin:0 16px;">
@@ -664,7 +677,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','setCdMode','setCdCustom','cdAdjust','cdFromInput','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','tsrFilterGames','obUpdateBtn','obRenderExisting','tsrRenderStep2','tsrRenderStep1','filterGameResults','filterQueJugamos','playThisGame','renderTeams','removePlayerFromTeam','addPlayerToTeam','removeTeam','addTeam','setGameMode','renderQueJugamosList','selectGame','selectCustomGame','clearGameSelection','confirmCustomGame','removeLastTeam','quePlayCustom','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','setCdMode','setCdCustom','cdAdjust','cdFromInput','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','tsrFilterGames','obUpdateBtn','obRenderExisting','tsrRenderStep2','tsrRenderStep1','filterGameResults','filterQueJugamos','playThisGame','renderTeams','removePlayerFromTeam','addPlayerToTeam','removeTeam','addTeam','setGameMode','renderQueJugamosList','selectGame','selectCustomGame','clearGameSelection','confirmCustomGame','removeLastTeam','quePlayCustom','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji','renderOtherParticipants','toggleOtherParticipant'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
@@ -768,22 +781,45 @@ function computeScores(games){
   var playerList = state.activePlayers || state.players || [];
   playerList.forEach(p=>{scores[p]=0;wins[p]=0;podiums[p]=0;gp[p]=0;});
   (games||[]).forEach(g=>{
+    // "Jugó esta partida" = participants (podio + sin puesto). Fallback a positions para partidas viejas sin ese campo.
+    const participants = g.participants || g.positions || [];
+    participants.forEach(p=>{ if(gp[p]!==undefined) gp[p]++; });
     if(g.teams&&g.teams.length){
       // Team game: all members of same team get same points
       const pts=getPoints(g.teams.length,state.system);
       g.teams.forEach((team,ti)=>{
         team.forEach(p=>{
-          if(scores[p]!==undefined){scores[p]+=pts[ti]||0;if(ti===0)wins[p]++;if(ti<3)podiums[p]++;gp[p]++;}
+          if(scores[p]!==undefined){scores[p]+=pts[ti]||0;if(ti===0)wins[p]++;if(ti<3)podiums[p]++;}
         });
       });
     } else {
-      // Individual game
+      // Individual game — solo quienes tienen puesto asignado (positions) reciben puntos
       const pts=getPoints(g.positions.length,state.system);
-      g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;gp[p]++;}});
+      g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;}});
     }
   });
   return playerList.map(p=>({name:p,pts:scores[p],wins:wins[p],podiums:podiums[p],gamesPlayed:gp[p]}))
     .sort((a,b)=>b.pts-a.pts||b.wins-a.wins||b.podiums-a.podiums||a.name.localeCompare(b.name,'es'));
+}
+
+// Puestos "de verdad" para mostrar en UI: si dos jugadores quedan exactamente iguales
+// en pts/wins/podiums, comparten el mismo puesto (1,1,3,4...). El orden interno del
+// array (que sí usa desempate alfabético) no cambia — solo se recalcula el número mostrado.
+function computeDisplayRanks(sc){
+  const ranks=[];
+  (sc||[]).forEach((p,i)=>{
+    if(i>0 && p.pts===sc[i-1].pts && p.wins===sc[i-1].wins && p.podiums===sc[i-1].podiums){
+      ranks.push(ranks[i-1]);
+    } else {
+      ranks.push(i+1);
+    }
+  });
+  return ranks;
+}
+
+// Nombres de jugadores empatados EXACTO con `player` en pts/wins/podiums (excluyéndolo a él mismo)
+function getTiedWith(sc,player){
+  return (sc||[]).filter(p=>p.name!==player.name && p.pts===player.pts && p.wins===player.wins && p.podiums===player.podiums).map(p=>p.name);
 }
 
 const medals=['🥇','🥈','🥉'];
@@ -831,12 +867,14 @@ window.render=function(){
     </div>`;}
   else{
     const sc=computeScores(state.games);
+    const ranks=computeDisplayRanks(sc);
     const streaks=getStreaks();
     board.innerHTML=sc.map((p,i)=>{
-      const isFirst=i===0;
+      const rank=ranks[i];
+      const isFirst=rank===1;
       const streak=streaks[p.name];
       return `<div class="leader-row${isFirst?' first-place':''}">
-        <span class="rank">${i<3?medals[i]:i+1}</span>
+        <span class="rank">${rank<=3?medals[rank-1]:rank}</span>
         ${av(p.name,36)}
         <div style="flex:1;">
           <div class="player-name">${p.name}</div>
@@ -850,6 +888,34 @@ window.render=function(){
         <div class="player-pts">${p.pts}<small> pts</small></div>
       </div>`;
     }).join('');
+  }
+
+  // Último campeón — solo se muestra cuando no hay torneo activo (pantalla de bienvenida/nuevo torneo)
+  const lcc=document.getElementById('lastChampCard');
+  if(lcc){
+    const noActiveTourney=!(state.players||[]).length || (!(state.games||[]).length && !state._tournamentStarted);
+    const lastArchived=(state.archive||[]).length?state.archive[state.archive.length-1]:null;
+    if(noActiveTourney && lastArchived && lastArchived.games && lastArchived.games.length){
+      const lsc=computeScores(lastArchived.games);
+      const lchamp=lsc[0];
+      const lTied=getTiedWith(lsc,lchamp);
+      const ld=lastArchived.date?new Date(lastArchived.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
+      lcc.style.display='block';
+      lcc.innerHTML=`<div class="nb-card" style="background:#FFE066;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin-bottom:8px;">🏆 Último campeón</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          ${av(lchamp.name,44)}
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;">${lchamp.name}</div>
+            <div style="font-size:12px;font-weight:500;color:#555;">${lastArchived.name}${ld?' · '+ld:''}${lTied.length?' · empate c/ '+lTied.join(', '):''}</div>
+          </div>
+          <div class="player-pts">${lchamp.pts}<small> pts</small></div>
+        </div>
+      </div>`;
+    } else {
+      lcc.style.display='none';
+      lcc.innerHTML='';
+    }
   }
 
   // Game select + search
@@ -1003,19 +1069,43 @@ function renderStats(){
   }).join(''):'<div class="nb-empty">Sin datos.</div>';
 }
 
+// Resuelve el resultado de UN jugador en UNA partida, sea individual rankeado,
+// individual sin puesto (jugó pero no quedó en podio), o de equipos.
+function getPlayerGameResult(g,name){
+  if(g.teams&&g.teams.length){
+    const ti=g.teams.findIndex(function(team){return team.indexOf(name)>=0;});
+    if(ti<0)return{participated:false};
+    const pts=getPoints(g.teams.length,state.system);
+    return{participated:true,ranked:true,idx:ti,points:pts[ti]||0};
+  }
+  const positions=g.positions||[];
+  const i=positions.indexOf(name);
+  if(i>=0){
+    const pts=getPoints(positions.length,state.system);
+    return{participated:true,ranked:true,idx:i,points:pts[i]||0};
+  }
+  // No tiene puesto asignado — ¿está en participants? (jugó pero no llegó a podio)
+  const participants=g.participants||positions;
+  if(participants.indexOf(name)>=0)return{participated:true,ranked:false,idx:-1,points:0};
+  return{participated:false};
+}
+
 window.showProfile=function(name){
-  document.getElementById('profileDetail').style.display='block';
+  document.getElementById('profileModal').style.display='flex';
   const allGames=[...(state.games||[]),...(state.archive||[]).flatMap(t=>t.games||[])];
-  const myGames=allGames.filter(g=>g.positions.includes(name));
+  const myGames=allGames.filter(g=>getPlayerGameResult(g,name).participated);
   let wins=0,podiums=0,pts=0;const gamePts={};
   myGames.forEach(g=>{
-    const i=g.positions.indexOf(name);const p=getPoints(g.positions.length,state.system);const earned=p[i]||0;
-    pts+=earned;if(i===0)wins++;if(i<3)podiums++;
+    const r=getPlayerGameResult(g,name);
+    pts+=r.points;
+    if(r.ranked&&r.idx===0)wins++;
+    if(r.ranked&&r.idx<3)podiums++;
     if(!gamePts[g.name])gamePts[g.name]={pts:0,games:0,wins:0};
-    gamePts[g.name].pts+=earned;gamePts[g.name].games++;if(i===0)gamePts[g.name].wins++;
+    gamePts[g.name].pts+=r.points;gamePts[g.name].games++;
+    if(r.ranked&&r.idx===0)gamePts[g.name].wins++;
   });
-  const totalTourneyGames=(state.games||[]).length+(state.archive||[]).flatMap(t=>t.games||[]).length;
-  const winRate=totalTourneyGames?Math.round(wins/totalTourneyGames*100):0;
+  // Win rate clásico: victorias / partidas que este jugador realmente jugó
+  const winRate=myGames.length?Math.round(wins/myGames.length*100):0;
   const profAv=document.getElementById('profAvatar');
   const photo=(state.playerPhotos||{})[name];
   if(photo){profAv.innerHTML=`<img src="${photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`;profAv.style.background='none';}
@@ -1026,28 +1116,31 @@ window.showProfile=function(name){
     `<div class="metric-box"><div class="metric-val">${pts}</div><div class="metric-lbl">Puntos</div></div>
     <div class="metric-box"><div class="metric-val">${wins}</div><div class="metric-lbl">Victorias</div></div>
     <div class="metric-box"><div class="metric-val">${podiums}</div><div class="metric-lbl">Podios</div></div>
-    <div class="metric-box"><div class="metric-val">${winRate}%</div><div class="metric-lbl">Win rate global</div></div>`;
+    <div class="metric-box"><div class="metric-val">${winRate}%</div><div class="metric-lbl">Win rate</div></div>`;
   const best=Object.entries(gamePts).sort((a,b)=>b[1].wins-a[1].wins)[0];
   document.getElementById('profBestGame').innerHTML=best?`${gameEmoji(best[0])} ${best[0]} — ${best[1].wins}V en ${best[1].games} partidas`:'Sin datos';
   document.getElementById('profHistory').innerHTML=myGames.slice(-10).reverse().map(g=>{
-    const i=g.positions.indexOf(name);const p=getPoints(g.positions.length,state.system);
+    const r=getPlayerGameResult(g,name);
+    const label=r.ranked?(r.idx<3?medals[r.idx]:(r.idx+1)+'°'):'Participó';
     return `<div class="stat-row"><div>${gameEmoji(g.name)} <span style="font-size:13px;font-weight:700;">${g.name}</span></div>
-      <div>${i<3?medals[i]:(i+1)+'°'} <span class="nb-tag tag-win">+${p[i]||0}</span></div></div>`;
+      <div>${label} <span class="nb-tag tag-win">+${r.points}</span></div></div>`;
   }).join('')||'<div class="nb-empty">Sin partidas.</div>';
 };
 
 window.showArchiveTorney=function(i){
   const t=state.archive[i];if(!t)return;
   const sc=computeScores(t.games);
+  const ranks=computeDisplayRanks(sc);
   const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
   document.getElementById('archiveModalTitle').textContent='🏆 '+t.name;
   document.getElementById('archiveModalSub').textContent=d+' · '+t.games.length+' juegos jugados';
   const ms=['🥇','🥈','🥉'];
   document.getElementById('archiveModalBody').innerHTML=
     sc.map((p,pi)=>{
-      const isFirst=pi===0;
+      const rank=ranks[pi];
+      const isFirst=rank===1;
       return '<div class="leader-row'+(isFirst?' first-place':'')+'">'+
-        '<span class="rank">'+(pi<3?ms[pi]:pi+1)+'</span>'+
+        '<span class="rank">'+(rank<=3?ms[rank-1]:rank)+'</span>'+
         '<div style="flex:1;"><div class="player-name">'+p.name+'</div>'+
         '<div style="display:flex;gap:3px;margin-top:3px;">'+
         (p.wins?'<span class="nb-tag tag-win">'+p.wins+'V</span>':'')+
@@ -1070,7 +1163,13 @@ window.showArchiveTorney=function(i){
 window.closeTournament=async function(){
   if(!(state.games||[]).length){showToast('No hay juegos registrados aún');return;}
   const sc=computeScores(state.games);const champ=sc[0];
-  if(!await nbConfirm('🏆 Campeón: '+champ.name+' con '+champ.pts+' pts\n\nEl torneo se archivará y empezará uno nuevo.','¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
+  const tied=getTiedWith(sc,champ);
+  let confirmMsg='🏆 Campeón: '+champ.name+' con '+champ.pts+' pts';
+  if(tied.length){
+    confirmMsg+='\n\n(Empate en puntos, victorias y podios con '+tied.join(', ')+'. Se definió por orden alfabético — el trofeo es para '+champ.name+'.)';
+  }
+  confirmMsg+='\n\nEl torneo se archivará y empezará uno nuevo.';
+  if(!await nbConfirm(confirmMsg,'¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
   state.games=[];state._tournamentStarted=false;state.activePlayers=null;if(window._turnPlayers)window._turnPlayers.length=0;if(window._turnOrder)window._turnOrder.length=0;var _tol=document.getElementById('turnOrderList');if(_tol)_tol.innerHTML='';var _tpp=document.getElementById('turnPlayerPicker');if(_tpp)_tpp.innerHTML='';await window.saveState();
@@ -1103,9 +1202,9 @@ window.selectEmoji=function(e){
 
 // Pos selects
 function buildPlayerOpts(){return'<option value="">— jugador —</option>'+((state.activePlayers||state.players)||[]).map(p=>'<option value="'+p+'">'+p+'</option>').join('');}
-function refreshPosSelects(){[...document.querySelectorAll('#posSelect select')].forEach(s=>{const v=s.value;s.innerHTML=buildPlayerOpts();if(v)s.value=v;});}
-window.addPosRow=function(){const cont=document.getElementById('posSelect');const i=cont.children.length;const d=document.createElement('div');d.className='pos-item';d.innerHTML='<span class="pos-label">'+(i+1)+'°</span><select>'+buildPlayerOpts()+'</select>';cont.appendChild(d);};
-window.removePosRow=function(){const cont=document.getElementById('posSelect');if(cont.children.length>1)cont.removeChild(cont.lastChild);};
+function refreshPosSelects(){[...document.querySelectorAll('#posSelect select')].forEach(s=>{const v=s.value;s.innerHTML=buildPlayerOpts();if(v)s.value=v;s.setAttribute('onchange','renderOtherParticipants()');});window.renderOtherParticipants&&window.renderOtherParticipants();}
+window.addPosRow=function(){const cont=document.getElementById('posSelect');const i=cont.children.length;const d=document.createElement('div');d.className='pos-item';d.innerHTML='<span class="pos-label">'+(i+1)+'°</span><select onchange="renderOtherParticipants()">'+buildPlayerOpts()+'</select>';cont.appendChild(d);window.renderOtherParticipants&&window.renderOtherParticipants();};
+window.removePosRow=function(){const cont=document.getElementById('posSelect');if(cont.children.length>1)cont.removeChild(cont.lastChild);window.renderOtherParticipants&&window.renderOtherParticipants();};
 
 window.onGameSelect=function(){const v=document.getElementById('gameSelect').value;document.getElementById('gameCustom').style.display=v==='__custom__'?'block':'none';};
 
@@ -1131,13 +1230,20 @@ window.saveGame=async function(){
     positions=unique;
   }
   
+  // participants = todos los que realmente jugaron esta partida (podio + los marcados sin puesto).
+  // En equipos, positions ya incluye a todos los miembros de todos los equipos.
+  var participants = positions.slice();
+  if(gameMode!=='teams'){
+    otherParticipants.forEach(function(p){ if(participants.indexOf(p)===-1) participants.push(p); });
+  }
+
   if(!state.games)state.games=[];
-  var gameEntry={name:name,positions:positions,date:new Date().toISOString()};
+  var gameEntry={name:name,positions:positions,participants:participants,date:new Date().toISOString()};
   if(teamPositions){gameEntry.teams=teamPositions;}
   state.games.push(gameEntry);
   await window.saveState();
-  selectedGame=null;if(gameMode==='teams'){teams=[{name:'Equipo 1',members:[]},{name:'Equipo 2',members:[]}];}document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';document.getElementById('gameSelected').style.display='none';document.getElementById('gameResultsList').style.display='none';
-  document.getElementById('posSelect').innerHTML='';window.addPosRow();window.addPosRow();
+  selectedGame=null;if(gameMode==='teams'){teams=[{name:'Equipo 1',members:[]},{name:'Equipo 2',members:[]}];}otherParticipants=[];document.getElementById('gameCustom').value='';document.getElementById('gameCustom').style.display='none';document.getElementById('gameSearch').value='';document.getElementById('gameSelected').style.display='none';document.getElementById('gameResultsList').style.display='none';
+  document.getElementById('posSelect').innerHTML='';window.addPosRow();window.addPosRow();window.renderOtherParticipants();
   window.goTo('board',document.querySelector('.nav button'));showToast('✓ Resultado guardado');playSound('success');
 };
 
@@ -2387,6 +2493,32 @@ window.setCdCustom = function() {
 // ==================== TEAM MODE ====================
 var gameMode = 'individual';
 var teams = [];
+// Jugadores marcados como "participó pero no llegó a podio" en modo individual
+var otherParticipants = [];
+
+window.renderOtherParticipants = function(){
+  var wrap = document.getElementById('otherParticipantsList');
+  if(!wrap) return;
+  var active = (state.activePlayers || state.players || []);
+  var ranked = [...document.querySelectorAll('#posSelect select')].map(function(s){return s.value;}).filter(Boolean);
+  var available = active.filter(function(p){ return ranked.indexOf(p)===-1; });
+  if(!available.length){
+    wrap.innerHTML = '<div style="font-size:12px;color:#888;">Todos los jugadores activos ya están en el podio.</div>';
+    return;
+  }
+  wrap.innerHTML = available.map(function(p){
+    var sel = otherParticipants.indexOf(p)>=0;
+    var esc = p.replace(/'/g,"\\'");
+    return '<span class="nb-chip" style="cursor:pointer;'+(sel?'background:#A3E635;':'background:#fff;')+'" onclick="toggleOtherParticipant(\''+esc+'\')">'+(sel?'✓ ':'+ ')+p+'</span>';
+  }).join('');
+};
+
+window.toggleOtherParticipant = function(name){
+  var idx = otherParticipants.indexOf(name);
+  if(idx>=0) otherParticipants.splice(idx,1); else otherParticipants.push(name);
+  playSound('tap');
+  window.renderOtherParticipants();
+};
 
 window.setGameMode = function(mode, btn) {
   gameMode = mode;
@@ -2570,6 +2702,8 @@ window['_m_renderTurnPicker'] = window.renderTurnPicker;
 window['_m_filterGameSelect'] = window.filterGameSelect;
 window['_m_toggleEmojiPicker'] = window.toggleEmojiPicker;
 window['_m_selectEmoji'] = window.selectEmoji;
+window['_m_renderOtherParticipants'] = window.renderOtherParticipants;
+window['_m_toggleOtherParticipant'] = window.toggleOtherParticipant;
 window['_m_render'] = window.render;
 window['_m_saveState'] = window.saveState;
 window['_m_clearTurnOrder'] = window.clearTurnOrder;
