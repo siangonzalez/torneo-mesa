@@ -117,6 +117,13 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 .stat-row:last-child{border:none;}
 .metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .metric-box{background:#E8F5A3;border:2px solid #000;border-radius:8px;padding:12px;text-align:center;box-shadow:2px 2px 0 #000;}
+.stat-carousel{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
+.stat-carousel::-webkit-scrollbar{display:none;}
+.stat-card-mini{scroll-snap-align:start;flex:0 0 auto;width:150px;background:#fff;border:3px solid #000;border-radius:12px;box-shadow:3px 3px 0 #000;padding:12px;}
+.stat-card-mini .sc-icon{font-size:22px;margin-bottom:6px;}
+.stat-card-mini .sc-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#555;margin-bottom:4px;}
+.stat-card-mini .sc-value{font-size:14px;font-weight:700;line-height:1.25;overflow-wrap:break-word;}
+.stat-card-mini .sc-sub{font-size:11px;font-weight:500;color:#555;margin-top:3px;overflow-wrap:break-word;}
 .metric-val{font-size:24px;font-weight:700;}
 .metric-lbl{font-size:11px;font-weight:700;color:#555;margin-top:2px;text-transform:uppercase;}
 .seg{display:flex;border:2px solid #000;border-radius:8px;overflow:hidden;margin-bottom:12px;box-shadow:2px 2px 0 #000;}
@@ -249,6 +256,10 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
       <div id="leaderList"><div class="nb-empty">Agrega jugadores en Ajustes.</div></div>
     </div>
     <div id="lastChampCard" style="display:none;"></div>
+    <div id="globalStatsCard" style="display:none;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:14px 2px 8px;">📊 Estadísticas globales</div>
+      <div class="stat-carousel" id="globalStatsList"></div>
+    </div>
   </div>
 
   <!-- REGISTRAR -->
@@ -947,6 +958,9 @@ window.render=function(){
     }
   }
 
+  // Estadísticas globales (carrusel)
+  renderGlobalStats();
+
   // Game select + search
   filterGameSelect();
 
@@ -1532,6 +1546,228 @@ function getStreaks() {
   var result = {};
   if(lastWinner && streaks[lastWinner]) result[lastWinner] = streaks[lastWinner];
   return result;
+}
+
+// ==================== ESTADÍSTICAS GLOBALES (histórico: archivados + torneo actual) ====================
+function getAllGamesEver(){
+  return [...(state.archive||[]).flatMap(t=>t.games||[]), ...(state.games||[])];
+}
+
+// Racha de victorias consecutivas más larga de toda la historia (no solo la activa)
+function getLongestStreakEver(){
+  const games=getAllGamesEver();
+  let current={}, best=null;
+  games.forEach(g=>{
+    const winner=g.positions&&g.positions[0];
+    if(!winner)return;
+    current[winner]=(current[winner]||0)+1;
+    Object.keys(current).forEach(p=>{ if(p!==winner) current[p]=0; });
+    if(!best || current[winner]>best.len) best={name:winner,len:current[winner]};
+  });
+  return (best && best.len>=2) ? best : null;
+}
+
+// Puntos acumulados de por vida por jugador (independiente del roster activo actual)
+function getLifetimePoints(){
+  const games=getAllGamesEver();
+  const totals={};
+  games.forEach(g=>{
+    if(g.teams&&g.teams.length){
+      const pts=getGamePoints(g.teams.length,state.system,g.complexity);
+      g.teams.forEach((team,ti)=>{ team.forEach(p=>{ totals[p]=(totals[p]||0)+(pts[ti]||0); }); });
+    } else {
+      const positions=g.positions||[];
+      const pts=getGamePoints(positions.length,state.system,g.complexity);
+      positions.forEach((p,i)=>{ if(p) totals[p]=(totals[p]||0)+(pts[i]||0); });
+    }
+  });
+  return Object.entries(totals).map(([name,pts])=>({name,pts})).sort((a,b)=>b.pts-a.pts);
+}
+
+// Win rate histórico (victorias/partidas jugadas de por vida), con mínimo de partidas para filtrar muestras chicas
+function getLifetimeWinRates(minGames){
+  const games=getAllGamesEver();
+  const wins={},played={};
+  games.forEach(g=>{
+    const participants=g.participants||g.positions||[];
+    participants.forEach(p=>{ played[p]=(played[p]||0)+1; });
+    if(g.teams&&g.teams.length){
+      if(g.teams[0]) g.teams[0].forEach(p=>{ wins[p]=(wins[p]||0)+1; });
+    } else {
+      const w=(g.positions||[])[0];
+      if(w) wins[w]=(wins[w]||0)+1;
+    }
+  });
+  return Object.keys(played).filter(p=>played[p]>=minGames)
+    .map(p=>({name:p,winRate:Math.round((wins[p]||0)/played[p]*100),games:played[p],wins:wins[p]||0}))
+    .sort((a,b)=>b.winRate-a.winRate||b.games-a.games);
+}
+
+// Jugador que más veces quedó en último lugar (partidas individuales o de equipos con 2+ rankeados)
+function getLastPlaceLeader(){
+  const games=getAllGamesEver();
+  const counts={};
+  games.forEach(g=>{
+    if(g.teams&&g.teams.length>=2){
+      const lastTeam=g.teams[g.teams.length-1];
+      lastTeam.forEach(p=>{ counts[p]=(counts[p]||0)+1; });
+    } else if(g.positions && g.positions.length>=2){
+      const last=g.positions[g.positions.length-1];
+      if(last) counts[last]=(counts[last]||0)+1;
+    }
+  });
+  const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  return entries.length ? {name:entries[0][0],count:entries[0][1]} : null;
+}
+
+// Juego probado por más jugadores distintos a lo largo de la historia
+function getMostVersatileGame(){
+  const games=getAllGamesEver();
+  const byGame={};
+  games.forEach(g=>{
+    const participants=g.participants||g.positions||[];
+    if(!byGame[g.name]) byGame[g.name]=new Set();
+    participants.forEach(p=>byGame[g.name].add(p));
+  });
+  let best=null;
+  Object.entries(byGame).forEach(([name,set])=>{ if(!best||set.size>best.count) best={name,count:set.size}; });
+  return best;
+}
+
+// Estimación de minutos jugados a partir de la duración del catálogo (promedio del rango)
+function parseDurationMinutes(durationStr){
+  if(!durationStr) return 0;
+  const nums=(durationStr.match(/\d+/g)||[]).map(Number);
+  if(!nums.length) return 0;
+  return nums.length>=2 ? (nums[0]+nums[1])/2 : nums[0];
+}
+function getTotalPlayMinutes(){
+  const games=getAllGamesEver();
+  let total=0;
+  games.forEach(g=>{
+    const cat=(state.catalog||[]).find(c=>c.name===g.name);
+    total+=parseDurationMinutes(cat&&cat.duration);
+  });
+  return Math.round(total);
+}
+function formatMinutes(mins){
+  if(mins<60) return mins+' min';
+  const h=Math.floor(mins/60), m=Math.round(mins%60);
+  return h+'h'+(m?' '+m+'m':'');
+}
+
+// Dupla de jugadores que más veces coincidió jugando juntos en la misma partida
+function getTopDuo(){
+  const games=getAllGamesEver();
+  const pairCounts={};
+  games.forEach(g=>{
+    const participants=g.participants||g.positions||[];
+    for(let i=0;i<participants.length;i++){
+      for(let j=i+1;j<participants.length;j++){
+        const key=[participants[i],participants[j]].sort((a,b)=>a.localeCompare(b,'es')).join(' & ');
+        pairCounts[key]=(pairCounts[key]||0)+1;
+      }
+    }
+  });
+  const entries=Object.entries(pairCounts).sort((a,b)=>b[1]-a[1]);
+  return entries.length ? {pair:entries[0][0],count:entries[0][1]} : null;
+}
+
+// Torneo archivado con el marcador más reñido (menor diferencia de puntos entre 1° y 2°)
+function getClosestTournament(){
+  let best=null;
+  (state.archive||[]).forEach(t=>{
+    const sc=computeScores(t.games);
+    if(sc.length>=2){
+      const diff=sc[0].pts-sc[1].pts;
+      if(!best||diff<best.diff) best={name:t.name,diff,champ:sc[0].name,runnerUp:sc[1].name};
+    }
+  });
+  return best;
+}
+
+function renderGlobalStats(){
+  const gsc=document.getElementById('globalStatsCard');
+  if(!gsc)return;
+  const noActiveTourney=!(state.players||[]).length || (!(state.games||[]).length && !state._tournamentStarted);
+  const archivedGames=(state.archive||[]).flatMap(t=>t.games||[]);
+  const allGames=getAllGamesEver();
+  if(!noActiveTourney || !allGames.length){ gsc.style.display='none'; gsc.innerHTML=''; return; }
+
+  const cards=[];
+
+  // Campeón con más títulos
+  const titles={};
+  (state.archive||[]).forEach(t=>{ const champ=computeScores(t.games)[0]; if(champ) titles[champ.name]=(titles[champ.name]||0)+1; });
+  const titleEntries=Object.entries(titles).sort((a,b)=>b[1]-a[1]);
+  if(titleEntries.length){
+    const [tName,tCount]=titleEntries[0];
+    const tied=titleEntries.filter(([n,c])=>c===tCount&&n!==tName);
+    cards.push({icon:'🏆',label:'Más títulos',value:tName,sub:tCount+' torneo'+(tCount===1?'':'s')+(tied.length?' (empate)':'')});
+  }
+
+  // Racha histórica más larga
+  const streak=getLongestStreakEver();
+  if(streak) cards.push({icon:'🔥',label:'Racha histórica',value:streak.len+' victorias seguidas',sub:streak.name});
+
+  // Juego más jugado de siempre
+  const freq={}; allGames.forEach(g=>{freq[g.name]=(freq[g.name]||0)+1;});
+  const freqEntries=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+  if(freqEntries.length){
+    const [gName,gCount]=freqEntries[0];
+    cards.push({icon:gameEmoji(gName),label:'Más jugado',value:gName,sub:gCount+' partida'+(gCount===1?'':'s')});
+  }
+
+  // Top 3 histórico por puntos
+  const lifetime=getLifetimePoints();
+  if(lifetime.length){
+    const top3=lifetime.slice(0,3);
+    cards.push({icon:'📊',label:'Más puntos (histórico)',value:top3[0].name+' · '+top3[0].pts+' pts',sub:top3.slice(1).map((p,i)=>(i+2)+'° '+p.name).join(' · ')||'Único con puntos'});
+  }
+
+  // Total de partidas y torneos
+  const nTourneys=(state.archive||[]).length;
+  cards.push({icon:'📅',label:'Total jugado',value:archivedGames.length+' partida'+(archivedGames.length===1?'':'s'),sub:nTourneys+' torneo'+(nTourneys===1?'':'s')+' cerrado'+(nTourneys===1?'':'s')});
+
+  // Mejor win rate histórico (mínimo 5 partidas)
+  const winRates=getLifetimeWinRates(5);
+  if(winRates.length){
+    const best=winRates[0];
+    cards.push({icon:'🥇',label:'Mejor win rate',value:best.name+' · '+best.winRate+'%',sub:best.wins+'V en '+best.games+' partidas (mín. 5)'});
+  }
+
+  // --- Datos curiosos ---
+
+  // Quien más veces quedó último
+  const lastPlace=getLastPlaceLeader();
+  if(lastPlace) cards.push({icon:'🐢',label:'Más últimos lugares',value:lastPlace.name,sub:lastPlace.count+' vez'+(lastPlace.count===1?'':'es')});
+
+  // Juego con más jugadores distintos
+  const versatile=getMostVersatileGame();
+  if(versatile) cards.push({icon:'🎭',label:'Más variado',value:versatile.name,sub:versatile.count+' jugadores distintos lo probaron'});
+
+  // Tiempo total jugado (estimado)
+  const totalMin=getTotalPlayMinutes();
+  if(totalMin>0) cards.push({icon:'⏱️',label:'Tiempo total jugado',value:formatMinutes(totalMin),sub:'estimado según duración del catálogo'});
+
+  // Dupla que más veces coincidió jugando junta
+  const duo=getTopDuo();
+  if(duo) cards.push({icon:'🤝',label:'Dupla más frecuente',value:duo.pair,sub:duo.count+' partidas juntos'});
+
+  // Torneo más reñido
+  const closest=getClosestTournament();
+  if(closest) cards.push({icon:'📈',label:'Torneo más reñido',value:closest.name,sub:closest.diff===0?'¡Empate! '+closest.champ+' vs '+closest.runnerUp:closest.diff+' pts entre '+closest.champ+' y '+closest.runnerUp});
+
+  if(!cards.length){ gsc.style.display='none'; gsc.innerHTML=''; return; }
+  gsc.style.display='block';
+  document.getElementById('globalStatsList').innerHTML=cards.map(c=>
+    `<div class="stat-card-mini">
+      <div class="sc-icon">${c.icon}</div>
+      <div class="sc-label">${c.label}</div>
+      <div class="sc-value">${c.value}</div>
+      <div class="sc-sub">${c.sub}</div>
+    </div>`
+  ).join('');
 }
 
 // ==================== SHARE SCOREBOARD ====================
