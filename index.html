@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- deploy test: Claude push 2026-10-02 11:06 America/Bogota -->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -497,7 +496,8 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
     <div class="nb-card">
       <span class="nb-card-title">Sistema de puntos</span>
       <select class="nb-select" id="settingSystem" onchange="saveSystem()">
-        <option value="proportional">Proporcional (recomendado)</option>
+        <option value="balanced">Equilibrado (recomendado)</option>
+        <option value="proportional">Proporcional</option>
         <option value="fibonacci">Fibonacci invertido</option>
         <option value="flat">Puntos fijos</option>
       </select>
@@ -764,7 +764,7 @@ const DEFAULT_GAMES = [
 
 const EMOJI_LIST=['🎲', '🃏', '🎯', '🎮', '🏆', '🥇', '⚔️', '🛡️', '🗡️', '🔮', '🧩', '🎰', '🎳', '🎪', '🎭', '🃏', '🀱', '🎴', '🧸', '🪆', '🦁', '🐉', '🦊', '🐺', '🦅', '🐙', '🦈', '🦖', '🐝', '🦋', '🏰', '🏯', '⛵', '🚂', '🏎️', '🚀', '⚓', '🗺️', '🌍', '🏝️', '💎', '👑', '🔱', '⚜️', '🌟', '💥', '🔥', '❄️', '🌊', '⚡', '🧠', '🔬', '🔭', '⚗️', '🧪', '📜', '📚', '🗝️', '🔍', '🪄', '🍎', '🌮', '🍕', '☕', '🍺', '🧁', '🍄', '🌺', '🌵', '🍀', '🤝', '👻', '💀', '🎨', '🎵', '🎬', '📸', '✏️', '🖌️', '🎤'];
 
-let state={name:'Torneo de Mesa',players:[],games:[],system:'proportional',catalog:DEFAULT_GAMES,archive:[],playerPhotos:{}};
+let state={name:'Torneo de Mesa',players:[],games:[],system:'balanced',catalog:DEFAULT_GAMES,archive:[],playerPhotos:{}};
 let catalogFilters={type:'',complexity:'',players:''};
 let selectedEmoji='🎲';
 let pendingPhoto=null;
@@ -784,9 +784,20 @@ function setSyncStatus(s){
 }
 
 function getPoints(n,system){
+  if(system==='balanced')return Array.from({length:n},(_,i)=>Math.max(100-i*15,25));
   if(system==='fibonacci'){const f=[1,2,3,5,8,13,21];const b=f.slice(0,n).reverse();const m=b[0];return b.map(v=>Math.round(v/m*100));}
   if(system==='flat')return[100,70,50,35,20,10].slice(0,n);
   return Array.from({length:n},(_,i)=>Math.round((n-i)/n*100));
+}
+
+// Puntos de "participación" para quien jugó pero no quedó en podio (no está en `positions`,
+// solo en `participants`). Antes era 0 — eso hacía que ganar un juego con podio corto (ej. solo
+// se registra al 1°) dejara al resto en 0 puntos, una brecha abrupta y muy difícil de remontar.
+// Ahora reciben un porcentaje de lo que se ganó el 1er puesto EN ESA PARTIDA (ya con el
+// multiplicador de dificultad aplicado), así el "castigo" por no podio escala igual que el resto.
+const PARTICIPATION_RATIO=0.25;
+function getParticipationPoints(winnerPoints){
+  return Math.round((winnerPoints||0)*PARTICIPATION_RATIO);
 }
 
 // Multiplicador de puntos según dificultad del juego (nivel "suave")
@@ -820,9 +831,14 @@ function computeScores(games){
         });
       });
     } else {
-      // Individual game — solo quienes tienen puesto asignado (positions) reciben puntos
+      // Individual game — quienes tienen puesto (positions) reciben puntos por posición;
+      // quienes jugaron pero no quedaron en podio (participants sin posición) reciben
+      // puntos de participación en vez de 0.
       const pts=getGamePoints(g.positions.length,state.system,g.complexity);
-      g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;}});
+      const rankedSet={};
+      g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;rankedSet[p]=true;}});
+      const partPts=getParticipationPoints(pts[0]);
+      participants.forEach(p=>{ if(!rankedSet[p] && scores[p]!==undefined) scores[p]+=partPts; });
     }
   });
   return playerList.map(p=>({name:p,pts:scores[p],wins:wins[p],podiums:podiums[p],gamesPlayed:gp[p]}))
@@ -870,7 +886,7 @@ function av(p,size=36){const photo=(state.playerPhotos||{})[p];const s=`width:${
 window.render=function(){
   document.getElementById('tourneyName').textContent=state.name||'Torneo de Mesa';
   document.getElementById('settingName').value=state.name||'';
-  document.getElementById('settingSystem').value=state.system||'proportional';
+  document.getElementById('settingSystem').value=state.system||'balanced';
   const gc=(state.games||[]).length;
   document.getElementById('gameCount').textContent=gc+' juego'+(gc===1?'':'s');
 
@@ -1131,7 +1147,10 @@ function getPlayerGameResult(g,name){
   }
   // No tiene puesto asignado — ¿está en participants? (jugó pero no llegó a podio)
   const participants=g.participants||positions;
-  if(participants.indexOf(name)>=0)return{participated:true,ranked:false,idx:-1,points:0};
+  if(participants.indexOf(name)>=0){
+    const pts=getGamePoints(positions.length,state.system,g.complexity);
+    return{participated:true,ranked:false,idx:-1,points:getParticipationPoints(pts[0])};
+  }
   return{participated:false};
 }
 
@@ -1578,8 +1597,12 @@ function getLifetimePoints(){
       g.teams.forEach((team,ti)=>{ team.forEach(p=>{ totals[p]=(totals[p]||0)+(pts[ti]||0); }); });
     } else {
       const positions=g.positions||[];
+      const participants=g.participants||positions;
       const pts=getGamePoints(positions.length,state.system,g.complexity);
-      positions.forEach((p,i)=>{ if(p) totals[p]=(totals[p]||0)+(pts[i]||0); });
+      const rankedSet={};
+      positions.forEach((p,i)=>{ if(p){ totals[p]=(totals[p]||0)+(pts[i]||0); rankedSet[p]=true; } });
+      const partPts=getParticipationPoints(pts[0]);
+      participants.forEach(p=>{ if(!rankedSet[p]) totals[p]=(totals[p]||0)+partPts; });
     }
   });
   return Object.entries(totals).map(([name,pts])=>({name,pts})).sort((a,b)=>b.pts-a.pts);
