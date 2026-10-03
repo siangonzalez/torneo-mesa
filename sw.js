@@ -11,7 +11,7 @@
 // Al publicar una versión nueva, actualizar APP_VERSION y que coincida con los ?v= de
 // index.html y app.js (lo comprueba tests/sw.test.js).
 
-const APP_VERSION = '3.6.0';
+const APP_VERSION = '3.7.0';
 const SHELL_CACHE = `torneo-shell-${APP_VERSION}`;
 const RUNTIME_CACHE = 'torneo-runtime-v1';
 const V = `?v=${APP_VERSION}`;
@@ -36,6 +36,7 @@ const SHELL_FILES = [
 const FIREBASE_SDK = [
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js',
   'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js',
 ];
 
 self.addEventListener('install', event => {

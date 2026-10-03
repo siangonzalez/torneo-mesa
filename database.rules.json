@@ -1,0 +1,46 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "admins": {
+      "$emailKey": {
+        ".read": "auth != null && auth.token.email_verified == true && auth.token.email.replace('.', ',') == $emailKey",
+        ".write": false
+      }
+    },
+
+    "allowed": {
+      ".read": "auth != null && auth.token.email_verified == true && root.child('admins').child(auth.token.email.replace('.', ',')).val() == true",
+      ".write": "auth != null && auth.token.email_verified == true && root.child('admins').child(auth.token.email.replace('.', ',')).val() == true",
+      "$emailKey": {
+        ".read": "auth != null && auth.token.email_verified == true && auth.token.email.replace('.', ',') == $emailKey",
+        ".validate": "newData.isBoolean()"
+      }
+    },
+
+    "requests": {
+      ".read": "auth != null && auth.token.email_verified == true && root.child('admins').child(auth.token.email.replace('.', ',')).val() == true",
+      ".write": "auth != null && auth.token.email_verified == true && root.child('admins').child(auth.token.email.replace('.', ',')).val() == true",
+      "$uid": {
+        ".write": "auth != null && auth.uid == $uid && auth.token.email_verified == true",
+        ".validate": "!newData.exists() || (newData.hasChildren(['email', 'at']) && newData.child('email').val() == auth.token.email)"
+      }
+    },
+
+    "torneo_v2": {
+      ".read": "auth != null && auth.token.email_verified == true && root.child('allowed').child(auth.token.email.replace('.', ',')).val() == true",
+      ".write": "auth != null && auth.token.email_verified == true && root.child('allowed').child(auth.token.email.replace('.', ',')).val() == true"
+    },
+
+    "torneo_photos": {
+      ".read": "auth != null && auth.token.email_verified == true && root.child('allowed').child(auth.token.email.replace('.', ',')).val() == true",
+      ".write": "auth != null && auth.token.email_verified == true && root.child('allowed').child(auth.token.email.replace('.', ',')).val() == true"
+    },
+
+    "torneo": {
+      ".read": "auth != null && auth.token.email_verified == true && root.child('allowed').child(auth.token.email.replace('.', ',')).val() == true",
+      ".write": false
+    }
+  }
+}

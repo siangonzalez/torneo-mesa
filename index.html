@@ -12,11 +12,15 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Torneo de Mesa v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=3.6.0">
+<link rel="stylesheet" href="css/styles.css?v=3.7.0">
 <!-- Bloquea toques hasta que js/app.js termine de cargar (lo quita al final) -->
 <style>body.booting{pointer-events:none}</style>
 </head>
 <body class="booting">
+<!-- Ingreso: aparece solo si las reglas de Firebase niegan el acceso (ver ACCESO en app.js) -->
+<div id="authGate" class="splash auth-gate" style="display:none;">
+  <div class="splash-card"><div id="authGateBody"></div><div id="authMsg" class="auth-msg"></div></div>
+</div>
 <!-- Pantalla de carga: frase de un jugador o dato curioso mientras se conecta (ver splash en app.js) -->
 <div id="splash" class="splash" onclick="hideSplash()">
   <div class="splash-card">
@@ -267,6 +271,10 @@
 
   <!-- AJUSTES -->
   <div class="page" id="pg-settings">
+    <div class="nb-card" id="accessCard">
+      <span class="nb-card-title">Acceso</span>
+      <div id="accessBody"></div>
+    </div>
     <div class="nb-card">
       <span class="nb-card-title">Renombrar torneo</span>
       <input type="text" class="nb-input" id="settingName" placeholder="Nuevo nombre del torneo">
@@ -491,6 +499,6 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=3.6.0"></script>
+<script type="module" src="js/app.js?v=3.7.0"></script>
 </body>
 </html>

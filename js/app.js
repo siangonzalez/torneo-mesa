@@ -1,10 +1,11 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getDatabase,ref,onValue,update,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.6.0";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.6.0";
-import{escHtml,cleanName}from"./text.js?v=3.6.0";
-import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.6.0";
-import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.6.0";
+import{getDatabase,ref,onValue,update,push,get,set}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.7.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.7.0";
+import{escHtml,cleanName}from"./text.js?v=3.7.0";
+import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.7.0";
+import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.7.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -20,6 +21,7 @@ const torneoRef=ref(db,ROOT_PATH);
 const photosRef=ref(db,PHOTOS_PATH);
 const rootRef=ref(db);
 const torneoV1Ref=ref(db,'torneo');
+const auth=getAuth(app);
 
 const DEFAULT_GAMES = [
   {name:'Catan', emoji:'🏝️', type:'Competitivo', players:'3-4', duration:'60-120 min', complexity:'Media', category:'Estrategia', desc:'Construye asentamientos, recolecta recursos y comercia con otros jugadores para dominar la isla de Catan.'},
@@ -118,28 +120,160 @@ function applyTorneo(d,fromCache){
   if(!fromCache)maybeMigratePhotos();
 }
 
-onValue(torneoRef,(snap)=>{
-  const d=snap.val();
-  gotRemote=true;
-  if(d){applyTorneo(d,false);lsSet(LS_TORNEO,d);}
-  window.render();setSyncStatus(isConnected?'ok':'off');
-  if(d&&ensureQuoteSeeds())window.saveState();
-  fillSplash();maybeHideSplash();
-},()=>setSyncStatus('off'));
-
-onValue(photosRef,(snap)=>{
-  const raw=snap.val();
-  syncedPhotos=photosFromRemote(raw);photosLoaded=true;lsSet(LS_PHOTOS,raw||{});
-  state.playerPhotos=currentPhotos();
-  maybeMigratePhotos();
-  window.render();
-});
+// Escucha de datos. Se arranca cuando Firebase ya sabe si hay sesión iniciada (ver ACCESO), y
+// se reinicia al iniciar sesión. Si las reglas niegan el acceso, se muestra la pantalla de ingreso.
+let dataUnsubs=[];
+function stopData(){dataUnsubs.forEach(u=>{try{u();}catch(e){}});dataUnsubs=[];}
+function onDataError(err){
+  if(err&&/permission/i.test(String(err.code||err.message||'')))handleAccessDenied();
+  else setSyncStatus('off');
+}
+function startData(){
+  stopData();accessDenied=false;hideAuthGate();
+  dataUnsubs.push(onValue(torneoRef,(snap)=>{
+    const d=snap.val();
+    gotRemote=true;accessDenied=false;hideAuthGate();
+    if(d){applyTorneo(d,false);lsSet(LS_TORNEO,d);}
+    window.render();setSyncStatus(isConnected?'ok':'off');
+    if(d&&ensureQuoteSeeds())window.saveState();
+    fillSplash();maybeHideSplash();
+  },onDataError));
+  dataUnsubs.push(onValue(photosRef,(snap)=>{
+    const raw=snap.val();
+    syncedPhotos=photosFromRemote(raw);photosLoaded=true;lsSet(LS_PHOTOS,raw||{});
+    state.playerPhotos=currentPhotos();
+    maybeMigratePhotos();
+    window.render();
+  },onDataError));
+}
 
 onValue(ref(db,'.info/connected'),(snap)=>{
   isConnected=snap.val()===true;
   if(!isConnected){setSyncStatus(gotRemote?'off':'cache');if(!gotRemote)maybeHideSplash();}
   else if(gotRemote)setSyncStatus('ok');
 });
+
+// ==================== ACCESO (inicio de sesión con Google) ====================
+// Las reglas de Firebase (database.rules.json) solo dejan entrar a los correos de `allowed`.
+// Mientras las reglas sigan abiertas la app funciona igual sin iniciar sesión.
+// Las claves de correo usan comas en lugar de puntos, igual que en las reglas.
+const emailKey=e=>String(e||'').trim().replace(/\./g,',');
+const keyToEmail=k=>String(k).replace(/,/g,'.');
+let currentUser=null,accessDenied=false,isAdmin=false,authReady=false,amAllowed=null;
+let adminAllowed={},adminRequests={},adminUnsubs=[];
+const googleProvider=new GoogleAuthProvider();googleProvider.setCustomParameters({prompt:'select_account'});
+
+window.signInGoogle=async function(){
+  setAuthMsg('');
+  try{await signInWithPopup(auth,googleProvider);}
+  catch(e){
+    const c=String(e&&e.code||'');
+    if(/popup-blocked|operation-not-supported|web-storage-unsupported/.test(c)){try{await signInWithRedirect(auth,googleProvider);return;}catch(e2){setAuthMsg('No se pudo abrir el inicio de sesión ('+(e2.code||e2.message)+').');return;}}
+    if(/popup-closed-by-user|cancelled-popup-request/.test(c))return;
+    setAuthMsg('No se pudo iniciar sesión ('+(c||e.message)+').');
+  }
+};
+window.signOutGoogle=async function(){try{await signOut(auth);}catch(e){}};
+getRedirectResult(auth).catch(e=>setAuthMsg('No se pudo iniciar sesión ('+(e.code||e.message)+').'));
+
+function setAuthMsg(t){const el=document.getElementById('authMsg');if(el)el.textContent=t;}
+function hideAuthGate(){const g=document.getElementById('authGate');if(g)g.style.display='none';}
+function showAuthGate(){
+  const g=document.getElementById('authGate');if(!g)return;
+  window.hideSplash&&window.hideSplash();
+  const body=document.getElementById('authGateBody');
+  if(!currentUser){
+    body.innerHTML='<div class="splash-dice">🔒</div><div class="auth-title">Torneo privado</div>'+
+      '<div class="auth-text">Inicia sesión con tu cuenta de Google para ver y registrar partidas.</div>'+
+      '<button class="nb-btn nb-btn-primary" onclick="signInGoogle()">Entrar con Google</button>';
+  }else{
+    body.innerHTML='<div class="splash-dice">⏳</div><div class="auth-title">Falta tu aprobación</div>'+
+      '<div class="auth-text">Tu cuenta <b>'+escHtml(currentUser.email)+'</b> todavía no tiene acceso. Ya le enviamos tu solicitud al administrador del grupo.</div>'+
+      '<button class="nb-btn nb-btn-primary" onclick="retryAccess()">Volver a intentar</button>'+
+      '<button class="nb-btn" style="margin-top:8px;" onclick="signOutGoogle()">Usar otra cuenta</button>';
+  }
+  g.style.display='flex';
+}
+function handleAccessDenied(){
+  accessDenied=true;stopData();setSyncStatus('off');
+  // Sin permiso: borrar la copia local de este equipo para no dejar datos del torneo a la vista
+  try{localStorage.removeItem(LS_TORNEO);localStorage.removeItem(LS_PHOTOS);}catch(e){}
+  if(currentUser)sendAccessRequest();
+  showAuthGate();
+}
+window.retryAccess=function(){setAuthMsg('Revisando…');startData();};
+async function sendAccessRequest(){
+  if(!currentUser||!currentUser.email)return;
+  try{await set(ref(db,'requests/'+currentUser.uid),{email:currentUser.email,name:currentUser.displayName||'',at:Date.now()});}catch(e){}
+}
+async function refreshMyAccess(){
+  amAllowed=null;isAdmin=false;
+  if(!currentUser||!currentUser.email){stopAdmin();renderAccessCard();return;}
+  const k=emailKey(currentUser.email);
+  try{isAdmin=(await get(ref(db,'admins/'+k))).val()===true;}catch(e){isAdmin=false;}
+  try{amAllowed=(await get(ref(db,'allowed/'+k))).val()===true;}catch(e){amAllowed=false;}
+  if(!amAllowed)sendAccessRequest(); // así el administrador ve quién quiere entrar, aun antes de cerrar la base
+  if(isAdmin)startAdmin();else stopAdmin();
+  renderAccessCard();
+}
+function startAdmin(){
+  stopAdmin();
+  adminUnsubs.push(onValue(ref(db,'allowed'),s=>{adminAllowed=s.val()||{};renderAccessCard();},()=>{}));
+  adminUnsubs.push(onValue(ref(db,'requests'),s=>{adminRequests=s.val()||{};renderAccessCard();},()=>{}));
+}
+function stopAdmin(){adminUnsubs.forEach(u=>{try{u();}catch(e){}});adminUnsubs=[];adminAllowed={};adminRequests={};}
+
+onAuthStateChanged(auth,(user)=>{
+  currentUser=user||null;
+  const first=!authReady;authReady=true;
+  if(first||accessDenied)startData(); // la primera vez, o reintentar con la nueva sesión
+  refreshMyAccess();
+});
+
+// Panel en Ajustes
+function renderAccessCard(){
+  const el=document.getElementById('accessBody');if(!el)return;
+  if(!currentUser){
+    el.innerHTML='<div class="auth-text" style="text-align:left;">No has iniciado sesión. Cuando el torneo se cierre, solo entrarán las cuentas de Google aprobadas.</div>'+
+      '<button class="nb-btn nb-btn-primary" onclick="signInGoogle()">Entrar con Google</button>';
+    return;
+  }
+  const status=isAdmin?'👑 Administrador':amAllowed?'✓ Con acceso':amAllowed===false?'⏳ Pendiente de aprobación':'';
+  let h='<div class="access-me"><div><div style="font-weight:700;">'+escHtml(currentUser.email)+'</div><div style="font-size:12px;color:#555;font-weight:500;">'+status+'</div></div>'+
+    '<button class="nb-btn nb-btn-sm" onclick="signOutGoogle()">Salir</button></div>';
+  if(isAdmin){
+    const reqs=Object.entries(adminRequests).filter(([,r])=>r&&r.email);
+    h+='<div class="access-lbl">Solicitudes'+(reqs.length?' ('+reqs.length+')':'')+'</div>';
+    h+=reqs.length?reqs.map(([uid,r])=>'<div class="access-row"><div style="flex:1;min-width:0;"><div style="font-weight:700;">'+escHtml(r.name||r.email)+'</div><div class="access-mail">'+escHtml(r.email)+'</div></div>'+
+      '<button class="nb-btn nb-btn-sm nb-btn-green" onclick="approveRequest(this.dataset.uid,this.dataset.mail)" data-uid="'+escHtml(uid)+'" data-mail="'+escHtml(r.email)+'">Aprobar</button>'+
+      '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="rejectRequest(this.dataset.uid)" data-uid="'+escHtml(uid)+'">×</button></div>').join('')
+      :'<div class="access-empty">Sin solicitudes pendientes.</div>';
+    const allowed=Object.keys(adminAllowed).filter(k=>adminAllowed[k]===true).sort();
+    h+='<div class="access-lbl">Con acceso ('+allowed.length+')</div>';
+    h+=allowed.map(k=>'<div class="access-row"><div class="access-mail" style="flex:1;font-size:13px;color:#000;">'+escHtml(keyToEmail(k))+'</div>'+
+      (k===emailKey(currentUser.email)?'<span style="font-size:11px;font-weight:700;color:#555;">tú</span>':
+      '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="removeAllowed(this.dataset.k)" data-k="'+escHtml(k)+'">×</button>')+'</div>').join('');
+    h+='<div style="display:flex;gap:8px;margin-top:10px;"><input type="email" class="nb-input" id="allowEmail" placeholder="correo@gmail.com" style="margin:0;flex:1;">'+
+      '<button class="nb-btn nb-btn-sm nb-btn-green" onclick="addAllowed()">+ Dar acceso</button></div>';
+  }
+  el.innerHTML=h;
+}
+window.approveRequest=async function(uid,email){
+  try{await update(rootRef,{['allowed/'+emailKey(email)]:true,['requests/'+uid]:null});showToast(email+' ya tiene acceso ✓');playSound('success');}
+  catch(e){showToast('No se pudo aprobar');}
+};
+window.rejectRequest=async function(uid){try{await update(rootRef,{['requests/'+uid]:null});showToast('Solicitud rechazada');}catch(e){showToast('No se pudo rechazar');}};
+window.addAllowed=async function(){
+  const inp=document.getElementById('allowEmail');const email=String(inp&&inp.value||'').trim().toLowerCase();
+  if(!/^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/.test(email)){showToast('Escribe un correo válido');return;}
+  try{await update(rootRef,{['allowed/'+emailKey(email)]:true});inp.value='';showToast(email+' ya tiene acceso ✓');playSound('success');}
+  catch(e){showToast('No se pudo dar acceso');}
+};
+window.removeAllowed=async function(k){
+  if(currentUser&&k===emailKey(currentUser.email)){showToast('No puedes quitarte el acceso a ti mismo');return;}
+  if(!await nbConfirm('Esa cuenta ya no podrá ver ni registrar partidas cuando la base esté cerrada.','¿Quitar acceso a '+keyToEmail(k)+'?','Quitar'))return;
+  try{await update(rootRef,{['allowed/'+k]:null});showToast('Acceso quitado');}catch(e){showToast('No se pudo quitar');}
+};
 
 window.saveState=async function(){
   setSyncStatus('syncing');
