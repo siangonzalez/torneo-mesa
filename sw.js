@@ -11,7 +11,7 @@
 // Al publicar una versión nueva, actualizar APP_VERSION y que coincida con los ?v= de
 // index.html y app.js (lo comprueba tests/sw.test.js).
 
-const APP_VERSION = '3.3.0';
+const APP_VERSION = '3.4.0';
 const SHELL_CACHE = `torneo-shell-${APP_VERSION}`;
 const RUNTIME_CACHE = 'torneo-runtime-v1';
 const V = `?v=${APP_VERSION}`;
@@ -24,6 +24,7 @@ const SHELL_FILES = [
   `js/scoring.js${V}`,
   `js/sync.js${V}`,
   `js/text.js${V}`,
+  `js/dice.js${V}`,
   'manifest.webmanifest',
   'icons/apple-touch-icon.png',
   'icons/icon-192.png',

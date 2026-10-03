@@ -1,8 +1,9 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.3.0";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js?v=3.3.0";
-import{escHtml,cleanName}from"./text.js?v=3.3.0";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.4.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js?v=3.4.0";
+import{escHtml,cleanName}from"./text.js?v=3.4.0";
+import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.4.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -1580,33 +1581,66 @@ window.clearTurnOrder = function() {
 };
 
 // ==================== DADOS ====================
+// ==================== DADOS (dibujo en js/dice.js) ====================
+let diceRolling=false;
+const reduceMotion=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 window.rollDice = function() {
+  if(diceRolling) return;
   const count = parseInt(document.getElementById('diceCount').value);
   const faces = parseInt(document.getElementById('diceFaces').value);
-  const rolls = Array.from({length:count}, () => Math.floor(Math.random()*faces)+1);
+  const rolls = rollValues(count, faces);
   const total = rolls.reduce((a,b)=>a+b,0);
   const avg = ((faces+1)/2*count).toFixed(1);
 
-  const card = document.getElementById('diceResultCard');
-  card.style.display = 'block';
-
+  document.getElementById('diceResultCard').style.display = 'block';
   const resultsEl = document.getElementById('diceResults');
+  const totalEl = document.getElementById('diceTotal');
+  const btn = document.getElementById('diceRollBtn');
   playSound('dice');
-  resultsEl.innerHTML = rolls.map((r,i) =>
-    '<div style="position:relative;margin-bottom:22px;">'+
-    '<div class="die rolling" id="dr'+i+'">'+r+'</div>'+
-    '<div class="die-lbl">d'+faces+'</div></div>'
-  ).join('');
-  setTimeout(() => {
-    rolls.forEach((_,i) => {
-      const d = document.getElementById('dr'+i);
-      if(d) d.classList.remove('rolling');
-    });
-  }, 500);
 
-  document.getElementById('diceTotal').textContent = total;
+  // Cada dado: cae girando con un pequeño retraso respecto al anterior, cambiando de número en el
+  // aire, y se detiene en su valor al aterrizar. Luego la suma cuenta hasta el total.
+  const still = reduceMotion();
+  const DUR=720, STAGGER=110;
+  resultsEl.innerHTML = rolls.map((r,i) =>
+    '<div class="die-wrap'+(still?'':' throw')+'" id="dr'+i+'" style="--delay:'+(i*STAGGER)+'ms;--dur:'+DUR+'ms;--r0:'+(Math.random()<.5?-1:1)*(160+Math.random()*200|0)+'deg;--dx:'+((Math.random()*80-40)|0)+'px;">'+
+      '<div class="die-face">'+dieSVG(faces, still?r:rollValues(1,faces)[0])+'</div>'+
+      '<div class="die-lbl">d'+faces+'</div></div>'
+  ).join('');
+
+  const land=(i)=>{
+    const el=document.getElementById('dr'+i);if(!el)return;
+    el.querySelector('.die-face').innerHTML=dieSVG(faces,rolls[i]);
+    el.classList.remove('throw');el.classList.add('landed');
+    const badge=dieBadge(faces,rolls[i]);
+    if(badge){el.classList.add(badge.cls);el.querySelector('.die-lbl').textContent=badge.label;}
+  };
   document.getElementById('diceTotalLbl').textContent =
     count > 1 ? 'suma de '+count+'d'+faces+' · promedio: '+avg : 'resultado d'+faces;
+
+  if(still){
+    rolls.forEach((_,i)=>land(i));totalEl.textContent=total;
+  } else {
+    diceRolling=true;if(btn)btn.disabled=true;
+    totalEl.textContent='…';
+    const start=performance.now();
+    const shuffle=setInterval(()=>{
+      const t=performance.now()-start;
+      rolls.forEach((_,i)=>{
+        const el=document.getElementById('dr'+i);
+        if(el&&el.classList.contains('throw')&&t<i*STAGGER+DUR*0.78) el.querySelector('.die-face').innerHTML=dieSVG(faces,rollValues(1,faces)[0]);
+      });
+    },70);
+    rolls.forEach((_,i)=>setTimeout(()=>{land(i);if(navigator.vibrate)navigator.vibrate(15);},i*STAGGER+DUR*0.78));
+    const end=(count-1)*STAGGER+DUR;
+    setTimeout(()=>{
+      clearInterval(shuffle);
+      const t0=performance.now(),CU=380;
+      const tick=()=>{const k=Math.min(1,(performance.now()-t0)/CU);totalEl.textContent=Math.round(total*k*k*(3-2*k));if(k<1)requestAnimationFrame(tick);else{totalEl.textContent=total;diceRolling=false;if(btn)btn.disabled=false;}};
+      tick();
+    },end);
+  }
 
   diceRollHistory.unshift({count, faces, rolls, total,
     time: new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})});
