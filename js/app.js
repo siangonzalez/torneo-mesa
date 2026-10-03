@@ -1,9 +1,10 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.4.0";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js?v=3.4.0";
-import{escHtml,cleanName}from"./text.js?v=3.4.0";
-import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.4.0";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.5.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.5.0";
+import{escHtml,cleanName}from"./text.js?v=3.5.0";
+import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.5.0";
+import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.5.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -122,6 +123,8 @@ onValue(torneoRef,(snap)=>{
   gotRemote=true;
   if(d){applyTorneo(d,false);lsSet(LS_TORNEO,d);}
   window.render();setSyncStatus(isConnected?'ok':'off');
+  if(d&&ensureQuoteSeeds())window.saveState();
+  fillSplash();maybeHideSplash();
 },()=>setSyncStatus('off'));
 
 onValue(photosRef,(snap)=>{
@@ -134,7 +137,7 @@ onValue(photosRef,(snap)=>{
 
 onValue(ref(db,'.info/connected'),(snap)=>{
   isConnected=snap.val()===true;
-  if(!isConnected)setSyncStatus(gotRemote?'off':'cache');
+  if(!isConnected){setSyncStatus(gotRemote?'off':'cache');if(!gotRemote)maybeHideSplash();}
   else if(gotRemote)setSyncStatus('ok');
 });
 
@@ -167,6 +170,107 @@ function readName(inp){
   const raw=(inp&&inp.value||'').trim();const name=cleanName(raw);
   if(name!==raw.replace(/\s+/g,' '))showToast('Se quitaron caracteres no permitidos (< > " ` \\)');
   return name;
+}
+
+// ==================== FRASES (ver js/quotes.js) ====================
+// Se guardan en torneo_v2/quotes como {nombre codificado: [frases]}. Las frases iniciales del
+// grupo se agregan una sola vez (quotesSeeded) a los jugadores cuyo nombre coincide.
+function getQuotes(name){const q=(state.quotes||{})[encodeKey(name)];return (Array.isArray(q)?q:Object.values(q||{})).filter(x=>typeof x==='string'&&x);}
+function setQuotes(name,list){if(!state.quotes)state.quotes={};if(list.length)state.quotes[encodeKey(name)]=list;else delete state.quotes[encodeKey(name)];}
+function groupQuotes(){const out={};(state.players||[]).forEach(p=>{const q=getQuotes(p);if(q.length)out[p]=q;});return out;}
+function ensureQuoteSeeds(){
+  if(state.quotesSeeded)return false;
+  Object.entries(seedQuotesFor(state.players)).forEach(([p,list])=>{if(!getQuotes(p).length)setQuotes(p,list);});
+  state.quotesSeeded=true;return true;
+}
+function renderProfileQuotes(name){
+  const list=getQuotes(name);
+  document.getElementById('profQuotes').innerHTML=list.length?list.map((q,i)=>
+    '<div class="quote-row"><span class="q">“'+escHtml(q)+'”</span><button class="nb-btn nb-btn-sm nb-btn-red" style="padding:2px 8px;" onclick="removeQuote(this.dataset.pn,Number(this.dataset.i))" data-pn="'+escHtml(name)+'" data-i="'+i+'">×</button></div>'
+  ).join(''):'<div style="font-size:13px;color:#555;font-weight:500;">Todavía no tiene frases. Agrega la primera 👇</div>';
+  document.getElementById('quoteAddBtn').dataset.pn=name;
+  document.getElementById('quoteInput').value='';
+}
+window.addQuote=async function(name){
+  const inp=document.getElementById('quoteInput');const text=cleanQuote(inp.value);
+  if(!name||!text)return;
+  const list=getQuotes(name);
+  if(list.includes(text)){showToast('Esa frase ya está');return;}
+  setQuotes(name,[...list,text]);await window.saveState();
+  renderProfileQuotes(name);showToast('Frase agregada ✓');playSound('success');
+};
+window.removeQuote=async function(name,i){
+  const list=getQuotes(name);if(!(i>=0&&i<list.length))return;
+  list.splice(i,1);setQuotes(name,list);await window.saveState();
+  renderProfileQuotes(name);showToast('Frase eliminada');playSound('delete');
+};
+
+// Datos curiosos del momento para la pantalla de carga
+function currentFacts(){
+  const standings=(state.games||[]).length?computeScores(state.games):[];
+  const kings={};
+  getAllGamesEver().forEach(g=>gameWinners(g).forEach(w=>{(kings[g.name]=kings[g.name]||{})[w]=(kings[g.name][w]||0)+1;}));
+  const titles={};
+  (state.archive||[]).forEach(t=>{const c=archiveScores(t)[0];if(c&&c.pts>0)titles[c.name]=(titles[c.name]||0)+1;});
+  const last=(state.archive||[]).length?state.archive[state.archive.length-1]:null;
+  const lc=last?archiveScores(last)[0]:null;
+  return statFacts({standings,streaks:getStreaks(),kings,titles,lastChampion:lc&&lc.pts>0?{name:lc.name,tournament:last.name}:null});
+}
+
+// De quiénes se muestran frases y datos:
+//   - con un torneo en curso, solo de los jugadores de ese torneo;
+//   - sin torneo en curso, del último campeón;
+//   - si nunca se ha cerrado un torneo, de cualquiera del grupo.
+function splashAllowed(){
+  if(state._tournamentStarted&&(state.activePlayers||[]).length)return state.activePlayers.slice();
+  const last=(state.archive||[]).length?state.archive[state.archive.length-1]:null;
+  const lc=last?archiveScores(last)[0]:null;
+  return lc&&lc.pts>0?[lc.name]:null;
+}
+function splashPool(){
+  const allowed=splashAllowed();
+  const quotes={};
+  (allowed||state.players||[]).forEach(p=>{const q=getQuotes(p);if(q.length)quotes[p]=q;});
+  return restrictPool({quotes,facts:currentFacts()},allowed);
+}
+
+// ==================== PANTALLA DE CARGA ====================
+// Se ve al abrir la app mientras se conecta. Muestra una frase o un dato apenas hay datos (de
+// Firebase o de la copia local), se queda al menos SPLASH_MIN para alcanzar a leerla, se salta
+// con un toque y nunca dura más de SPLASH_MAX.
+const SPLASH_MIN=2200,SPLASH_MAX=7000;
+let splashShownAt=0,splashDone=false;
+function fillSplash(){
+  if(splashShownAt||splashDone)return;
+  try{
+    const pick=pickSplash(splashPool());
+    if(!pick)return;
+    const body=document.getElementById('splashBody');if(!body)return;
+    if(pick.type==='quote'){
+      const t=(state.archive||[]).filter(a=>{const c=archiveScores(a)[0];return c&&c.name===pick.name&&c.pts>0;}).length;
+      body.innerHTML='<div class="splash-tag">🎲 '+escHtml(state.name||'Torneo de Mesa')+'</div>'+
+        '<div class="splash-avatar">'+av(pick.name,72)+'</div>'+
+        '<div class="splash-quote">'+escHtml(pick.text)+'</div>'+
+        '<div class="splash-author">— '+escHtml(pick.name)+'</div>'+
+        (t?'<div class="splash-sub">🏆 '+t+(t===1?' título':' títulos')+'</div>':'');
+    }else{
+      body.innerHTML='<div class="splash-tag">¿Sabías que…?</div>'+
+        '<div class="splash-avatar">'+av(pick.name,64)+'</div>'+
+        '<div class="splash-fact-icon">'+pick.icon+'</div>'+
+        '<div class="splash-fact">'+escHtml(pick.text)+'</div>';
+    }
+    splashShownAt=performance.now();
+  }catch(e){}
+}
+window.hideSplash=function(){
+  if(splashDone)return;splashDone=true;
+  const el=document.getElementById('splash');if(!el)return;
+  el.classList.add('hide');setTimeout(()=>el.remove(),400);
+};
+function maybeHideSplash(){
+  if(splashDone)return;
+  const wait=splashShownAt?Math.max(0,SPLASH_MIN-(performance.now()-splashShownAt)):0;
+  setTimeout(window.hideSplash,wait);
 }
 
 // ==================== PUNTAJE (ver js/scoring.js) ====================
@@ -487,6 +591,7 @@ function getPlayerGameResult(g,name,system){
 
 window.showProfile=function(name){
   document.getElementById('profileModal').style.display='flex';
+  renderProfileQuotes(name);
   const myGames=getAllGamesWithSystem().map(({g,system})=>({g,r:getPlayerGameResult(g,name,system)})).filter(x=>x.r.participated);
   let wins=0,podiums=0,pts=0;const gamePts={};
   myGames.forEach(({g,r})=>{
@@ -572,6 +677,7 @@ function showChampionScreen(name,pts){
   div.innerHTML=`<canvas class="confetti-canvas" id="confetti"></canvas><div class="champ-trophy">🏆</div>
     <div style="font-size:13px;font-weight:700;opacity:.6;margin-bottom:8px;text-transform:uppercase;">Campeón del torneo</div>
     <div class="champ-name">${escHtml(name)}</div><div class="champ-sub">${pts} puntos</div>
+    ${(q=>q.length?`<div class="champ-quote">${escHtml(q[Math.floor(Math.random()*q.length)])}</div>`:'')(getQuotes(name))}
     <button class="nb-btn nb-btn-primary" style="margin-top:16px;" onclick="this.parentElement.remove()">Cerrar</button>`;
   document.body.appendChild(div);
   const c=div.querySelector('#confetti');c.width=window.innerWidth;c.height=window.innerHeight;
@@ -2302,8 +2408,10 @@ if(!gotRemote){
   const cachedPhotos=lsGet(LS_PHOTOS);
   if(cachedPhotos){syncedPhotos=photosFromRemote(cachedPhotos);}
   const cached=lsGet(LS_TORNEO);
-  if(cached){applyTorneo(cached,true);window.render();setSyncStatus('cache');}
+  if(cached){applyTorneo(cached,true);window.render();setSyncStatus('cache');fillSplash();}
 }
+setTimeout(window.hideSplash,SPLASH_MAX);
+document.getElementById('quoteInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();window.addQuote(document.getElementById('quoteAddBtn').dataset.pn);}});
 
 // Uso sin conexión: guarda la app en el equipo (ver sw.js)
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

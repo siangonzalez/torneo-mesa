@@ -279,3 +279,27 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
   #profilePicker{grid-template-columns:repeat(4,minmax(0,1fr));}
   #pg-board .board-side{flex-basis:400px;}
 }
+
+/* ==================== Pantalla de carga con frases ==================== */
+.splash{position:fixed;inset:0;z-index:300;background:#FF6B9D;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;transition:opacity .35s ease,transform .35s ease;cursor:pointer;}
+.splash.hide{opacity:0;transform:scale(1.04);pointer-events:none;}
+.splash-card{background:#fff;border:3px solid #000;border-radius:16px;box-shadow:6px 6px 0 #000;width:100%;max-width:420px;padding:28px 24px 24px;text-align:center;animation:splashIn .45s cubic-bezier(.2,.8,.3,1.2) both;}
+@keyframes splashIn{from{transform:translateY(24px) rotate(-2deg);opacity:0;}to{transform:none;opacity:1;}}
+.splash-dice{font-size:44px;animation:bounce .8s infinite alternate;}
+.splash-loading{font-size:15px;font-weight:700;margin-top:10px;}
+.splash-avatar{display:flex;justify-content:center;margin-bottom:14px;}
+.splash-quote{font-size:26px;font-weight:700;line-height:1.2;white-space:pre-line;overflow-wrap:break-word;}
+.splash-quote::before{content:"“";}.splash-quote::after{content:"”";}
+.splash-author{margin-top:14px;font-size:15px;font-weight:700;}
+.splash-sub{font-size:12px;font-weight:500;color:#555;margin-top:2px;}
+.splash-fact-icon{font-size:44px;margin-bottom:8px;}
+.splash-fact{font-size:22px;font-weight:700;line-height:1.25;overflow-wrap:break-word;}
+.splash-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#A3E635;border:2px solid #000;border-radius:4px;padding:2px 6px;margin-bottom:14px;}
+.splash-hint{margin-top:18px;font-size:12px;font-weight:700;opacity:0;animation:hintIn .4s 1.2s forwards;}
+@keyframes hintIn{to{opacity:.7;}}
+.quote-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:2px solid #000;}
+.quote-row .q{flex:1;font-size:14px;font-weight:700;white-space:pre-line;overflow-wrap:break-word;}
+.champ-quote{font-size:20px;font-weight:700;white-space:pre-line;max-width:420px;margin:-16px auto 24px;}
+.champ-quote::before{content:"“";}.champ-quote::after{content:"”";}
+@media (min-width:768px){.splash-card{max-width:520px;padding:36px 32px 30px;}.splash-quote{font-size:32px;}.splash-fact{font-size:26px;}}
+@media (prefers-reduced-motion:reduce){.splash-card,.splash-dice{animation:none;}}
