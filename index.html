@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Torneo de Mesa v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=3.2.1">
+<link rel="stylesheet" href="css/styles.css?v=3.3.0">
 <!-- Bloquea toques hasta que js/app.js termine de cargar (lo quita al final) -->
 <style>body.booting{pointer-events:none}</style>
 </head>
@@ -38,10 +38,12 @@
       </div>
       <div id="leaderList"><div class="nb-empty">Agrega jugadores en Ajustes.</div></div>
     </div>
-    <div id="lastChampCard" style="display:none;"></div>
-    <div id="globalStatsCard" style="display:none;">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:14px 2px 8px;">📊 Estadísticas globales</div>
-      <div class="stat-carousel" id="globalStatsList"></div>
+    <div class="board-side" id="boardSide">
+      <div id="lastChampCard" style="display:none;"></div>
+      <div id="globalStatsCard" style="display:none;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:14px 2px 8px;">📊 Estadísticas globales</div>
+        <div class="stat-carousel" id="globalStatsList"></div>
+      </div>
     </div>
   </div>
 
@@ -476,6 +478,6 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=3.2.1"></script>
+<script type="module" src="js/app.js?v=3.3.0"></script>
 </body>
 </html>

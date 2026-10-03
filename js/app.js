@@ -1,8 +1,8 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.2.1";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js?v=3.2.1";
-import{escHtml,cleanName}from"./text.js?v=3.2.1";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.3.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js?v=3.3.0";
+import{escHtml,cleanName}from"./text.js?v=3.3.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -84,9 +84,10 @@ let synced=null;            // torneo tal como está en el servidor (sin fotos)
 let syncedPhotos={};        // fotos tal como están en el servidor
 let photosLoaded=false;     // ya llegó el nodo de fotos al menos una vez
 let legacyPhotos=null;      // fotos viejas guardadas dentro del torneo, pendientes de mover
+let cachedLegacyPhotos=null;// las mismas, pero de la copia local: solo para mostrarlas, nunca para migrar
 const newKey=list=>push(ref(db,ROOT_PATH+'/'+list)).key;
 
-function currentPhotos(){return {...(legacyPhotos||{}),...syncedPhotos};}
+function currentPhotos(){return {...(cachedLegacyPhotos||{}),...(legacyPhotos||{}),...syncedPhotos};}
 function applyDefaults(s){if(!s.players)s.players=[];if(!s.games)s.games=[];if(!s.catalog||!s.catalog.length)s.catalog=DEFAULT_GAMES;if(!s.archive)s.archive=[];}
 function withoutPhotos(s){const {playerPhotos,...rest}=s;return rest;}
 
@@ -97,38 +98,67 @@ function maybeMigratePhotos(){
   if(Object.keys(up).length)update(rootRef,up).catch(()=>{});
 }
 
+// Copia local del último estado recibido, para abrir la app sin internet (solo en este equipo).
+const LS_TORNEO='torneo_cache_v2',LS_PHOTOS='torneo_cache_photos';
+function lsGet(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+let gotRemote=false;        // ya llegaron datos reales de Firebase en esta sesión
+let isConnected=false;      // conexión real con Firebase (.info/connected)
+
+function applyTorneo(d,fromCache){
+  if(!d)return;
+  const remote=normalizeRemote(d);
+  // La migración de fotos solo se decide con datos reales del servidor, nunca con la copia local
+  if(fromCache)cachedLegacyPhotos=remote.legacyPhotos;
+  else{legacyPhotos=remote.legacyPhotos;cachedLegacyPhotos=null;}
+  synced=cloneData(remote.state);
+  state=remote.state;applyDefaults(state);state.playerPhotos=currentPhotos();
+  if(!fromCache)maybeMigratePhotos();
+}
+
 onValue(torneoRef,(snap)=>{
   const d=snap.val();
-  if(d){
-    const remote=normalizeRemote(d);
-    if(remote.legacyPhotos)legacyPhotos=remote.legacyPhotos;
-    synced=cloneData(remote.state);
-    state=remote.state;applyDefaults(state);state.playerPhotos=currentPhotos();
-    maybeMigratePhotos();
-  }
-  window.render();setSyncStatus('ok');
+  gotRemote=true;
+  if(d){applyTorneo(d,false);lsSet(LS_TORNEO,d);}
+  window.render();setSyncStatus(isConnected?'ok':'off');
 },()=>setSyncStatus('off'));
 
 onValue(photosRef,(snap)=>{
-  syncedPhotos=photosFromRemote(snap.val());photosLoaded=true;
+  const raw=snap.val();
+  syncedPhotos=photosFromRemote(raw);photosLoaded=true;lsSet(LS_PHOTOS,raw||{});
   state.playerPhotos=currentPhotos();
   maybeMigratePhotos();
   window.render();
+});
+
+onValue(ref(db,'.info/connected'),(snap)=>{
+  isConnected=snap.val()===true;
+  if(!isConnected)setSyncStatus(gotRemote?'off':'cache');
+  else if(gotRemote)setSyncStatus('ok');
 });
 
 window.saveState=async function(){
   setSyncStatus('syncing');
   try{
     const up={...computeUpdates(synced||{},state,newKey),...computePhotoUpdates(syncedPhotos,state.playerPhotos||{})};
-    if(Object.keys(up).length)await update(rootRef,up);
+    const pending=Object.keys(up).length?update(rootRef,up):null;
     synced=cloneData(withoutPhotos(state));syncedPhotos={...(state.playerPhotos||{})};
+    if(pending&&!isConnected){
+      // Sin conexión: Firebase guarda el cambio y lo sube al reconectar (si la app sigue abierta)
+      setSyncStatus('pending');
+      window.render(); // sin conexión Firebase no confirma el cambio, así que se redibuja aquí
+      pending.then(()=>setSyncStatus(isConnected?'ok':'off')).catch(()=>setSyncStatus('off'));
+      return;
+    }
+    if(pending)await pending;
     setSyncStatus('ok');
   }catch(e){setSyncStatus('off');showToast('Error al guardar');}
 };
 
 function setSyncStatus(s){
-  document.getElementById('syncDot').className='sync-dot'+(s==='off'?' off':s==='syncing'?' syncing':'');
-  document.getElementById('syncLabel').textContent=s==='ok'?'en vivo':s==='syncing'?'guardando...':'sin conexión';
+  const labels={ok:'en vivo',syncing:'guardando...',off:'sin conexión',cache:'sin conexión · datos guardados',pending:'sin conexión · se subirá al reconectar'};
+  document.getElementById('syncDot').className='sync-dot'+((s==='off'||s==='cache')?' off':(s==='syncing'||s==='pending')?' syncing':'');
+  document.getElementById('syncLabel').textContent=labels[s]||labels.off;
 }
 
 // Lee un nombre de un campo de texto quitando caracteres que rompen el HTML (ver js/text.js)
@@ -289,6 +319,9 @@ window.render=function(){
 
   // Estadísticas globales (carrusel)
   renderGlobalStats();
+  // La columna lateral del marcador (último campeón + estadísticas) se oculta si no muestra nada
+  const side=document.getElementById('boardSide');
+  if(side)side.classList.toggle('empty',![...side.children].some(c=>c.style.display!=='none'));
 
   // Game select + search
   filterGameSelect();
@@ -994,7 +1027,7 @@ function renderGlobalStats(){
   const noActiveTourney=!(state.players||[]).length || (!(state.games||[]).length && !state._tournamentStarted);
   const archivedGames=(state.archive||[]).flatMap(t=>t.games||[]);
   const allGames=getAllGamesEver();
-  if(!noActiveTourney || !allGames.length){ gsc.style.display='none'; gsc.innerHTML=''; return; }
+  if(!noActiveTourney || !allGames.length){ gsc.style.display='none'; return; }
 
   const cards=[];
 
@@ -1060,7 +1093,7 @@ function renderGlobalStats(){
   const closest=getClosestTournament();
   if(closest) cards.push({icon:'📈',label:'Torneo más reñido',value:closest.name,sub:closest.diff===0?'¡Empate! '+closest.champ+' vs '+closest.runnerUp:closest.diff+' pts entre '+closest.champ+' y '+closest.runnerUp});
 
-  if(!cards.length){ gsc.style.display='none'; gsc.innerHTML=''; return; }
+  if(!cards.length){ gsc.style.display='none'; return; }
   gsc.style.display='block';
   document.getElementById('globalStatsList').innerHTML=cards.map(c=>
     `<div class="stat-card-mini">
@@ -2228,3 +2261,15 @@ window.addPosRow();window.addPosRow();
 // La interfaz queda bloqueada (clase .booting) hasta que este módulo termina de cargar,
 // así ningún botón se toca antes de que sus funciones existan.
 document.body.classList.remove('booting');
+
+// Si Firebase todavía no respondió (sin internet o conexión lenta), mostrar lo último guardado
+// en este equipo mientras tanto.
+if(!gotRemote){
+  const cachedPhotos=lsGet(LS_PHOTOS);
+  if(cachedPhotos){syncedPhotos=photosFromRemote(cachedPhotos);}
+  const cached=lsGet(LS_TORNEO);
+  if(cached){applyTorneo(cached,true);window.render();setSyncStatus('cache');}
+}
+
+// Uso sin conexión: guarda la app en el equipo (ver sw.js)
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

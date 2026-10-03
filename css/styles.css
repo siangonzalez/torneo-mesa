@@ -221,3 +221,37 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#000;color:#A3E635;padding:10px 20px;border:2px solid #000;border-radius:20px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;box-shadow:3px 3px 0 #555;}
 .toast.show{opacity:1;}
 .photo-upload-btn{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;border:2px solid #000;background:#E8F5A3;cursor:pointer;flex-shrink:0;overflow:hidden;position:relative;font-size:22px;box-shadow:2px 2px 0 #000;}
+.board-side.empty{display:none;}
+
+/* ==================== iPad y pantallas anchas ==================== */
+@media (min-width:768px){
+  .app{max-width:1040px;padding:0 20px 92px;}
+  .nav{max-width:1040px;}
+  .page{padding:16px 0 0;}
+  .fab{right:max(16px,calc((100vw - 1040px)/2 + 20px));bottom:84px;}
+  /* Marcador: la tabla a la izquierda; último campeón y estadísticas a la derecha */
+  #pg-board.active{display:flex;gap:16px;align-items:flex-start;}
+  #pg-board>.nb-card{flex:1 1 0;min-width:0;}
+  #pg-board .board-side{flex:0 0 360px;}
+  #pg-board .board-side .stat-carousel{flex-wrap:wrap;overflow:visible;scroll-snap-type:none;}
+  #pg-board .board-side .stat-card-mini{width:calc(50% - 5px);}
+  /* Registrar y Mesa: dos tarjetas lado a lado */
+  #pg-add.active,#pg-dice.active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;}
+  /* Historial y estadísticas en columnas */
+  #historyList,#archiveList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px;}
+  #statsGames{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;}
+  #profilePicker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:20px;}
+  /* Ajustes en dos columnas; el catálogo ocupa todo el ancho */
+  #pg-settings.active{column-count:2;column-gap:16px;}
+  #pg-settings>.nb-card{break-inside:avoid;display:inline-block;width:100%;}
+  #pg-settings>.nb-card:has(#catalogList){column-span:all;display:block;}
+  #catalogList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px;}
+  /* Ventanas emergentes centradas en vez de subir desde abajo */
+  .modal-overlay{align-items:center;padding:24px;}
+  .modal-sheet{max-width:620px;border-radius:16px;box-shadow:6px 6px 0 #000;}
+}
+@media (min-width:1100px){
+  #catalogList{grid-template-columns:repeat(3,minmax(0,1fr));}
+  #profilePicker{grid-template-columns:repeat(4,minmax(0,1fr));}
+  #pg-board .board-side{flex-basis:400px;}
+}
