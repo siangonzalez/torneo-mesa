@@ -1,10 +1,10 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.5.0";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.5.0";
-import{escHtml,cleanName}from"./text.js?v=3.5.0";
-import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.5.0";
-import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.5.0";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.6.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.6.0";
+import{escHtml,cleanName}from"./text.js?v=3.6.0";
+import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.6.0";
+import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.6.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -246,22 +246,59 @@ function fillSplash(){
     const pick=pickSplash(splashPool());
     if(!pick)return;
     const body=document.getElementById('splashBody');if(!body)return;
-    if(pick.type==='quote'){
-      const t=(state.archive||[]).filter(a=>{const c=archiveScores(a)[0];return c&&c.name===pick.name&&c.pts>0;}).length;
-      body.innerHTML='<div class="splash-tag">🎲 '+escHtml(state.name||'Torneo de Mesa')+'</div>'+
-        '<div class="splash-avatar">'+av(pick.name,72)+'</div>'+
-        '<div class="splash-quote">'+escHtml(pick.text)+'</div>'+
-        '<div class="splash-author">— '+escHtml(pick.name)+'</div>'+
-        (t?'<div class="splash-sub">🏆 '+t+(t===1?' título':' títulos')+'</div>':'');
-    }else{
-      body.innerHTML='<div class="splash-tag">¿Sabías que…?</div>'+
-        '<div class="splash-avatar">'+av(pick.name,64)+'</div>'+
-        '<div class="splash-fact-icon">'+pick.icon+'</div>'+
-        '<div class="splash-fact">'+escHtml(pick.text)+'</div>';
-    }
+    body.innerHTML=splashCardHTML(pick,'🎲 '+(state.name||'Torneo de Mesa'));
     splashShownAt=performance.now();
   }catch(e){}
 }
+// HTML de la tarjeta de frase o dato (pantalla de carga y botón de datos curiosos)
+function splashCardHTML(pick,quoteTag){
+  if(pick.type==='quote'){
+    const t=(state.archive||[]).filter(a=>{const c=archiveScores(a)[0];return c&&c.name===pick.name&&c.pts>0;}).length;
+    return '<div class="splash-tag">'+escHtml(quoteTag)+'</div>'+
+      '<div class="splash-avatar">'+av(pick.name,72)+'</div>'+
+      '<div class="splash-quote">'+escHtml(pick.text)+'</div>'+
+      '<div class="splash-author">— '+escHtml(pick.name)+'</div>'+
+      (t?'<div class="splash-sub">🏆 '+t+(t===1?' título':' títulos')+'</div>':'');
+  }
+  return '<div class="splash-tag">¿Sabías que…?</div>'+
+    (pick.name?'<div class="splash-avatar">'+av(pick.name,64)+'</div>':'')+
+    '<div class="splash-fact-icon">'+pick.icon+'</div>'+
+    '<div class="splash-fact">'+escHtml(pick.text)+'</div>'+
+    (pick.sub?'<div class="splash-sub" style="margin-top:8px;">'+escHtml(pick.sub)+'</div>':'');
+}
+
+// ==================== BOTÓN DE DATOS CURIOSOS ====================
+// Frase o dato al azar de cualquier jugador del grupo (no solo del torneo en curso), sin
+// repetir el anterior. Suma los datos de las estadísticas globales para más variedad.
+let lastCuriosity=null;
+function curiosityPool(){
+  const quotes={};
+  const names=new Set([...(state.players||[]),...Object.keys(state.quotes||{}).map(k=>{try{return decodeURIComponent(k);}catch(e){return k;}})]);
+  names.forEach(p=>{const q=getQuotes(p);if(q.length)quotes[p]=q;});
+  let facts=[];
+  try{facts=currentFacts();}catch(e){}
+  try{if(getAllGamesEver().length)globalStatCards().forEach(c=>facts.push({icon:c.icon,text:c.label+': '+c.value,sub:c.sub}));}catch(e){}
+  return {quotes,facts};
+}
+window.openCuriosity=function(){
+  const pool=curiosityPool();
+  let pick=null;
+  for(let i=0;i<8;i++){pick=pickSplash(pool);if(!pick||pick.text!==lastCuriosity)break;}
+  if(!pick){showToast('Todavía no hay frases ni datos: agrega frases en el perfil de cada jugador');return;}
+  lastCuriosity=pick.text;
+  let el=document.getElementById('curiosity');
+  if(!el){
+    el=document.createElement('div');el.id='curiosity';el.className='splash curiosity';
+    el.addEventListener('click',e=>{if(e.target===el)window.closeCuriosity();});
+    document.body.appendChild(el);
+  }
+  el.innerHTML='<div class="splash-card">'+splashCardHTML(pick,'💬 Frase célebre')+
+    '<div class="curiosity-actions"><button class="nb-btn nb-btn-primary" onclick="openCuriosity()">🎲 Otro</button>'+
+    '<button class="nb-btn" onclick="closeCuriosity()">Cerrar</button></div></div>';
+  playSound('tap');
+};
+window.closeCuriosity=function(){const el=document.getElementById('curiosity');if(el)el.remove();};
+
 window.hideSplash=function(){
   if(splashDone)return;splashDone=true;
   const el=document.getElementById('splash');if(!el)return;
@@ -357,9 +394,10 @@ window.render=function(){
   if(ba){
     if(state._tournamentStarted&&(state.activePlayers||[]).length){
       ba.innerHTML='<button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="shareScoreboard()" style="font-size:11px;padding:4px 8px;">📤</button>'+
+        '<button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="openCuriosity()" title="Dato curioso" style="font-size:11px;padding:4px 8px;">💬</button>'+
         '<button class="nb-btn nb-btn-sm nb-btn-pink" onclick="openQueJugamos()" style="color:#000;">🎲 ¿Qué jugamos?</button>';
     } else {
-      ba.innerHTML='';
+      ba.innerHTML=(state.players||[]).length?'<button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="openCuriosity()" style="font-size:11px;padding:4px 8px;">💬 Dato curioso</button>':'';
     }
   }
   const board=document.getElementById('leaderList');
@@ -1128,14 +1166,10 @@ function getClosestTournament(){
   return best;
 }
 
-function renderGlobalStats(){
-  const gsc=document.getElementById('globalStatsCard');
-  if(!gsc)return;
-  const noActiveTourney=!(state.players||[]).length || (!(state.games||[]).length && !state._tournamentStarted);
+// Tarjetas de estadísticas globales (también alimentan el botón de datos curiosos)
+function globalStatCards(){
   const archivedGames=(state.archive||[]).flatMap(t=>t.games||[]);
   const allGames=getAllGamesEver();
-  if(!noActiveTourney || !allGames.length){ gsc.style.display='none'; return; }
-
   const cards=[];
 
   // Campeón con más títulos
@@ -1182,7 +1216,7 @@ function renderGlobalStats(){
 
   // Quien más veces quedó último
   const lastPlace=getLastPlaceLeader();
-  if(lastPlace) cards.push({icon:'🐢',label:'Más últimos lugares',value:lastPlace.name,sub:lastPlace.count+' vez'+(lastPlace.count===1?'':'es')});
+  if(lastPlace) cards.push({icon:'🐢',label:'Más últimos lugares',value:lastPlace.name,sub:lastPlace.count+(lastPlace.count===1?' vez':' veces')});
 
   // Juego con más jugadores distintos
   const versatile=getMostVersatileGame();
@@ -1200,6 +1234,18 @@ function renderGlobalStats(){
   const closest=getClosestTournament();
   if(closest) cards.push({icon:'📈',label:'Torneo más reñido',value:closest.name,sub:closest.diff===0?'¡Empate! '+closest.champ+' vs '+closest.runnerUp:closest.diff+' pts entre '+closest.champ+' y '+closest.runnerUp});
 
+  return cards;
+}
+
+function renderGlobalStats(){
+  const gsc=document.getElementById('globalStatsCard');
+  if(!gsc)return;
+  const noActiveTourney=!(state.players||[]).length || (!(state.games||[]).length && !state._tournamentStarted);
+  const archivedGames=(state.archive||[]).flatMap(t=>t.games||[]);
+  const allGames=getAllGamesEver();
+  if(!noActiveTourney || !allGames.length){ gsc.style.display='none'; return; }
+
+  const cards=globalStatCards();
   if(!cards.length){ gsc.style.display='none'; return; }
   gsc.style.display='block';
   document.getElementById('globalStatsList').innerHTML=cards.map(c=>

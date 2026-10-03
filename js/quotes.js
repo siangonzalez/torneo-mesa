@@ -66,7 +66,7 @@ export function pickSplash({ quotes = {}, facts = [], rng = Math.random } = {}) 
   Object.entries(quotes).forEach(([name, list]) => (list || []).forEach(text => { if (text) pairs.push({ name, text }); }));
   const useQuote = pairs.length && (!facts.length || rng() < 0.65);
   if (useQuote) { const q = pairs[Math.floor(rng() * pairs.length)]; return { type: 'quote', name: q.name, text: q.text }; }
-  if (facts.length) { const f = facts[Math.floor(rng() * facts.length)]; return { type: 'fact', name: f.name, text: f.text, icon: f.icon }; }
+  if (facts.length) { const f = facts[Math.floor(rng() * facts.length)]; return { ...f, type: 'fact' }; }
   return null;
 }
 

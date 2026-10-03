@@ -303,3 +303,6 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 .champ-quote::before{content:"“";}.champ-quote::after{content:"”";}
 @media (min-width:768px){.splash-card{max-width:520px;padding:36px 32px 30px;}.splash-quote{font-size:32px;}.splash-fact{font-size:26px;}}
 @media (prefers-reduced-motion:reduce){.splash-card,.splash-dice{animation:none;}}
+.curiosity{background:rgba(0,0,0,.55);cursor:default;}
+.curiosity-actions{display:flex;gap:8px;margin-top:22px;}
+.curiosity-actions .nb-btn{flex:1;margin:0;}
