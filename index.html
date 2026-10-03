@@ -496,11 +496,23 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
     <div class="nb-card">
       <span class="nb-card-title">Sistema de puntos</span>
       <select class="nb-select" id="settingSystem" onchange="saveSystem()">
-        <option value="balanced">Equilibrado (recomendado)</option>
+        <option value="rivals">Rivales vencidos (recomendado)</option>
         <option value="proportional">Proporcional</option>
         <option value="fibonacci">Fibonacci invertido</option>
         <option value="flat">Puntos fijos</option>
       </select>
+      <div style="font-size:12px;font-weight:500;color:#555;margin:6px 0 12px;line-height:1.4;">Rivales vencidos: ganas más por cada jugador que quede debajo de ti. Cada mesa reparte en promedio 100 pts por jugador, sea de 2 o de 6.</div>
+      <span class="nb-card-title">Partidas que cuentan</span>
+      <select class="nb-select" id="settingBestN" onchange="saveBestN()">
+        <option value="3">Mejores 3 de cada jugador</option>
+        <option value="4">Mejores 4 de cada jugador</option>
+        <option value="5">Mejores 5 de cada jugador (recomendado)</option>
+        <option value="6">Mejores 6 de cada jugador</option>
+        <option value="8">Mejores 8 de cada jugador</option>
+        <option value="10">Mejores 10 de cada jugador</option>
+        <option value="0">Todas (suma total)</option>
+      </select>
+      <div style="font-size:12px;font-weight:500;color:#555;margin-top:6px;line-height:1.4;">Solo suman tus mejores resultados: faltar a una partida o tener una mala noche no te hunde.</div>
     </div>
     <div class="nb-card">
       <span class="nb-card-title">Catálogo de juegos</span>
@@ -689,7 +701,7 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 (function(){
   var q={};
   var handler=function(name){return function(){var args=arguments;if(window['_m_'+name])return window['_m_'+name].apply(null,args);if(!q[name])q[name]=[];q[name].push(args);};};
-  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','setCdMode','setCdCustom','cdAdjust','cdFromInput','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','tsrFilterGames','obUpdateBtn','obRenderExisting','tsrRenderStep2','tsrRenderStep1','filterGameResults','filterQueJugamos','playThisGame','renderTeams','removePlayerFromTeam','addPlayerToTeam','removeTeam','addTeam','setGameMode','renderQueJugamosList','selectGame','selectCustomGame','clearGameSelection','confirmCustomGame','removeLastTeam','quePlayCustom','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji','renderOtherParticipants','toggleOtherParticipant'];
+  var fns=['goTo','rollDice','saveGame','addPosRow','removePosRow','addPlayer','removePlayer','saveName','saveSystem','addGameToCatalog','removeGameFromCatalog','confirmReset','closeTournament','deleteGame','showProfile','showArchiveTorney','setHistTab','setStatTab','toggleGameCard','migrateV1','onPhotoSelected','updatePhoto','onGameSelect','setFilter','renderCatalog','openQueJugamos','toggleQJCard','closeQueJugamos','closeQueJugamosBtn','pickRandomGame','setTimerMode','swToggle','swReset','cdToggle','cdReset','setCdPreset','setCdMode','setCdCustom','cdAdjust','cdFromInput','startTurnTimer','turnPause','turnNext','turnEnd','turnRestart','shuffleTurnOrder','addTurnPlayers','addTurnCustomPlayer','toggleTurnPlayer','clearTurnOrder','shareScoreboard','toggleDiceHist','startOnboarding','obNext','obAddPlayer','obRemovePlayer','obTogglePlayer','obPhotoSelected','obFinish','turnSaveResult','tsrSelectGame','tsrAssignPlayer','tsrUndoLast','tsrSave','closeTurnGameModal','tsrFilterGames','obUpdateBtn','obRenderExisting','tsrRenderStep2','tsrRenderStep1','filterGameResults','filterQueJugamos','playThisGame','renderTeams','removePlayerFromTeam','addPlayerToTeam','removeTeam','addTeam','setGameMode','renderQueJugamosList','selectGame','selectCustomGame','clearGameSelection','confirmCustomGame','removeLastTeam','quePlayCustom','cancelTournament','moveTurnPlayer','removeTurnPlayer','renderTurnPicker','filterGameSelect','toggleEmojiPicker','selectEmoji','renderOtherParticipants','toggleOtherParticipant','saveBestN'];
   fns.forEach(function(fn){if(!window[fn])window[fn]=handler(fn);});
   window._resolveQ=function(){fns.forEach(function(fn){if(window['_m_'+fn]&&q[fn]){q[fn].forEach(function(a){window['_m_'+fn].apply(null,a);});q[fn]=[];}});};
 })();
@@ -764,7 +776,7 @@ const DEFAULT_GAMES = [
 
 const EMOJI_LIST=['🎲', '🃏', '🎯', '🎮', '🏆', '🥇', '⚔️', '🛡️', '🗡️', '🔮', '🧩', '🎰', '🎳', '🎪', '🎭', '🃏', '🀱', '🎴', '🧸', '🪆', '🦁', '🐉', '🦊', '🐺', '🦅', '🐙', '🦈', '🦖', '🐝', '🦋', '🏰', '🏯', '⛵', '🚂', '🏎️', '🚀', '⚓', '🗺️', '🌍', '🏝️', '💎', '👑', '🔱', '⚜️', '🌟', '💥', '🔥', '❄️', '🌊', '⚡', '🧠', '🔬', '🔭', '⚗️', '🧪', '📜', '📚', '🗝️', '🔍', '🪄', '🍎', '🌮', '🍕', '☕', '🍺', '🧁', '🍄', '🌺', '🌵', '🍀', '🤝', '👻', '💀', '🎨', '🎵', '🎬', '📸', '✏️', '🖌️', '🎤'];
 
-let state={name:'Torneo de Mesa',players:[],games:[],system:'balanced',catalog:DEFAULT_GAMES,archive:[],playerPhotos:{}};
+let state={name:'Torneo de Mesa',players:[],games:[],system:'rivals',bestN:5,catalog:DEFAULT_GAMES,archive:[],playerPhotos:{}};
 let catalogFilters={type:'',complexity:'',players:''};
 let selectedEmoji='🎲';
 let pendingPhoto=null;
@@ -783,22 +795,92 @@ function setSyncStatus(s){
   document.getElementById('syncLabel').textContent=s==='ok'?'en vivo':s==='syncing'?'guardando...':'sin conexión';
 }
 
+// ==================== SISTEMA DE PUNTAJE ====================
+// 'rivals' (Rivales vencidos, el recomendado): por cada partida ganas 2 por cada jugador que
+// quedó debajo de ti y 1 por cada empatado contigo (tú incluido), dividido entre los jugadores
+// de la mesa, ×100. Cada partida reparte en promedio 100 pts por jugador sin importar si eran
+// 2 o 6, y ganarle a más gente vale más. Quienes jugaron sin podio quedan empatados al final.
+// 'balanced' existió solo un día como versión anterior: se trata como 'rivals'.
+// Los demás sistemas se conservan para torneos archivados que se jugaron con ellos.
+function normSystem(s){return (!s||s==='balanced')?'rivals':s;}
+function rivalsPoints(n){return Array.from({length:n},(_,i)=>(2*(n-1-i)+1)/n*100);}
 function getPoints(n,system){
-  if(system==='balanced')return Array.from({length:n},(_,i)=>Math.max(100-i*15,25));
+  system=normSystem(system);
+  if(system==='rivals')return rivalsPoints(n).map(v=>Math.round(v));
   if(system==='fibonacci'){const f=[1,2,3,5,8,13,21];const b=f.slice(0,n).reverse();const m=b[0];return b.map(v=>Math.round(v/m*100));}
   if(system==='flat')return[100,70,50,35,20,10].slice(0,n);
   return Array.from({length:n},(_,i)=>Math.round((n-i)/n*100));
 }
 
-// Puntos de "participación" para quien jugó pero no quedó en podio (no está en `positions`,
-// solo en `participants`). Antes era 0 — eso hacía que ganar un juego con podio corto (ej. solo
-// se registra al 1°) dejara al resto en 0 puntos, una brecha abrupta y muy difícil de remontar.
-// Ahora reciben un porcentaje de lo que se ganó el 1er puesto EN ESA PARTIDA (ya con el
-// multiplicador de dificultad aplicado), así el "castigo" por no podio escala igual que el resto.
+// En los sistemas antiguos, quien jugó sin podio recibe el 25% de lo que ganó el 1° en esa partida.
 const PARTICIPATION_RATIO=0.25;
 function getParticipationPoints(winnerPoints){
   return Math.round((winnerPoints||0)*PARTICIPATION_RATIO);
 }
+
+// Partidas que cuentan para el marcador: solo las mejores N de cada jugador (0 = todas).
+const DEFAULT_BEST_N=5;
+function getBestN(){const n=state.bestN;return (n===undefined||n===null)?DEFAULT_BEST_N:Number(n)||0;}
+
+// Puntos de UNA partida para cada jugador que la jugó.
+// Devuelve {nombre:{pts, rank, ranked}}: rank = puesto (0 = ganó) o -1 si jugó sin podio.
+function scoreGame(g,system){
+  system=normSystem(system);
+  const mult=getComplexityMultiplier(g.complexity);
+  const out={};
+  if(g.teams&&g.teams.length){
+    const T=g.teams.length;
+    const base=system==='rivals'?rivalsPoints(T):getPoints(T,system);
+    g.teams.forEach((team,ti)=>(team||[]).forEach(p=>{out[p]={pts:Math.round((base[ti]||0)*mult),rank:ti,ranked:true};}));
+    return out;
+  }
+  const positions=(g.positions||[]).filter(Boolean);
+  const participants=g.participants||positions;
+  const unranked=participants.filter(p=>p&&positions.indexOf(p)<0);
+  if(system==='rivals'){
+    const N=positions.length+unranked.length;
+    positions.forEach((p,i)=>{const below=(positions.length-1-i)+unranked.length;out[p]={pts:Math.round((2*below+1)/N*100*mult),rank:i,ranked:true};});
+    unranked.forEach(p=>{out[p]={pts:Math.round(unranked.length/N*100*mult),rank:-1,ranked:false};});
+  } else {
+    const base=getPoints(positions.length,system);
+    positions.forEach((p,i)=>{out[p]={pts:Math.round((base[i]||0)*mult),rank:i,ranked:true};});
+    const part=getParticipationPoints(Math.round((base[0]||0)*mult));
+    unranked.forEach(p=>{out[p]={pts:part,rank:-1,ranked:false};});
+  }
+  return out;
+}
+
+// Todos los nombres que aparecen en una lista de partidas
+function playersInGames(games){
+  const set={};
+  (games||[]).forEach(g=>Object.keys(scoreGame(g,'proportional')).forEach(p=>set[p]=true));
+  return Object.keys(set);
+}
+
+// Marcador de un torneo archivado, con el sistema y la regla de partidas con que se jugó.
+// Los torneos cerrados antes de guardar ese dato se jugaron con Proporcional y suma total.
+function archiveScores(t){
+  return computeScores(t.games||[],{system:t.system||'proportional',bestN:t.bestN||0,players:playersInGames(t.games)});
+}
+
+// Lista de todas las partidas de la historia, cada una con el sistema de su torneo
+function getAllGamesWithSystem(){
+  const list=[];
+  (state.archive||[]).forEach(t=>(t.games||[]).forEach(g=>list.push({g,system:t.system||'proportional'})));
+  (state.games||[]).forEach(g=>list.push({g,system:state.system}));
+  return list;
+}
+
+// Chips de resultado de una partida para el historial (equipos, puestos y quienes jugaron sin podio)
+function gameResultChips(g,system){
+  const sg=scoreGame(g,system);
+  if(g.teams&&g.teams.length){
+    return g.teams.map((team,ti)=>{const pts=team.length&&sg[team[0]]?sg[team[0]].pts:0;return '<span class="nb-chip">'+(ti+1)+'° '+team.map(escHtml).join(' + ')+' +'+pts+'</span>';}).join('');
+  }
+  return Object.entries(sg).sort((a,b)=>(a[1].ranked===b[1].ranked?a[1].rank-b[1].rank:(a[1].ranked?-1:1)))
+    .map(([p,r])=>'<span class="nb-chip"'+(r.ranked?'':' style="background:#fff;"')+'>'+(r.ranked?(r.rank+1)+'° ':'')+escHtml(p)+' +'+r.pts+'</span>').join('');
+}
+function escHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 // Multiplicador de puntos según dificultad del juego (nivel "suave")
 const COMPLEXITY_MULTIPLIERS={Baja:1.0,Media:1.15,Alta:1.3};
@@ -814,35 +896,29 @@ function getGamePoints(n,system,complexity){
   return base.map(v=>Math.round(v*mult));
 }
 
-function computeScores(games){
-  const scores={},wins={},podiums={},gp={};
-  var playerList = state.activePlayers || state.players || [];
-  playerList.forEach(p=>{scores[p]=0;wins[p]=0;podiums[p]=0;gp[p]=0;});
+// Marcador de un conjunto de partidas. Por defecto usa el torneo actual (sistema, mejores N y
+// jugadores activos); los torneos archivados pasan sus propios valores (ver archiveScores).
+// Victorias, podios y partidas jugadas cuentan TODAS las partidas; los puntos solo las mejores N.
+function computeScores(games,opts){
+  opts=opts||{};
+  const system=opts.system!==undefined?opts.system:state.system;
+  const bestN=opts.bestN!==undefined?opts.bestN:getBestN();
+  const playerList=opts.players||state.activePlayers||state.players||[];
+  const results={},wins={},podiums={},gp={};
+  playerList.forEach(p=>{results[p]=[];wins[p]=0;podiums[p]=0;gp[p]=0;});
   (games||[]).forEach(g=>{
-    // "Jugó esta partida" = participants (podio + sin puesto). Fallback a positions para partidas viejas sin ese campo.
-    const participants = g.participants || g.positions || [];
-    participants.forEach(p=>{ if(gp[p]!==undefined) gp[p]++; });
-    if(g.teams&&g.teams.length){
-      // Team game: all members of same team get same points
-      const pts=getGamePoints(g.teams.length,state.system,g.complexity);
-      g.teams.forEach((team,ti)=>{
-        team.forEach(p=>{
-          if(scores[p]!==undefined){scores[p]+=pts[ti]||0;if(ti===0)wins[p]++;if(ti<3)podiums[p]++;}
-        });
-      });
-    } else {
-      // Individual game — quienes tienen puesto (positions) reciben puntos por posición;
-      // quienes jugaron pero no quedaron en podio (participants sin posición) reciben
-      // puntos de participación en vez de 0.
-      const pts=getGamePoints(g.positions.length,state.system,g.complexity);
-      const rankedSet={};
-      g.positions.forEach((p,i)=>{if(p&&scores[p]!==undefined){scores[p]+=pts[i]||0;if(i===0)wins[p]++;if(i<3)podiums[p]++;rankedSet[p]=true;}});
-      const partPts=getParticipationPoints(pts[0]);
-      participants.forEach(p=>{ if(!rankedSet[p] && scores[p]!==undefined) scores[p]+=partPts; });
-    }
+    Object.entries(scoreGame(g,system)).forEach(([p,r])=>{
+      if(results[p]===undefined)return;
+      results[p].push(r.pts);gp[p]++;
+      if(r.ranked&&r.rank===0)wins[p]++;
+      if(r.ranked&&r.rank<3)podiums[p]++;
+    });
   });
-  return playerList.map(p=>({name:p,pts:scores[p],wins:wins[p],podiums:podiums[p],gamesPlayed:gp[p]}))
-    .sort((a,b)=>b.pts-a.pts||b.wins-a.wins||b.podiums-a.podiums||a.name.localeCompare(b.name,'es'));
+  return playerList.map(p=>{
+    const sorted=results[p].slice().sort((a,b)=>b-a);
+    const counted=bestN>0?sorted.slice(0,bestN):sorted;
+    return {name:p,pts:counted.reduce((s,v)=>s+v,0),wins:wins[p],podiums:podiums[p],gamesPlayed:gp[p],counted:counted.length};
+  }).sort((a,b)=>b.pts-a.pts||b.wins-a.wins||b.podiums-a.podiums||a.name.localeCompare(b.name,'es'));
 }
 
 // Puestos "de verdad" para mostrar en UI: si dos jugadores quedan exactamente iguales
@@ -886,7 +962,8 @@ function av(p,size=36){const photo=(state.playerPhotos||{})[p];const s=`width:${
 window.render=function(){
   document.getElementById('tourneyName').textContent=state.name||'Torneo de Mesa';
   document.getElementById('settingName').value=state.name||'';
-  document.getElementById('settingSystem').value=state.system||'balanced';
+  document.getElementById('settingSystem').value=normSystem(state.system);
+  const bnSel=document.getElementById('settingBestN');if(bnSel)bnSel.value=String(getBestN());
   const gc=(state.games||[]).length;
   document.getElementById('gameCount').textContent=gc+' juego'+(gc===1?'':'s');
 
@@ -938,7 +1015,7 @@ window.render=function(){
           <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;">
             ${p.wins?`<span class="nb-tag tag-win">${p.wins}V</span>`:''}
             ${p.podiums>p.wins?`<span class="nb-tag tag-pod">${p.podiums} pod</span>`:''}
-            <span class="nb-tag tag-games">${p.gamesPlayed} part</span>
+            <span class="nb-tag tag-games">${p.gamesPlayed} part${p.counted<p.gamesPlayed?` · cuentan ${p.counted}`:''}</span>
             ${streak?`<span class="nb-tag" style="background:#FF6B9D;border-color:#000;">\u{1F525} ${streak} racha</span>`:''}
           </div>
         </div>
@@ -953,7 +1030,7 @@ window.render=function(){
     const noActiveTourney=!(state.players||[]).length || (!(state.games||[]).length && !state._tournamentStarted);
     const lastArchived=(state.archive||[]).length?state.archive[state.archive.length-1]:null;
     if(noActiveTourney && lastArchived && lastArchived.games && lastArchived.games.length){
-      const lsc=computeScores(lastArchived.games);
+      const lsc=archiveScores(lastArchived);
       const lchamp=lsc[0];
       const lTied=getTiedWith(lsc,lchamp);
       const ld=lastArchived.date?new Date(lastArchived.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
@@ -1003,13 +1080,13 @@ window.render=function(){
   if(!(state.games||[]).length){hist.innerHTML='<div class="nb-empty">Sin juegos registrados.</div>';}
   else{hist.innerHTML=[...(state.games||[])].reverse().map((g,ri)=>{
     const i=state.games.length-1-ri;
-    const pts=getGamePoints(g.positions.length,state.system,g.complexity);
+    const d=g.date?new Date(g.date).toLocaleDateString('es-CO',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
     return `<div class="game-row">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div><div style="font-size:14px;font-weight:700;">${gameEmoji(g.name)} ${g.name}</div>${d?`<div style="font-size:11px;color:#555;">${d}</div>`:''}</div>
         <button class="nb-btn nb-btn-sm nb-btn-red" onclick="deleteGame(${i})" style="padding:3px 8px;font-size:11px;">×</button>
       </div>
-      <div style="margin-top:5px;">${g.positions.map((p,pi)=>`<span class="nb-chip">${pi+1}° ${p} +${pts[pi]}</span>`).join('')}</div>
+      <div style="margin-top:5px;">${gameResultChips(g,state.system)}</div>
     </div>`;
   }).join('');}
 
@@ -1017,7 +1094,7 @@ window.render=function(){
   const arch=document.getElementById('archiveList');
   if(!(state.archive||[]).length){arch.innerHTML='<div class="nb-empty">Sin torneos cerrados aún.</div>';}
   else{arch.innerHTML=[...(state.archive||[])].reverse().map((t,i)=>{
-    const champ=computeScores(t.games)[0];
+    const champ=archiveScores(t)[0];
     const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
     return `<div class="archive-item" onclick="showArchiveTorney(${state.archive.length-1-i})">
       <div class="archive-title">🏆 ${t.name}</div>
@@ -1132,35 +1209,17 @@ function renderStats(){
 
 // Resuelve el resultado de UN jugador en UNA partida, sea individual rankeado,
 // individual sin puesto (jugó pero no quedó en podio), o de equipos.
-function getPlayerGameResult(g,name){
-  if(g.teams&&g.teams.length){
-    const ti=g.teams.findIndex(function(team){return team.indexOf(name)>=0;});
-    if(ti<0)return{participated:false};
-    const pts=getGamePoints(g.teams.length,state.system,g.complexity);
-    return{participated:true,ranked:true,idx:ti,points:pts[ti]||0};
-  }
-  const positions=g.positions||[];
-  const i=positions.indexOf(name);
-  if(i>=0){
-    const pts=getGamePoints(positions.length,state.system,g.complexity);
-    return{participated:true,ranked:true,idx:i,points:pts[i]||0};
-  }
-  // No tiene puesto asignado — ¿está en participants? (jugó pero no llegó a podio)
-  const participants=g.participants||positions;
-  if(participants.indexOf(name)>=0){
-    const pts=getGamePoints(positions.length,state.system,g.complexity);
-    return{participated:true,ranked:false,idx:-1,points:getParticipationPoints(pts[0])};
-  }
-  return{participated:false};
+function getPlayerGameResult(g,name,system){
+  const r=scoreGame(g,system!==undefined?system:state.system)[name];
+  if(!r)return{participated:false};
+  return{participated:true,ranked:r.ranked,idx:r.rank,points:r.pts};
 }
 
 window.showProfile=function(name){
   document.getElementById('profileModal').style.display='flex';
-  const allGames=[...(state.games||[]),...(state.archive||[]).flatMap(t=>t.games||[])];
-  const myGames=allGames.filter(g=>getPlayerGameResult(g,name).participated);
+  const myGames=getAllGamesWithSystem().map(({g,system})=>({g,r:getPlayerGameResult(g,name,system)})).filter(x=>x.r.participated);
   let wins=0,podiums=0,pts=0;const gamePts={};
-  myGames.forEach(g=>{
-    const r=getPlayerGameResult(g,name);
+  myGames.forEach(({g,r})=>{
     pts+=r.points;
     if(r.ranked&&r.idx===0)wins++;
     if(r.ranked&&r.idx<3)podiums++;
@@ -1183,8 +1242,7 @@ window.showProfile=function(name){
     <div class="metric-box"><div class="metric-val">${winRate}%</div><div class="metric-lbl">Win rate</div></div>`;
   const best=Object.entries(gamePts).sort((a,b)=>b[1].wins-a[1].wins)[0];
   document.getElementById('profBestGame').innerHTML=best?`${gameEmoji(best[0])} ${best[0]} — ${best[1].wins}V en ${best[1].games} partidas`:'Sin datos';
-  document.getElementById('profHistory').innerHTML=myGames.slice(-10).reverse().map(g=>{
-    const r=getPlayerGameResult(g,name);
+  document.getElementById('profHistory').innerHTML=myGames.slice(-10).reverse().map(({g,r})=>{
     const label=r.ranked?(r.idx<3?medals[r.idx]:(r.idx+1)+'°'):'Participó';
     return `<div class="stat-row"><div>${gameEmoji(g.name)} <span style="font-size:13px;font-weight:700;">${g.name}</span></div>
       <div>${label} <span class="nb-tag tag-win">+${r.points}</span></div></div>`;
@@ -1193,7 +1251,7 @@ window.showProfile=function(name){
 
 window.showArchiveTorney=function(i){
   const t=state.archive[i];if(!t)return;
-  const sc=computeScores(t.games);
+  const sc=archiveScores(t);
   const ranks=computeDisplayRanks(sc);
   const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
   document.getElementById('archiveModalTitle').textContent='🏆 '+t.name;
@@ -1215,10 +1273,9 @@ window.showArchiveTorney=function(i){
     }).join('')+
     '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:14px 0 6px;">Juegos jugados</div>'+
     t.games.map(g=>{
-      const pts=getGamePoints(g.positions.length,state.system,g.complexity);
       return '<div class="game-row">'+
         '<div style="font-size:13px;font-weight:700;">'+gameEmoji(g.name)+' '+g.name+'</div>'+
-        '<div style="margin-top:4px;">'+g.positions.map((p,pi)=>'<span class="nb-chip">'+(pi+1)+'° '+p+' +'+pts[pi]+'</span>').join('')+'</div>'+
+        '<div style="margin-top:4px;">'+gameResultChips(g,t.system||'proportional')+'</div>'+
         '</div>';
     }).join('');
   document.getElementById('archiveModal').style.display='flex';
@@ -1235,7 +1292,7 @@ window.closeTournament=async function(){
   confirmMsg+='\n\nEl torneo se archivará y empezará uno nuevo.';
   if(!await nbConfirm(confirmMsg,'¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
-  state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players});
+  state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players,system:normSystem(state.system),bestN:getBestN()});
   state.games=[];state._tournamentStarted=false;state.activePlayers=null;if(window._turnPlayers)window._turnPlayers.length=0;if(window._turnOrder)window._turnOrder.length=0;var _tol=document.getElementById('turnOrderList');if(_tol)_tol.innerHTML='';var _tpp=document.getElementById('turnPlayerPicker');if(_tpp)_tpp.innerHTML='';await window.saveState();
   playSound('fanfare');showChampionScreen(champ.name,champ.pts);
 };
@@ -1320,6 +1377,7 @@ window.addPlayer=async function(){const inp=document.getElementById('newPlayerNa
 window.removePlayer=async function(i){const name=state.players[i];if(!await nbConfirm('Sus puntos en juegos ya registrados se conservan.','¿Quitar a '+name+'?','Quitar'))return;state.players.splice(i,1);if(state.playerPhotos&&state.playerPhotos[name])delete state.playerPhotos[name];await window.saveState();};
 window.saveName=async function(){state.name=document.getElementById('settingName').value.trim()||'Torneo de Mesa';await window.saveState();showToast('Guardado ✓');};
 window.saveSystem=async function(){state.system=document.getElementById('settingSystem').value;await window.saveState();};
+window.saveBestN=async function(){state.bestN=Number(document.getElementById('settingBestN').value);await window.saveState();};
 window.addGameToCatalog=async function(){const inp=document.getElementById('newGameName');const n=inp.value.trim();if(!n)return;if((state.catalog||[]).find(g=>g.name===n)){showToast('Ya está en el catálogo');return;}if(!state.catalog)state.catalog=[...DEFAULT_GAMES];state.catalog.push({name:n,emoji:selectedEmoji});inp.value='';selectedEmoji='🎲';document.getElementById('newGameEmoji').textContent='🎲';await window.saveState();showToast(n+' agregado al catálogo ✓');};
 window.removeGameFromCatalog=async function(i){if(!await nbConfirm('Se quitará del catálogo.','¿Quitar juego?','Quitar'))return;state.catalog.splice(i,1);await window.saveState();};
 window.confirmReset=async function(){if(!await nbConfirm('Se borran los juegos del torneo actual. Los torneos archivados se conservan.','¿Reiniciar torneo?','Reiniciar'))return;state.games=[];await window.saveState();showToast('Torneo reiniciado');};
@@ -1589,21 +1647,9 @@ function getLongestStreakEver(){
 
 // Puntos acumulados de por vida por jugador (independiente del roster activo actual)
 function getLifetimePoints(){
-  const games=getAllGamesEver();
   const totals={};
-  games.forEach(g=>{
-    if(g.teams&&g.teams.length){
-      const pts=getGamePoints(g.teams.length,state.system,g.complexity);
-      g.teams.forEach((team,ti)=>{ team.forEach(p=>{ totals[p]=(totals[p]||0)+(pts[ti]||0); }); });
-    } else {
-      const positions=g.positions||[];
-      const participants=g.participants||positions;
-      const pts=getGamePoints(positions.length,state.system,g.complexity);
-      const rankedSet={};
-      positions.forEach((p,i)=>{ if(p){ totals[p]=(totals[p]||0)+(pts[i]||0); rankedSet[p]=true; } });
-      const partPts=getParticipationPoints(pts[0]);
-      participants.forEach(p=>{ if(!rankedSet[p]) totals[p]=(totals[p]||0)+partPts; });
-    }
+  getAllGamesWithSystem().forEach(({g,system})=>{
+    Object.entries(scoreGame(g,system)).forEach(([p,r])=>{ totals[p]=(totals[p]||0)+r.pts; });
   });
   return Object.entries(totals).map(([name,pts])=>({name,pts})).sort((a,b)=>b.pts-a.pts);
 }
@@ -1701,7 +1747,7 @@ function getTopDuo(){
 function getClosestTournament(){
   let best=null;
   (state.archive||[]).forEach(t=>{
-    const sc=computeScores(t.games);
+    const sc=archiveScores(t);
     if(sc.length>=2){
       const diff=sc[0].pts-sc[1].pts;
       if(!best||diff<best.diff) best={name:t.name,diff,champ:sc[0].name,runnerUp:sc[1].name};
@@ -1722,7 +1768,7 @@ function renderGlobalStats(){
 
   // Campeón con más títulos
   const titles={};
-  (state.archive||[]).forEach(t=>{ const champ=computeScores(t.games)[0]; if(champ) titles[champ.name]=(titles[champ.name]||0)+1; });
+  (state.archive||[]).forEach(t=>{ const champ=archiveScores(t)[0]; if(champ) titles[champ.name]=(titles[champ.name]||0)+1; });
   const titleEntries=Object.entries(titles).sort((a,b)=>b[1]-a[1]);
   if(titleEntries.length){
     const [tName,tCount]=titleEntries[0];
@@ -2954,6 +3000,7 @@ window['_m_addPlayer'] = window.addPlayer;
 window['_m_removePlayer'] = window.removePlayer;
 window['_m_saveName'] = window.saveName;
 window['_m_saveSystem'] = window.saveSystem;
+window['_m_saveBestN'] = window.saveBestN;
 window['_m_addGameToCatalog'] = window.addGameToCatalog;
 window['_m_removeGameFromCatalog'] = window.removeGameFromCatalog;
 window['_m_confirmReset'] = window.confirmReset;
