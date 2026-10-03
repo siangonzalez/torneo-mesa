@@ -1,7 +1,8 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith}from"./scoring.js";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.2.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js?v=3.2.0";
+import{escHtml,cleanName}from"./text.js?v=3.2.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -130,6 +131,13 @@ function setSyncStatus(s){
   document.getElementById('syncLabel').textContent=s==='ok'?'en vivo':s==='syncing'?'guardando...':'sin conexión';
 }
 
+// Lee un nombre de un campo de texto quitando caracteres que rompen el HTML (ver js/text.js)
+function readName(inp){
+  const raw=(inp&&inp.value||'').trim();const name=cleanName(raw);
+  if(name!==raw.replace(/\s+/g,' '))showToast('Se quitaron caracteres no permitidos (< > " ` \\)');
+  return name;
+}
+
 // ==================== PUNTAJE (ver js/scoring.js) ====================
 // Envoltorios que le pasan al módulo de puntaje el estado del torneo actual.
 function getBestN(){const n=state.bestN;return (n===undefined||n===null)?DEFAULT_BEST_N:Number(n)||0;}
@@ -167,7 +175,6 @@ function gameResultChips(g,system){
   return Object.entries(sg).sort((a,b)=>(a[1].ranked===b[1].ranked?a[1].rank-b[1].rank:(a[1].ranked?-1:1)))
     .map(([p,r])=>'<span class="nb-chip"'+(r.ranked?'':' style="background:#fff;"')+'>'+(r.ranked?(r.rank+1)+'° ':'')+escHtml(p)+' +'+r.pts+'</span>').join('');
 }
-function escHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 // Ordena una lista de nombres de jugadores por su puntaje del torneo ACTUAL (mismo criterio
 // de desempate que el marcador: pts → wins → podiums → alfabético). Jugadores sin puntaje
@@ -292,7 +299,7 @@ window.render=function(){
   pl.innerHTML=sortedRoster.length?sortedRoster.map(p=>{
     const i=state.players.indexOf(p); // índice real en state.players, no en la lista ordenada
     return `<div class="player-item">${av(p,38)}<span style="flex:1;font-size:14px;font-weight:700;">${p}</span>
-    <label style="cursor:pointer;font-size:18px;">📷<input type="file" accept="image/*" style="display:none;" onchange="updatePhoto('${p}',event)"></label>
+    <label style="cursor:pointer;font-size:18px;">📷<input type="file" accept="image/*" style="display:none;" onchange="updatePhoto(this.dataset.pn,event)" data-pn="${escHtml(p)}"></label>
     <button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePlayer(${i})">×</button></div>`;
   }).join(''):'<div style="font-size:13px;color:#555;font-weight:500;padding:8px 0;">Sin jugadores.</div>';
 
@@ -335,7 +342,7 @@ window.render=function(){
 
   // Profile picker — ordenado por puntaje del torneo actual
   document.getElementById('profilePicker').innerHTML=sortPlayersByScore(state.players||[]).map(p=>
-    `<div class="player-item" style="cursor:pointer;" onclick="showProfile('${p}')">
+    `<div class="player-item" style="cursor:pointer;" onclick="showProfile(this.dataset.pn)" data-pn="${escHtml(p)}">
       ${av(p,34)}<span style="flex:1;font-size:14px;font-weight:700;">${p}</span><span style="font-size:18px;">›</span>
     </div>`
   ).join('')||'<div class="nb-empty">Sin jugadores.</div>';
@@ -426,12 +433,13 @@ function renderStats(){
     </div>`
   ).join(''):'<div class="nb-empty">Sin datos.</div>';
   const kings={};
-  allGames.forEach(g=>{if(g.positions&&g.positions[0]){if(!kings[g.name])kings[g.name]={};kings[g.name][g.positions[0]]=(kings[g.name][g.positions[0]]||0)+1;}});
+  allGames.forEach(g=>{gameWinners(g).forEach(w=>{if(!kings[g.name])kings[g.name]={};kings[g.name][w]=(kings[g.name][w]||0)+1;});});
   const ke=Object.entries(kings);
   document.getElementById('statsKings').innerHTML=ke.length?ke.map(([game,players])=>{
-    const top=Object.entries(players).sort((a,b)=>b[1]-a[1])[0];
-    return `<div class="stat-row"><div>${gameEmoji(game)} <span style="font-size:14px;font-weight:700;">${game}</span></div>
-      <div style="font-size:14px;font-weight:700;">👑 ${top[0]} <span style="font-size:11px;font-weight:500;">${top[1]}V</span></div></div>`;
+    const max=Math.max(...Object.values(players));
+    const kingsNames=Object.keys(players).filter(p=>players[p]===max).sort((a,b)=>a.localeCompare(b,'es'));
+    return `<div class="stat-row"><div>${gameEmoji(game)} <span style="font-size:14px;font-weight:700;">${escHtml(game)}</span></div>
+      <div style="font-size:14px;font-weight:700;text-align:right;">👑 ${kingsNames.map(escHtml).join(' y ')} <span style="font-size:11px;font-weight:500;">${max}V</span></div></div>`;
   }).join(''):'<div class="nb-empty">Sin datos.</div>';
 }
 
@@ -601,12 +609,12 @@ window.saveGame=async function(){
 };
 
 window.deleteGame=async function(i){if(!await nbConfirm('Se eliminará este resultado y sus puntos.','¿Borrar resultado?','Borrar'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');playSound('delete');};
-window.addPlayer=async function(){const inp=document.getElementById('newPlayerName');const n=inp.value.trim();if(!n)return;if((state.players||[]).includes(n)){showToast('Ya existe');return;}if(!state.players)state.players=[];state.players.push(n);if(pendingPhoto){if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[n]=pendingPhoto;pendingPhoto=null;document.getElementById('photoPreview').style.display='none';document.getElementById('photoPlaceholder').style.display='block';}inp.value='';await window.saveState();showToast(n+' agregado ✓');playSound('success');};
+window.addPlayer=async function(){const inp=document.getElementById('newPlayerName');const n=readName(inp);if(!n)return;if((state.players||[]).includes(n)){showToast('Ya existe');return;}if(!state.players)state.players=[];state.players.push(n);if(pendingPhoto){if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[n]=pendingPhoto;pendingPhoto=null;document.getElementById('photoPreview').style.display='none';document.getElementById('photoPlaceholder').style.display='block';}inp.value='';await window.saveState();showToast(n+' agregado ✓');playSound('success');};
 window.removePlayer=async function(i){const name=state.players[i];if(!await nbConfirm('Sus puntos en juegos ya registrados se conservan.','¿Quitar a '+name+'?','Quitar'))return;state.players.splice(i,1);if(state.playerPhotos&&state.playerPhotos[name])delete state.playerPhotos[name];await window.saveState();};
-window.saveName=async function(){state.name=document.getElementById('settingName').value.trim()||'Torneo de Mesa';await window.saveState();showToast('Guardado ✓');};
+window.saveName=async function(){state.name=readName(document.getElementById('settingName'))||'Torneo de Mesa';await window.saveState();showToast('Guardado ✓');};
 window.saveSystem=async function(){state.system=document.getElementById('settingSystem').value;await window.saveState();};
 window.saveBestN=async function(){state.bestN=Number(document.getElementById('settingBestN').value);await window.saveState();};
-window.addGameToCatalog=async function(){const inp=document.getElementById('newGameName');const n=inp.value.trim();if(!n)return;if((state.catalog||[]).find(g=>g.name===n)){showToast('Ya está en el catálogo');return;}if(!state.catalog)state.catalog=[...DEFAULT_GAMES];state.catalog.push({name:n,emoji:selectedEmoji});inp.value='';selectedEmoji='🎲';document.getElementById('newGameEmoji').textContent='🎲';await window.saveState();showToast(n+' agregado al catálogo ✓');};
+window.addGameToCatalog=async function(){const inp=document.getElementById('newGameName');const n=readName(inp);if(!n)return;if((state.catalog||[]).find(g=>g.name===n)){showToast('Ya está en el catálogo');return;}if(!state.catalog)state.catalog=[...DEFAULT_GAMES];state.catalog.push({name:n,emoji:selectedEmoji});inp.value='';selectedEmoji='🎲';document.getElementById('newGameEmoji').textContent='🎲';await window.saveState();showToast(n+' agregado al catálogo ✓');};
 window.removeGameFromCatalog=async function(i){if(!await nbConfirm('Se quitará del catálogo.','¿Quitar juego?','Quitar'))return;state.catalog.splice(i,1);await window.saveState();};
 window.confirmReset=async function(){if(!await nbConfirm('Se borran los juegos del torneo actual. Los torneos archivados se conservan.','¿Reiniciar torneo?','Reiniciar'))return;state.games=[];await window.saveState();showToast('Torneo reiniciado');};
 
@@ -674,7 +682,7 @@ window.renderQueJugamosList = function(games) {
         '<span style="font-size:16px;font-weight:700;color:#555;" id="arr_' + idx + '">›</span></div>' +
         '<div class="game-expand-card" id="' + idx + '">' +
         (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;margin-bottom:10px;">' + g.desc + '</div>':'') +
-        '<button class="nb-btn nb-btn-sm nb-btn-primary" style="width:100%;" onclick="event.stopPropagation();playThisGame(this.dataset.gn)" data-gn="' + g.name + '">🎮 Jugar este</button>' +
+        '<button class="nb-btn nb-btn-sm nb-btn-primary" style="width:100%;" onclick="event.stopPropagation();playThisGame(this.dataset.gn)" data-gn="' + escHtml(g.name) + '">🎮 Jugar este</button>' +
         '</div></div>';
     });
   });
@@ -830,27 +838,20 @@ function playSound(type) {
 window._playSound = playSound;
 
 // ==================== STREAK DETECTION ====================
+// Rachas activas del torneo actual: victorias seguidas de quien ganó la última partida.
+// En partidas de equipos, la victoria cuenta para todo el equipo ganador.
 function getStreaks() {
-  var games = state.games || [];
-  if(games.length < 2) return {};
-  var streaks = {};
-  var current = {};
-  // Go through games in order
-  games.forEach(function(g) {
-    var winner = g.positions && g.positions[0];
-    if(!winner) return;
-    if(!current[winner]) current[winner] = 0;
-    current[winner]++;
-    // Reset others
-    Object.keys(current).forEach(function(p) {
-      if(p !== winner) current[p] = 0;
-    });
-    if(current[winner] >= 2) streaks[winner] = current[winner];
+  const games=state.games||[];
+  if(games.length<2) return {};
+  const current={};
+  games.forEach(g=>{
+    const w=gameWinners(g);
+    if(!w.length) return;
+    Object.keys(current).forEach(p=>{ if(w.indexOf(p)<0) current[p]=0; });
+    w.forEach(p=>{ current[p]=(current[p]||0)+1; });
   });
-  // Only keep active streaks (last game winner must have streak)
-  var lastWinner = games.length > 0 && games[games.length-1].positions ? games[games.length-1].positions[0] : null;
-  var result = {};
-  if(lastWinner && streaks[lastWinner]) result[lastWinner] = streaks[lastWinner];
+  const result={};
+  gameWinners(games[games.length-1]).forEach(p=>{ if(current[p]>=2) result[p]=current[p]; });
   return result;
 }
 
@@ -862,15 +863,18 @@ function getAllGamesEver(){
 // Racha de victorias consecutivas más larga de toda la historia (no solo la activa)
 function getLongestStreakEver(){
   const games=getAllGamesEver();
-  let current={}, best=null;
-  games.forEach(g=>{
-    const winner=g.positions&&g.positions[0];
-    if(!winner)return;
-    current[winner]=(current[winner]||0)+1;
-    Object.keys(current).forEach(p=>{ if(p!==winner) current[p]=0; });
-    if(!best || current[winner]>best.len) best={name:winner,len:current[winner]};
+  const current={}; let best=null;
+  games.forEach((g,gi)=>{
+    const w=gameWinners(g);
+    if(!w.length)return;
+    Object.keys(current).forEach(p=>{ if(w.indexOf(p)<0) current[p]=0; });
+    w.forEach(p=>{
+      current[p]=(current[p]||0)+1;
+      if(!best||current[p]>best.len) best={names:[p],len:current[p],at:gi};
+      else if(current[p]===best.len&&best.at===gi&&best.names.indexOf(p)<0) best.names.push(p); // compañeros de equipo
+    });
   });
-  return (best && best.len>=2) ? best : null;
+  return (best&&best.len>=2)?{name:best.names.join(' y '),len:best.len}:null;
 }
 
 // Puntos acumulados de por vida por jugador (independiente del roster activo actual)
@@ -1279,7 +1283,7 @@ window._renderTurnPicker = function() {
       ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">'
       : '<div style="width:28px;height:28px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;">'+p[0]+'</div>';
     var sel = !!selected[p];
-    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,.07);cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+p+'">'
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,.07);cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+escHtml(p)+'">'
       + av
       + '<span style="flex:1;font-size:14px;">'+p+'</span>'
       + '<span style="font-size:18px;color:'+(sel?'#1a1a1a':'#ccc')+';">'+(sel?'✓':'○')+'</span>'
@@ -1313,7 +1317,7 @@ window.addTurnPlayers = function() {
 
 window.addTurnCustomPlayer = function() {
   var inp = document.getElementById('turnCustomPlayer');
-  var name = inp.value.trim();
+  var name = readName(inp);
   if(!name) return;
   if(turnPlayers.indexOf(name)<0) { turnPlayers.push(name); turnOrder.push(name); }
   inp.value = '';
@@ -1516,7 +1520,7 @@ window.renderTurnPicker = function() {
       : '<div style="width:32px;height:32px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">'+p[0]+'</div>';
     var pos = posMap[p];
     var sel = !!pos;
-    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+p+'">'
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+escHtml(p)+'">'
       + avHtml
       + '<span style="flex:1;font-size:14px;font-weight:700;">'+p+'</span>'
       + (sel
@@ -1626,7 +1630,7 @@ window.startOnboarding = function() {
 window.obNext = function(step) {
   playSound('success');
   if(step === 2) {
-    var name = document.getElementById('obTorneoName').value.trim() || 'Torneo de Mesa';
+    var name = readName(document.getElementById('obTorneoName')) || 'Torneo de Mesa';
     state.name = name;
     document.getElementById('obStep1').style.display = 'none';
     document.getElementById('obStep2').style.display = 'block';
@@ -1656,7 +1660,7 @@ window.obPhotoSelected = async function(event) {
 
 window.obAddPlayer = function() {
   var inp = document.getElementById('obPlayerName');
-  var name = inp.value.trim();
+  var name = readName(inp);
   if(!name) return;
   if(obPlayers.indexOf(name) >= 0) { showToast('Ya seleccionado'); return; }
   // Add to permanent roster if new
@@ -1695,7 +1699,7 @@ window.obRenderExisting = function() {
         ? '<img src="'+photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
         : '<div style="width:36px;height:36px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">'+p[0]+'</div>';
       var sel = !!selectedSet[p];
-      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="obTogglePlayer(this.dataset.pn)" data-pn="'+p+'">' +
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="obTogglePlayer(this.dataset.pn)" data-pn="'+escHtml(p)+'">' +
         avHtml +
         '<span style="flex:1;font-size:14px;font-weight:700;">'+p+'</span>' +
         (sel
@@ -1818,7 +1822,7 @@ window.tsrFilterGames = function() {
   });
   listEl.innerHTML = filtered.map(function(g) {
     return '<button class="nb-btn" style="margin-bottom:6px;text-align:left;padding:10px 14px;" ' +
-      'onclick="tsrSelectGame(this.dataset.gn)" data-gn="' + g.name + '">' +
+      'onclick="tsrSelectGame(this.dataset.gn)" data-gn="' + escHtml(g.name) + '">' +
       (g.emoji||'🎲') + ' ' + g.name + '</button>';
   }).join('') || '<div class="nb-empty">Sin resultados</div>';
 };
@@ -1858,7 +1862,7 @@ window.tsrRenderStep2 = function() {
     html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;color:#555;">Sin asignar</div>';
     remaining.forEach(function(p) {
       html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:2px solid #000;border-radius:8px;margin-bottom:4px;cursor:pointer;" ' +
-        'onclick="tsrAssignPlayer(this.dataset.pn)" data-pn="' + p + '">' +
+        'onclick="tsrAssignPlayer(this.dataset.pn)" data-pn="' + escHtml(p) + '">' +
         '<span style="font-size:18px;color:#ccc;font-weight:700;">+</span>' +
         '<span style="flex:1;font-weight:700;">' + p + '</span>' +
         '<span style="font-size:12px;color:#555;">' + window.fmtTime(times[p]||0) + '</span>' +
@@ -1950,7 +1954,7 @@ window.filterGameResults = function() {
   if(selectedGame) { listEl.style.display = 'none'; return; }
   
   var html = filtered.map(function(g) {
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:2px solid #000;cursor:pointer;background:#fff;" onclick="selectGame(this.dataset.gn)" data-gn="' + g.name + '">' +
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:2px solid #000;cursor:pointer;background:#fff;" onclick="selectGame(this.dataset.gn)" data-gn="' + escHtml(g.name) + '">' +
       '<span style="font-size:20px;">' + (g.emoji||'🎲') + '</span>' +
       '<div style="flex:1;"><div style="font-size:14px;font-weight:700;">' + g.name + '</div>' +
       (g.players||g.duration ? '<div style="font-size:11px;color:#555;font-weight:500;">' + (g.players?'👥 '+g.players:'') + (g.players&&g.duration?' · ':'') + (g.duration?'⏱ '+g.duration:'') + '</div>' : '') +
@@ -2001,7 +2005,7 @@ window.selectCustomGame = function() {
 
 window.confirmCustomGame = function() {
   var inp = document.getElementById('gameCustomName');
-  var name = inp ? inp.value.trim() : '';
+  var name = inp ? readName(inp) : '';
   if(!name) { showToast('Escribe el nombre del juego'); return; }
   selectedGame = name;
   // Show as selected
@@ -2081,7 +2085,7 @@ window.renderOtherParticipants = function(){
   wrap.innerHTML = available.map(function(p){
     var sel = otherParticipants.indexOf(p)>=0;
     var esc = p.replace(/'/g,"\\'");
-    return '<span class="nb-chip" style="cursor:pointer;'+(sel?'background:#A3E635;':'background:#fff;')+'" onclick="toggleOtherParticipant(\''+esc+'\')">'+(sel?'✓ ':'+ ')+p+'</span>';
+    return '<span class="nb-chip" style="cursor:pointer;'+(sel?'background:#A3E635;':'background:#fff;')+'" onclick="toggleOtherParticipant(this.dataset.pn)" data-pn="'+escHtml(p)+'">'+(sel?'✓ ':'+ ')+escHtml(p)+'</span>';
   }).join('');
 };
 
@@ -2152,7 +2156,7 @@ window.renderTeams = function() {
           : '<div style="width:28px;height:28px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">'+m[0]+'</div>';
         return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">' + avHtml +
           '<span style="flex:1;font-size:13px;font-weight:700;">' + m + '</span>' +
-          '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePlayerFromTeam('+ti+',this.dataset.pn)" data-pn="'+m+'" style="padding:2px 6px;font-size:10px;">×</button>' +
+          '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePlayerFromTeam('+ti+',this.dataset.pn)" data-pn="'+escHtml(m)+'" style="padding:2px 6px;font-size:10px;">×</button>' +
           '</div>';
       }).join('') +
       '<select class="nb-select" style="margin:4px 0 0;font-size:13px;padding:6px 8px;" onchange="addPlayerToTeam('+ti+',this.value);this.value=\'\';">' +

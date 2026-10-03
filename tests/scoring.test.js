@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   scoreGame, computeScores, computeDisplayRanks, getTiedWith, playersInGames,
-  getPoints, normSystem, DEFAULT_BEST_N,
+  getPoints, normSystem, DEFAULT_BEST_N, gameWinners,
 } from '../js/scoring.js';
 
 const pts = (g, system = 'rivals') =>
@@ -125,4 +125,11 @@ test('regresión: torneo simulado de 7 partidas', () => {
   assert.deepEqual(sc.map(p => [p.name, p.pts]), [
     ['Ana', 712], ['Beto', 595], ['Eli', 460], ['Dani', 440], ['Caro', 435],
   ]);
+});
+
+test('ganadores: individual, solo ganador registrado y equipos', () => {
+  assert.deepEqual(gameWinners(full(['A', 'B', 'C'])), ['A']);
+  assert.deepEqual(gameWinners({ positions: ['B'], participants: ['B', 'A'] }), ['B']);
+  assert.deepEqual(gameWinners({ positions: ['A', 'B', 'C', 'D'], teams: [['C', 'D'], ['A', 'B']] }).sort(), ['C', 'D']);
+  assert.deepEqual(gameWinners({ positions: [] }), []);
 });

@@ -134,3 +134,8 @@ export function computeDisplayRanks(sc) {
 export function getTiedWith(sc, player) {
   return (sc || []).filter(p => p.name !== player.name && p.pts === player.pts && p.wins === player.wins && p.podiums === player.podiums).map(p => p.name);
 }
+
+// Quiénes ganaron una partida: el 1° o, en partidas de equipos, todo el equipo ganador.
+export function gameWinners(g) {
+  return Object.entries(scoreGame(g, 'proportional')).filter(([, r]) => r.ranked && r.rank === 0).map(([p]) => p);
+}
