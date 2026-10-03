@@ -76,6 +76,14 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 /* PLAYER ITEMS */
 .player-item{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:2px solid #000;}
 .player-item:last-child{border:none;}
+.player-item.tappable{cursor:pointer;}
+.player-item.tappable:active{background:#F3F4F6;}
+.row-chevron{font-size:22px;font-weight:700;color:#555;padding:0 4px;}
+.prof-edit{margin:-4px 0 14px;}
+.prof-edit-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.prof-edit-btns .nb-btn{flex:1;text-align:center;cursor:pointer;}
+.prof-rename{display:flex;gap:8px;margin-top:8px;align-items:center;}
+.prof-rename .nb-input{margin:0;flex:1;}
 .add-row{display:flex;gap:8px;margin-top:8px;}
 .add-row input{margin:0;flex:1;}
 

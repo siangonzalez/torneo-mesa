@@ -1,11 +1,12 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get,set}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.7.0";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.7.0";
-import{escHtml,cleanName}from"./text.js?v=3.7.0";
-import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.7.0";
-import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.7.0";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.8.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.8.0";
+import{escHtml,cleanName}from"./text.js?v=3.8.0";
+import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.8.0";
+import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.8.0";
+import{renamePlayer}from"./players.js?v=3.8.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -607,10 +608,8 @@ window.render=function(){
   const pl=document.getElementById('playersList');
   const sortedRoster=sortPlayersByScore(state.players||[]);
   pl.innerHTML=sortedRoster.length?sortedRoster.map(p=>{
-    const i=state.players.indexOf(p); // índice real en state.players, no en la lista ordenada
-    return `<div class="player-item">${av(p,38)}<span style="flex:1;font-size:14px;font-weight:700;">${escHtml(p)}</span>
-    <label style="cursor:pointer;font-size:18px;">📷<input type="file" accept="image/*" style="display:none;" onchange="updatePhoto(this.dataset.pn,event)" data-pn="${escHtml(p)}"></label>
-    <button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePlayer(${i})">×</button></div>`;
+    return `<div class="player-item tappable" role="button" tabindex="0" onclick="showProfile(this.dataset.pn,true)" data-pn="${escHtml(p)}">${av(p,38)}<span style="flex:1;font-size:14px;font-weight:700;">${escHtml(p)}</span>
+    <span class="row-chevron">›</span></div>`;
   }).join(''):'<div style="font-size:13px;color:#555;font-weight:500;padding:8px 0;">Sin jugadores.</div>';
 
   // Catalog
@@ -761,8 +760,13 @@ function getPlayerGameResult(g,name,system){
   return{participated:true,ranked:r.ranked,idx:r.rank,points:r.pts};
 }
 
-window.showProfile=function(name){
+// Perfil del jugador. Desde Ajustes (edit=true) también muestra cambiar foto, nombre y quitar.
+let profileName=null,profileEdit=false;
+window.showProfile=function(name,edit){
+  profileName=name;profileEdit=!!edit;
   document.getElementById('profileModal').style.display='flex';
+  document.getElementById('profEdit').style.display=profileEdit?'block':'none';
+  document.getElementById('profRenameRow').style.display='none';
   renderProfileQuotes(name);
   const myGames=getAllGamesWithSystem().map(({g,system})=>({g,r:getPlayerGameResult(g,name,system)})).filter(x=>x.r.participated);
   let wins=0,podiums=0,pts=0;const gamePts={};
@@ -923,6 +927,33 @@ window.saveGame=async function(){
 window.deleteGame=async function(i){if(!await nbConfirm('Se eliminará este resultado y sus puntos.','¿Borrar resultado?','Borrar'))return;state.games.splice(i,1);await window.saveState();showToast('Borrado');playSound('delete');};
 window.addPlayer=async function(){const inp=document.getElementById('newPlayerName');const n=readName(inp);if(!n)return;if((state.players||[]).includes(n)){showToast('Ya existe');return;}if(!state.players)state.players=[];state.players.push(n);if(pendingPhoto){if(!state.playerPhotos)state.playerPhotos={};state.playerPhotos[n]=pendingPhoto;pendingPhoto=null;document.getElementById('photoPreview').style.display='none';document.getElementById('photoPlaceholder').style.display='block';}inp.value='';await window.saveState();showToast(n+' agregado ✓');playSound('success');};
 window.removePlayer=async function(i){const name=state.players[i];if(!await nbConfirm('Sus puntos en juegos ya registrados se conservan.','¿Quitar a '+name+'?','Quitar'))return;state.players.splice(i,1);if(state.playerPhotos&&state.playerPhotos[name])delete state.playerPhotos[name];await window.saveState();};
+window.profChangePhoto=async function(event){
+  const name=profileName;const file=event.target.files[0];event.target.value='';
+  if(!name||!file)return;
+  await window.updatePhoto(name,{target:{files:[file]}});
+  window.showProfile(name,profileEdit);
+};
+window.profToggleRename=function(){
+  const row=document.getElementById('profRenameRow');const open=row.style.display==='none';
+  row.style.display=open?'flex':'none';
+  if(open){const inp=document.getElementById('profRenameInput');inp.value=profileName||'';inp.focus();inp.select();}
+};
+window.profRename=async function(){
+  const from=profileName;const to=readName(document.getElementById('profRenameInput'));
+  if(!from||!to||to===from){document.getElementById('profRenameRow').style.display='none';return;}
+  const r=renamePlayer(state,from,to);
+  if(!r.ok){showToast(r.error);return;}
+  if(window._turnPlayers)window._turnPlayers.forEach((x,i,a)=>{if(x===from)a[i]=to;});
+  if(window._turnOrder)window._turnOrder.forEach((x,i,a)=>{if(x===from)a[i]=to;});
+  await window.saveState();window.render();
+  window.showProfile(to,profileEdit);
+  showToast(from+' ahora es '+to+' ✓');playSound('success');
+};
+window.profRemovePlayer=async function(){
+  const name=profileName;const i=(state.players||[]).indexOf(name);if(i<0)return;
+  await window.removePlayer(i);
+  if(!(state.players||[]).includes(name))document.getElementById('profileModal').style.display='none';
+};
 window.saveName=async function(){state.name=readName(document.getElementById('settingName'))||'Torneo de Mesa';await window.saveState();showToast('Guardado ✓');};
 window.saveSystem=async function(){state.system=document.getElementById('settingSystem').value;await window.saveState();};
 window.saveBestN=async function(){state.bestN=Number(document.getElementById('settingBestN').value);await window.saveState();};

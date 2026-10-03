@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Torneo de Mesa v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=3.7.0">
+<link rel="stylesheet" href="css/styles.css?v=3.8.0">
 <!-- Bloquea toques hasta que js/app.js termine de cargar (lo quita al final) -->
 <style>body.booting{pointer-events:none}</style>
 </head>
@@ -454,6 +454,17 @@
         <div class="profile-avatar-lg" id="profAvatar"></div>
         <div><div class="profile-name" id="profName"></div><div class="profile-sub" id="profSub"></div></div>
       </div>
+      <div id="profEdit" class="prof-edit" style="display:none;">
+        <div class="prof-edit-btns">
+          <label class="nb-btn nb-btn-sm">📷 Foto<input type="file" accept="image/*" style="display:none;" onchange="profChangePhoto(event)"></label>
+          <button class="nb-btn nb-btn-sm" onclick="profToggleRename()">✏️ Nombre</button>
+          <button class="nb-btn nb-btn-sm nb-btn-red" onclick="profRemovePlayer()">🗑 Quitar</button>
+        </div>
+        <div id="profRenameRow" class="prof-rename" style="display:none;">
+          <input type="text" class="nb-input" id="profRenameInput" maxlength="60" placeholder="Nuevo nombre" onkeydown="if(event.key==='Enter')profRename()">
+          <button class="nb-btn nb-btn-sm nb-btn-green" onclick="profRename()">Guardar</button>
+        </div>
+      </div>
       <div class="metrics-grid" id="profMetrics"></div>
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Mejor juego</div>
       <div id="profBestGame" style="font-size:14px;font-weight:500;padding:4px 0;margin-bottom:10px;"></div>
@@ -499,6 +510,6 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=3.7.0"></script>
+<script type="module" src="js/app.js?v=3.8.0"></script>
 </body>
 </html>
