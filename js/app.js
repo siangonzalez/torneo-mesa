@@ -1,6 +1,7 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getDatabase,ref,onValue,set,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import{getDatabase,ref,onValue,update,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith}from"./scoring.js";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -12,7 +13,9 @@ const firebaseConfig = {
 };
 const app=initializeApp(firebaseConfig);
 const db=getDatabase(app);
-const torneoRef=ref(db,'torneo_v2');
+const torneoRef=ref(db,ROOT_PATH);
+const photosRef=ref(db,PHOTOS_PATH);
+const rootRef=ref(db);
 const torneoV1Ref=ref(db,'torneo');
 
 const DEFAULT_GAMES = [
@@ -72,13 +75,55 @@ let selectedEmoji='🎲';
 let pendingPhoto=null;
 let diceRollHistory=[];
 
+// ==================== SINCRONIZACIÓN (ver js/sync.js) ====================
+// `synced` es lo último que sabemos que tiene el servidor; al guardar solo se escribe la
+// diferencia entre eso y `state`. Las fotos viven en su propio nodo y se escuchan aparte.
+const cloneData=v=>JSON.parse(JSON.stringify(v===undefined?null:v));
+let synced=null;            // torneo tal como está en el servidor (sin fotos)
+let syncedPhotos={};        // fotos tal como están en el servidor
+let photosLoaded=false;     // ya llegó el nodo de fotos al menos una vez
+let legacyPhotos=null;      // fotos viejas guardadas dentro del torneo, pendientes de mover
+const newKey=list=>push(ref(db,ROOT_PATH+'/'+list)).key;
+
+function currentPhotos(){return {...(legacyPhotos||{}),...syncedPhotos};}
+function applyDefaults(s){if(!s.players)s.players=[];if(!s.games)s.games=[];if(!s.catalog||!s.catalog.length)s.catalog=DEFAULT_GAMES;if(!s.archive)s.archive=[];}
+function withoutPhotos(s){const {playerPhotos,...rest}=s;return rest;}
+
+function maybeMigratePhotos(){
+  if(!photosLoaded||!legacyPhotos)return;
+  const up=photoMigrationUpdates(legacyPhotos,syncedPhotos);
+  legacyPhotos=null;
+  if(Object.keys(up).length)update(rootRef,up).catch(()=>{});
+}
+
 onValue(torneoRef,(snap)=>{
   const d=snap.val();
-  if(d){state=d;if(!state.players)state.players=[];if(!state.games)state.games=[];if(!state.catalog||!state.catalog.length)state.catalog=DEFAULT_GAMES;if(!state.archive)state.archive=[];if(!state.playerPhotos)state.playerPhotos={};}
+  if(d){
+    const remote=normalizeRemote(d);
+    if(remote.legacyPhotos)legacyPhotos=remote.legacyPhotos;
+    synced=cloneData(remote.state);
+    state=remote.state;applyDefaults(state);state.playerPhotos=currentPhotos();
+    maybeMigratePhotos();
+  }
   window.render();setSyncStatus('ok');
 },()=>setSyncStatus('off'));
 
-window.saveState=async function(){setSyncStatus('syncing');try{await set(torneoRef,state);setSyncStatus('ok');}catch(e){setSyncStatus('off');showToast('Error al guardar');}};
+onValue(photosRef,(snap)=>{
+  syncedPhotos=photosFromRemote(snap.val());photosLoaded=true;
+  state.playerPhotos=currentPhotos();
+  maybeMigratePhotos();
+  window.render();
+});
+
+window.saveState=async function(){
+  setSyncStatus('syncing');
+  try{
+    const up={...computeUpdates(synced||{},state,newKey),...computePhotoUpdates(syncedPhotos,state.playerPhotos||{})};
+    if(Object.keys(up).length)await update(rootRef,up);
+    synced=cloneData(withoutPhotos(state));syncedPhotos={...(state.playerPhotos||{})};
+    setSyncStatus('ok');
+  }catch(e){setSyncStatus('off');showToast('Error al guardar');}
+};
 
 function setSyncStatus(s){
   document.getElementById('syncDot').className='sync-dot'+(s==='off'?' off':s==='syncing'?' syncing':'');
