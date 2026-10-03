@@ -1,8 +1,8 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.2.0";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js?v=3.2.0";
-import{escHtml,cleanName}from"./text.js?v=3.2.0";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.2.1";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates}from"./sync.js?v=3.2.1";
+import{escHtml,cleanName}from"./text.js?v=3.2.1";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -192,7 +192,7 @@ function sortPlayersByScore(names){
 
 const medals=['🥇','🥈','🥉'];
 function gameEmoji(name){const f=(state.catalog||[]).find(g=>g.name===name);return f?f.emoji:'🎲';}
-function av(p,size=36){const photo=(state.playerPhotos||{})[p];const s=`width:${size}px;height:${size}px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:${Math.floor(size*.38)}px;font-weight:700;flex-shrink:0;overflow:hidden;`;return photo?`<img src="${photo}" style="${s}object-fit:cover;">`:`<div style="${s}">${p[0].toUpperCase()}</div>`;}
+function av(p,size=36){const photo=(state.playerPhotos||{})[p];const s=`width:${size}px;height:${size}px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:${Math.floor(size*.38)}px;font-weight:700;flex-shrink:0;overflow:hidden;`;return photo?`<img src="${photo}" style="${s}object-fit:cover;">`:`<div style="${s}">${escHtml(p[0].toUpperCase())}</div>`;}
 
 window.render=function(){
   document.getElementById('tourneyName').textContent=state.name||'Torneo de Mesa';
@@ -246,7 +246,7 @@ window.render=function(){
         <span class="rank">${rank<=3?medals[rank-1]:rank}</span>
         ${av(p.name,36)}
         <div style="flex:1;">
-          <div class="player-name">${p.name}</div>
+          <div class="player-name">${escHtml(p.name)}</div>
           <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;">
             ${p.wins?`<span class="nb-tag tag-win">${p.wins}V</span>`:''}
             ${p.podiums>p.wins?`<span class="nb-tag tag-pod">${p.podiums} pod</span>`:''}
@@ -275,8 +275,8 @@ window.render=function(){
         <div style="display:flex;align-items:center;gap:12px;">
           ${av(lchamp.name,44)}
           <div style="flex:1;">
-            <div style="font-size:17px;font-weight:700;">${lchamp.name}</div>
-            <div style="font-size:12px;font-weight:500;color:#555;">${lastArchived.name}${ld?' · '+ld:''}${lTied.length?' · empate c/ '+lTied.join(', '):''}</div>
+            <div style="font-size:17px;font-weight:700;">${escHtml(lchamp.name)}</div>
+            <div style="font-size:12px;font-weight:500;color:#555;">${escHtml(lastArchived.name)}${ld?' · '+ld:''}${lTied.length?' · empate c/ '+lTied.map(escHtml).join(', '):''}</div>
           </div>
           <div class="player-pts">${lchamp.pts}<small> pts</small></div>
         </div>
@@ -298,7 +298,7 @@ window.render=function(){
   const sortedRoster=sortPlayersByScore(state.players||[]);
   pl.innerHTML=sortedRoster.length?sortedRoster.map(p=>{
     const i=state.players.indexOf(p); // índice real en state.players, no en la lista ordenada
-    return `<div class="player-item">${av(p,38)}<span style="flex:1;font-size:14px;font-weight:700;">${p}</span>
+    return `<div class="player-item">${av(p,38)}<span style="flex:1;font-size:14px;font-weight:700;">${escHtml(p)}</span>
     <label style="cursor:pointer;font-size:18px;">📷<input type="file" accept="image/*" style="display:none;" onchange="updatePhoto(this.dataset.pn,event)" data-pn="${escHtml(p)}"></label>
     <button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePlayer(${i})">×</button></div>`;
   }).join(''):'<div style="font-size:13px;color:#555;font-weight:500;padding:8px 0;">Sin jugadores.</div>';
@@ -318,7 +318,7 @@ window.render=function(){
     const d=g.date?new Date(g.date).toLocaleDateString('es-CO',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
     return `<div class="game-row">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div><div style="font-size:14px;font-weight:700;">${gameEmoji(g.name)} ${g.name}</div>${d?`<div style="font-size:11px;color:#555;">${d}</div>`:''}</div>
+        <div><div style="font-size:14px;font-weight:700;">${gameEmoji(g.name)} ${escHtml(g.name)}</div>${d?`<div style="font-size:11px;color:#555;">${d}</div>`:''}</div>
         <button class="nb-btn nb-btn-sm nb-btn-red" onclick="deleteGame(${i})" style="padding:3px 8px;font-size:11px;">×</button>
       </div>
       <div style="margin-top:5px;">${gameResultChips(g,state.system)}</div>
@@ -332,8 +332,8 @@ window.render=function(){
     const champ=archiveScores(t)[0];
     const d=t.date?new Date(t.date).toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'}):'';
     return `<div class="archive-item" onclick="showArchiveTorney(${state.archive.length-1-i})">
-      <div class="archive-title">🏆 ${t.name}</div>
-      <div class="archive-sub">${d} · ${t.games.length} juegos · Campeón: ${champ?champ.name:'—'}</div>
+      <div class="archive-title">🏆 ${escHtml(t.name)}</div>
+      <div class="archive-sub">${d} · ${t.games.length} juegos · Campeón: ${champ?escHtml(champ.name):'—'}</div>
     </div>`;
   }).join('');}
 
@@ -343,7 +343,7 @@ window.render=function(){
   // Profile picker — ordenado por puntaje del torneo actual
   document.getElementById('profilePicker').innerHTML=sortPlayersByScore(state.players||[]).map(p=>
     `<div class="player-item" style="cursor:pointer;" onclick="showProfile(this.dataset.pn)" data-pn="${escHtml(p)}">
-      ${av(p,34)}<span style="flex:1;font-size:14px;font-weight:700;">${p}</span><span style="font-size:18px;">›</span>
+      ${av(p,34)}<span style="flex:1;font-size:14px;font-weight:700;">${escHtml(p)}</span><span style="font-size:18px;">›</span>
     </div>`
   ).join('')||'<div class="nb-empty">Sin jugadores.</div>';
 
@@ -362,7 +362,7 @@ window.filterGameSelect=function(){
   const prev=gs.value;
   const filtered=(state.catalog||[]).filter(g=>!q||g.name.toLowerCase().includes(q.toLowerCase()));
   gs.innerHTML='<option value="">— Selecciona un juego —</option>'+
-    filtered.map(g=>`<option value="${g.name}">${g.emoji||'🎲'} ${g.name}</option>`).join('')+
+    filtered.map(g=>`<option value="${escHtml(g.name)}">${g.emoji||'🎲'} ${escHtml(g.name)}</option>`).join('')+
     '<option value="__custom__">✏️ Otro juego...</option>';
   if(prev&&[...gs.options].find(o=>o.value===prev))gs.value=prev;
 };
@@ -395,8 +395,8 @@ window.renderCatalog=function(){
     const isCustom=i>=DEFAULT_GAMES.length;
     let html='<div><div class="game-cat-item"'+(hasInfo?' onclick="toggleGameCard(this.dataset.eid)" data-eid="'+expandId+'"':'')+'>'+
       '<span class="game-emoji">'+(g.emoji||'🎲')+'</span>'+
-      '<div style="flex:1;"><div class="game-name-text">'+g.name+'</div>'+
-      (g.players||g.duration?'<div class="game-meta-text">'+(g.players?'👥 '+g.players:'')+(g.players&&g.duration?' · ':'')+(g.duration?'⏱ '+g.duration:'')+'</div>':'')+'</div>'+
+      '<div style="flex:1;"><div class="game-name-text">'+escHtml(g.name)+'</div>'+
+      (g.players||g.duration?'<div class="game-meta-text">'+(g.players?'👥 '+escHtml(g.players):'')+(g.players&&g.duration?' · ':'')+(g.duration?'⏱ '+escHtml(g.duration):'')+'</div>':'')+'</div>'+
       '<div style="display:flex;align-items:center;gap:5px;">'+
       (isCustom?'<button class="nb-btn nb-btn-sm nb-btn-red" onclick="event.stopPropagation();removeGameFromCatalog('+i+')" style="padding:2px 7px;font-size:11px;">×</button>':'')+
       (hasInfo?'<span style="font-size:16px;font-weight:700;color:#555;" id="arr_'+i+'">›</span>':'')+
@@ -406,11 +406,11 @@ window.renderCatalog=function(){
         '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">'+
         (g.type?'<span class="nb-tag '+typeClass(g.type)+'">'+(g.type==='Cooperativo'?'🤝':'⚔️')+' '+g.type+'</span>':'')+
         (g.complexity?'<span class="nb-tag '+compClass(g.complexity)+'">🎯 '+g.complexity+'</span>':'')+
-        (g.category?'<span class="nb-tag nb-tag-cat">🏷 '+g.category+'</span>':'')+
+        (g.category?'<span class="nb-tag nb-tag-cat">🏷 '+escHtml(g.category)+'</span>':'')+
         '</div>'+
-        (g.players?'<div style="font-size:12px;font-weight:700;margin-bottom:3px;">👥 '+g.players+'</div>':'')+
-        (g.duration?'<div style="font-size:12px;font-weight:700;margin-bottom:3px;">⏱ '+g.duration+'</div>':'')+
-        (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;margin-top:4px;">'+g.desc+'</div>':'')+
+        (g.players?'<div style="font-size:12px;font-weight:700;margin-bottom:3px;">👥 '+escHtml(g.players)+'</div>':'')+
+        (g.duration?'<div style="font-size:12px;font-weight:700;margin-bottom:3px;">⏱ '+escHtml(g.duration)+'</div>':'')+
+        (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;margin-top:4px;">'+escHtml(g.desc)+'</div>':'')+
         '</div>';
     }
     html+='</div>';
@@ -426,7 +426,7 @@ function renderStats(){
   sgl.innerHTML=sorted.length?sorted.map(([name,count])=>
     `<div class="game-cat-item" style="cursor:default;">
       <span class="game-emoji">${gameEmoji(name)}</span>
-      <div style="flex:1;"><div class="game-name-text">${name}</div>
+      <div style="flex:1;"><div class="game-name-text">${escHtml(name)}</div>
         <div style="height:5px;background:#f0f0f0;border:1px solid #000;border-radius:3px;margin-top:4px;overflow:hidden;">
           <div style="height:100%;background:#A3E635;width:${Math.round(count/sorted[0][1]*100)}%;"></div></div></div>
       <span style="font-size:14px;font-weight:700;">${count}×</span>
@@ -477,10 +477,10 @@ window.showProfile=function(name){
     <div class="metric-box"><div class="metric-val">${podiums}</div><div class="metric-lbl">Podios</div></div>
     <div class="metric-box"><div class="metric-val">${winRate}%</div><div class="metric-lbl">Win rate</div></div>`;
   const best=Object.entries(gamePts).sort((a,b)=>b[1].wins-a[1].wins)[0];
-  document.getElementById('profBestGame').innerHTML=best?`${gameEmoji(best[0])} ${best[0]} — ${best[1].wins}V en ${best[1].games} partidas`:'Sin datos';
+  document.getElementById('profBestGame').innerHTML=best?`${gameEmoji(best[0])} ${escHtml(best[0])} — ${best[1].wins}V en ${best[1].games} partidas`:'Sin datos';
   document.getElementById('profHistory').innerHTML=myGames.slice(-10).reverse().map(({g,r})=>{
     const label=r.ranked?(r.idx<3?medals[r.idx]:(r.idx+1)+'°'):'Participó';
-    return `<div class="stat-row"><div>${gameEmoji(g.name)} <span style="font-size:13px;font-weight:700;">${g.name}</span></div>
+    return `<div class="stat-row"><div>${gameEmoji(g.name)} <span style="font-size:13px;font-weight:700;">${escHtml(g.name)}</span></div>
       <div>${label} <span class="nb-tag tag-win">+${r.points}</span></div></div>`;
   }).join('')||'<div class="nb-empty">Sin partidas.</div>';
 };
@@ -499,7 +499,7 @@ window.showArchiveTorney=function(i){
       const isFirst=rank===1;
       return '<div class="leader-row'+(isFirst?' first-place':'')+'">'+
         '<span class="rank">'+(rank<=3?ms[rank-1]:rank)+'</span>'+
-        '<div style="flex:1;"><div class="player-name">'+p.name+'</div>'+
+        '<div style="flex:1;"><div class="player-name">'+escHtml(p.name)+'</div>'+
         '<div style="display:flex;gap:3px;margin-top:3px;">'+
         (p.wins?'<span class="nb-tag tag-win">'+p.wins+'V</span>':'')+
         (p.podiums>p.wins?'<span class="nb-tag tag-pod">'+p.podiums+' pod</span>':'')+
@@ -510,7 +510,7 @@ window.showArchiveTorney=function(i){
     '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:14px 0 6px;">Juegos jugados</div>'+
     t.games.map(g=>{
       return '<div class="game-row">'+
-        '<div style="font-size:13px;font-weight:700;">'+gameEmoji(g.name)+' '+g.name+'</div>'+
+        '<div style="font-size:13px;font-weight:700;">'+gameEmoji(g.name)+' '+escHtml(g.name)+'</div>'+
         '<div style="margin-top:4px;">'+gameResultChips(g,t.system||'proportional')+'</div>'+
         '</div>';
     }).join('');
@@ -537,7 +537,7 @@ function showChampionScreen(name,pts){
   const div=document.createElement('div');div.className='champ-screen';
   div.innerHTML=`<canvas class="confetti-canvas" id="confetti"></canvas><div class="champ-trophy">🏆</div>
     <div style="font-size:13px;font-weight:700;opacity:.6;margin-bottom:8px;text-transform:uppercase;">Campeón del torneo</div>
-    <div class="champ-name">${name}</div><div class="champ-sub">${pts} puntos</div>
+    <div class="champ-name">${escHtml(name)}</div><div class="champ-sub">${pts} puntos</div>
     <button class="nb-btn nb-btn-primary" style="margin-top:16px;" onclick="this.parentElement.remove()">Cerrar</button>`;
   document.body.appendChild(div);
   const c=div.querySelector('#confetti');c.width=window.innerWidth;c.height=window.innerHeight;
@@ -558,7 +558,7 @@ window.selectEmoji=function(e){
 };
 
 // Pos selects
-function buildPlayerOpts(){return'<option value="">— jugador —</option>'+((state.activePlayers||state.players)||[]).map(p=>'<option value="'+p+'">'+p+'</option>').join('');}
+function buildPlayerOpts(){return'<option value="">— jugador —</option>'+((state.activePlayers||state.players)||[]).map(p=>'<option value="'+escHtml(p)+'">'+escHtml(p)+'</option>').join('');}
 function refreshPosSelects(){[...document.querySelectorAll('#posSelect select')].forEach(s=>{const v=s.value;s.innerHTML=buildPlayerOpts();if(v)s.value=v;s.setAttribute('onchange','renderOtherParticipants()');});window.renderOtherParticipants&&window.renderOtherParticipants();}
 window.addPosRow=function(){const cont=document.getElementById('posSelect');const i=cont.children.length;const d=document.createElement('div');d.className='pos-item';d.innerHTML='<span class="pos-label">'+(i+1)+'°</span><select onchange="renderOtherParticipants()">'+buildPlayerOpts()+'</select>';cont.appendChild(d);window.renderOtherParticipants&&window.renderOtherParticipants();};
 window.removePosRow=function(){const cont=document.getElementById('posSelect');if(cont.children.length>1)cont.removeChild(cont.lastChild);window.renderOtherParticipants&&window.renderOtherParticipants();};
@@ -677,11 +677,11 @@ window.renderQueJugamosList = function(games) {
       html += '<div class="game-cat-item" style="flex-direction:column;align-items:stretch;" onclick="toggleQJCard(this.dataset.qid)" data-qid="' + idx + '">' +
         '<div style="display:flex;align-items:center;gap:10px;">' +
         '<span style="font-size:22px;">' + (g.emoji||'🎲') + '</span>' +
-        '<div style="flex:1;"><div class="game-name-text">' + g.name + '</div>' +
-        '<div class="game-meta-text">' + (g.players?'👥 '+g.players:'') + (g.players&&g.duration?' · ':'') + (g.duration?'⏱ '+g.duration:'') + '</div></div>' +
+        '<div style="flex:1;"><div class="game-name-text">' + escHtml(g.name) + '</div>' +
+        '<div class="game-meta-text">' + (g.players?'👥 '+escHtml(g.players):'') + (g.players&&g.duration?' · ':'') + (g.duration?'⏱ '+escHtml(g.duration):'') + '</div></div>' +
         '<span style="font-size:16px;font-weight:700;color:#555;" id="arr_' + idx + '">›</span></div>' +
         '<div class="game-expand-card" id="' + idx + '">' +
-        (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;margin-bottom:10px;">' + g.desc + '</div>':'') +
+        (g.desc?'<div style="font-size:13px;font-weight:500;color:#333;margin-bottom:10px;">' + escHtml(g.desc) + '</div>':'') +
         '<button class="nb-btn nb-btn-sm nb-btn-primary" style="width:100%;" onclick="event.stopPropagation();playThisGame(this.dataset.gn)" data-gn="' + escHtml(g.name) + '">🎮 Jugar este</button>' +
         '</div></div>';
     });
@@ -718,9 +718,9 @@ window.pickRandomGame=function(){
   el.innerHTML=`<div class="pick-result">
     ${alreadyPlayed?'<div style="font-size:10px;font-weight:700;opacity:.5;margin-bottom:6px;text-transform:uppercase;">Ya jugaron todos — nueva selección</div>':'<div style="font-size:10px;font-weight:700;opacity:.5;margin-bottom:6px;text-transform:uppercase;">Selección aleatoria</div>'}
     <div class="pick-emoji">${pick.emoji||'🎲'}</div>
-    <div class="pick-name">${pick.name}</div>
-    <div class="pick-meta">${pick.players?'👥 '+pick.players:''}${pick.players&&pick.duration?' · ':''}${pick.duration?'⏱ '+pick.duration:''}</div>
-    ${pick.desc?'<div class="pick-desc">'+pick.desc+'</div>':''}
+    <div class="pick-name">${escHtml(pick.name)}</div>
+    <div class="pick-meta">${pick.players?'👥 '+escHtml(pick.players):''}${pick.players&&pick.duration?' · ':''}${pick.duration?'⏱ '+escHtml(pick.duration):''}</div>
+    ${pick.desc?'<div class="pick-desc">'+escHtml(pick.desc)+'</div>':''}
     <button class="pick-reroll" onclick="pickRandomGame()">🔀 Otra opción</button>
   </div>${!alreadyPlayed&&unplayed.length>1?'<div style="font-size:12px;font-weight:700;color:#555;text-align:center;margin-bottom:8px;">Quedan '+(unplayed.length-1)+' juegos sin jugar</div>':''}`;
 };
@@ -1066,8 +1066,8 @@ function renderGlobalStats(){
     `<div class="stat-card-mini">
       <div class="sc-icon">${c.icon}</div>
       <div class="sc-label">${c.label}</div>
-      <div class="sc-value">${c.value}</div>
-      <div class="sc-sub">${c.sub}</div>
+      <div class="sc-value">${escHtml(c.value)}</div>
+      <div class="sc-sub">${escHtml(c.sub)}</div>
     </div>`
   ).join('');
 }
@@ -1281,11 +1281,11 @@ window._renderTurnPicker = function() {
     var photo = (state.playerPhotos||{})[p];
     var av = photo
       ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">'
-      : '<div style="width:28px;height:28px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;">'+p[0]+'</div>';
+      : '<div style="width:28px;height:28px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;">'+escHtml(p[0])+'</div>';
     var sel = !!selected[p];
     return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,.07);cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+escHtml(p)+'">'
       + av
-      + '<span style="flex:1;font-size:14px;">'+p+'</span>'
+      + '<span style="flex:1;font-size:14px;">'+escHtml(p)+'</span>'
       + '<span style="font-size:18px;color:'+(sel?'#1a1a1a':'#ccc')+';">'+(sel?'✓':'○')+'</span>'
       + '</div>';
   }).join('') || '<div style="font-size:13px;color:#aaa;padding:8px 0;">Sin jugadores en el torneo.</div>';
@@ -1339,11 +1339,11 @@ renderTurnOrder = window._renderTurnOrder = function() {
     var photo = (state.playerPhotos||{})[p];
     var av = photo
       ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">'
-      : '<div style="width:28px;height:28px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;">'+p[0]+'</div>';
+      : '<div style="width:28px;height:28px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;">'+escHtml(p[0])+'</div>';
     return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f5f5f2;border-radius:8px;margin-bottom:4px;">'
       + '<span style="font-size:12px;color:#aaa;width:18px;">'+(i+1)+'.</span>'
       + av
-      + '<span style="flex:1;font-size:14px;">'+p+'</span>'
+      + '<span style="flex:1;font-size:14px;">'+escHtml(p)+'</span>'
       + '<div style="display:flex;gap:4px;">'
       + (i>0?'<button class="btn btn-sm" onclick="moveTurnPlayer('+i+',-1)" style="padding:2px 8px;">↑</button>':'')
       + (i<turnOrder.length-1?'<button class="btn btn-sm" onclick="moveTurnPlayer('+i+',1)" style="padding:2px 8px;">↓</button>':'')
@@ -1388,10 +1388,10 @@ function renderTurnActive() {
     var photo = (state.playerPhotos||{})[p];
     var av = photo
       ? '<img src="'+photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">'
-      : '<div class="turn-avatar" style="'+(isCurrent?'background:#fff;color:#1a1a1a;':'')+'">'+p[0]+'</div>';
+      : '<div class="turn-avatar" style="'+(isCurrent?'background:#fff;color:#1a1a1a;':'')+'">'+escHtml(p[0])+'</div>';
     return '<div class="turn-player'+(isCurrent?' active-turn':'')+'">'
       + av
-      + '<span class="turn-name">'+p+'</span>'
+      + '<span class="turn-name">'+escHtml(p)+'</span>'
       + '<span class="turn-time">'+fmtTime(turnTimes[p])+'</span>'
       + '</div>';
   }).join('');
@@ -1467,14 +1467,14 @@ function showTurnResults() {
     var photo = (state.playerPhotos||{})[p];
     var av = photo
       ? '<img src="'+photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">'
-      : '<div class="turn-avatar">'+p[0]+'</div>';
+      : '<div class="turn-avatar">'+escHtml(p[0])+'</div>';
     var pct = total > 0 ? Math.round(turnTimes[p]/total*100) : 0;
     var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'';
     return '<div class="result-row">'
       + '<span style="font-size:18px;width:28px;">'+medal+'</span>'
       + av
       + '<div style="flex:1;">'
-      + '<div style="font-size:14px;font-weight:500;">'+p+'</div>'
+      + '<div style="font-size:14px;font-weight:500;">'+escHtml(p)+'</div>'
       + '<div style="height:4px;background:#f0f0ee;border-radius:2px;margin-top:4px;overflow:hidden;">'
       + '<div style="height:100%;background:#1a1a1a;border-radius:2px;width:'+pct+'%;"></div>'
       + '</div></div>'
@@ -1517,12 +1517,12 @@ window.renderTurnPicker = function() {
     var photo = (state.playerPhotos||{})[p];
     var avHtml = photo
       ? '<img src="'+photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
-      : '<div style="width:32px;height:32px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">'+p[0]+'</div>';
+      : '<div style="width:32px;height:32px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">'+escHtml(p[0])+'</div>';
     var pos = posMap[p];
     var sel = !!pos;
     return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="toggleTurnPlayer(this.dataset.p)" data-p="'+escHtml(p)+'">'
       + avHtml
-      + '<span style="flex:1;font-size:14px;font-weight:700;">'+p+'</span>'
+      + '<span style="flex:1;font-size:14px;font-weight:700;">'+escHtml(p)+'</span>'
       + (sel
         ? '<span style="width:28px;height:28px;border-radius:50%;background:#000;color:#A3E635;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">'+pos+'</span>'
         : '<span style="width:28px;height:28px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:18px;color:#ccc;">+</span>')
@@ -1697,11 +1697,11 @@ window.obRenderExisting = function() {
       var photo = (state.playerPhotos||{})[p];
       var avHtml = photo
         ? '<img src="'+photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
-        : '<div style="width:36px;height:36px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">'+p[0]+'</div>';
+        : '<div style="width:36px;height:36px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">'+escHtml(p[0])+'</div>';
       var sel = !!selectedSet[p];
       return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:2px solid #000;cursor:pointer;" onclick="obTogglePlayer(this.dataset.pn)" data-pn="'+escHtml(p)+'">' +
         avHtml +
-        '<span style="flex:1;font-size:14px;font-weight:700;">'+p+'</span>' +
+        '<span style="flex:1;font-size:14px;font-weight:700;">'+escHtml(p)+'</span>' +
         (sel
           ? '<span style="width:30px;height:30px;border-radius:50%;background:#000;color:#A3E635;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">✓</span>'
           : '<span style="width:30px;height:30px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:16px;color:#ccc;">+</span>') +
@@ -1823,7 +1823,7 @@ window.tsrFilterGames = function() {
   listEl.innerHTML = filtered.map(function(g) {
     return '<button class="nb-btn" style="margin-bottom:6px;text-align:left;padding:10px 14px;" ' +
       'onclick="tsrSelectGame(this.dataset.gn)" data-gn="' + escHtml(g.name) + '">' +
-      (g.emoji||'🎲') + ' ' + g.name + '</button>';
+      (g.emoji||'🎲') + ' ' + escHtml(g.name) + '</button>';
   }).join('') || '<div class="nb-empty">Sin resultados</div>';
 };
 
@@ -1850,7 +1850,7 @@ window.tsrRenderStep2 = function() {
       var medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'°';
       html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#A3E635;border:2px solid #000;border-radius:8px;margin-bottom:4px;">' +
         '<span style="font-weight:700;">' + medal + '</span>' +
-        '<span style="flex:1;font-weight:700;">' + p + '</span>' +
+        '<span style="flex:1;font-weight:700;">' + escHtml(p) + '</span>' +
         '<span style="font-size:12px;color:#555;">' + window.fmtTime(times[p]||0) + '</span>' +
         '</div>';
     });
@@ -1864,7 +1864,7 @@ window.tsrRenderStep2 = function() {
       html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:2px solid #000;border-radius:8px;margin-bottom:4px;cursor:pointer;" ' +
         'onclick="tsrAssignPlayer(this.dataset.pn)" data-pn="' + escHtml(p) + '">' +
         '<span style="font-size:18px;color:#ccc;font-weight:700;">+</span>' +
-        '<span style="flex:1;font-weight:700;">' + p + '</span>' +
+        '<span style="flex:1;font-weight:700;">' + escHtml(p) + '</span>' +
         '<span style="font-size:12px;color:#555;">' + window.fmtTime(times[p]||0) + '</span>' +
         '</div>';
     });
@@ -1956,8 +1956,8 @@ window.filterGameResults = function() {
   var html = filtered.map(function(g) {
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:2px solid #000;cursor:pointer;background:#fff;" onclick="selectGame(this.dataset.gn)" data-gn="' + escHtml(g.name) + '">' +
       '<span style="font-size:20px;">' + (g.emoji||'🎲') + '</span>' +
-      '<div style="flex:1;"><div style="font-size:14px;font-weight:700;">' + g.name + '</div>' +
-      (g.players||g.duration ? '<div style="font-size:11px;color:#555;font-weight:500;">' + (g.players?'👥 '+g.players:'') + (g.players&&g.duration?' · ':'') + (g.duration?'⏱ '+g.duration:'') + '</div>' : '') +
+      '<div style="flex:1;"><div style="font-size:14px;font-weight:700;">' + escHtml(g.name) + '</div>' +
+      (g.players||g.duration ? '<div style="font-size:11px;color:#555;font-weight:500;">' + (g.players?'👥 '+escHtml(g.players):'') + (g.players&&g.duration?' · ':'') + (g.duration?'⏱ '+escHtml(g.duration):'') + '</div>' : '') +
       '</div></div>';
   }).join('');
   
@@ -2146,22 +2146,22 @@ window.renderTeams = function() {
     var posLabel = ti===0?'🥇 1°':ti===1?'🥈 2°':ti===2?'🥉 3°':(ti+1)+'°';
     return '<div style="border:2px solid #000;border-radius:8px;padding:10px;margin-bottom:8px;box-shadow:2px 2px 0 #000;background:#fff;">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
-      '<span style="font-size:14px;font-weight:700;">' + posLabel + ' ' + t.name + '</span>' +
+      '<span style="font-size:14px;font-weight:700;">' + posLabel + ' ' + escHtml(t.name) + '</span>' +
       (teams.length>1?'<button class="nb-btn nb-btn-sm nb-btn-red" onclick="removeTeam('+ti+')" style="padding:2px 6px;">×</button>':'') +
       '</div>' +
       t.members.map(function(m) {
         var photo = (state.playerPhotos||{})[m];
         var avHtml = photo
           ? '<img src="'+photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #000;">'
-          : '<div style="width:28px;height:28px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">'+m[0]+'</div>';
+          : '<div style="width:28px;height:28px;border-radius:50%;border:2px solid #000;background:#A3E635;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">'+escHtml(m[0])+'</div>';
         return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">' + avHtml +
-          '<span style="flex:1;font-size:13px;font-weight:700;">' + m + '</span>' +
+          '<span style="flex:1;font-size:13px;font-weight:700;">' + escHtml(m) + '</span>' +
           '<button class="nb-btn nb-btn-sm nb-btn-red" onclick="removePlayerFromTeam('+ti+',this.dataset.pn)" data-pn="'+escHtml(m)+'" style="padding:2px 6px;font-size:10px;">×</button>' +
           '</div>';
       }).join('') +
       '<select class="nb-select" style="margin:4px 0 0;font-size:13px;padding:6px 8px;" onchange="addPlayerToTeam('+ti+',this.value);this.value=\'\';">' +
       '<option value="">+ Agregar jugador...</option>' +
-      unassigned.map(function(p){ return '<option value="'+p+'">'+p+'</option>'; }).join('') +
+      unassigned.map(function(p){ return '<option value="'+escHtml(p)+'">'+escHtml(p)+'</option>'; }).join('') +
       '</select>' +
       '</div>';
   }).join('');
