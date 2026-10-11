@@ -1,6 +1,6 @@
 // ==================== JUGADORES ====================
 // Cambiar el nombre de un jugador. El nombre es la "llave" del jugador en todos lados
-// (lista de jugadores, partidas, equipos, torneos archivados, fotos, frases y baño), así que hay
+// (lista de jugadores, partidas, equipos, torneos archivados, fotos, frases, baño, juegos que tiene y anfitrión), así que hay
 // que cambiarlo en cada lugar a la vez para que no pierda sus puntos ni su historial.
 // Módulo puro (sin Firebase ni DOM), se prueba en tests/players.test.js.
 
@@ -50,6 +50,11 @@ export function renamePlayer(state, from, to) {
     delete state.playerPhotos[from];
   }
   const kf = encodeKey(from), kt = encodeKey(to);
+  if (state.collections && state.collections[kf] !== undefined) {
+    state.collections = { ...state.collections, [kt]: state.collections[kf] };
+    delete state.collections[kf];
+  }
+  if (state.host === from) state.host = to;
   if (state.bathroom && state.bathroom[kf] !== undefined) {
     state.bathroom = { ...state.bathroom, [kt]: state.bathroom[kf] };
     delete state.bathroom[kf];

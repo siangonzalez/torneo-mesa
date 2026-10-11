@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Torneo de Mesa v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=3.9.0">
+<link rel="stylesheet" href="css/styles.css?v=3.10.0">
 <!-- Bloquea toques hasta que js/app.js termine de cargar (lo quita al final) -->
 <style>body.booting{pointer-events:none}</style>
 </head>
@@ -384,7 +384,7 @@
 <div class="modal-overlay" id="onboardingModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-sheet" style="max-height:92vh;">
     <div class="modal-header">
-      <h2 id="obTitle">Paso 1 de 3</h2>
+      <h2 id="obTitle">Paso 1 de 4</h2>
       <button class="modal-close" onclick="document.getElementById('onboardingModal').style.display='none'">×</button>
     </div>
     <div class="modal-body">
@@ -412,6 +412,12 @@
         <button class="nb-btn nb-btn-primary" style="margin-top:12px;" onclick="obNext(3)" id="obStep2Btn" disabled>Necesitas al menos 2 jugadores</button>
       </div>
       <div id="obStep3" style="display:none;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">¿Dónde jugamos?</div>
+        <div style="font-size:13px;font-weight:500;color:#555;margin-bottom:10px;">Así ¿Qué jugamos? sugiere solo los juegos que hay a mano.</div>
+        <div id="obTable"></div>
+        <button class="nb-btn nb-btn-primary" style="margin-top:12px;" onclick="obNext(4)">Siguiente →</button>
+      </div>
+      <div id="obStep4" style="display:none;">
         <div style="text-align:center;padding:20px 0;">
           <div style="font-size:48px;margin-bottom:12px;">🏆</div>
           <div style="font-size:20px;font-weight:700;margin-bottom:4px;" id="obFinalName">Torneo</div>
@@ -470,6 +476,8 @@
       <div id="profBestGame" style="font-size:14px;font-weight:500;padding:4px 0;margin-bottom:10px;"></div>
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Últimas partidas</div>
       <div id="profHistory"></div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin:14px 0 6px;">🎲 Sus juegos</div>
+      <div id="profGames"></div>
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin:14px 0 6px;">Frases</div>
       <div id="profQuotes"></div>
       <div style="display:flex;gap:8px;margin-top:8px;">
@@ -497,6 +505,19 @@
       <div id="bdList"></div>
       <div id="bdNote" class="bd-note" style="display:none;"></div>
       <button class="nb-btn" id="bdProfileBtn" style="width:100%;margin-top:12px;" onclick="document.getElementById('breakdownModal').style.display='none';showProfile(this.dataset.pn)">👤 Ver perfil completo</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="tableModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2>🏠 ¿Dónde jugamos?</h2>
+      <button class="modal-close" onclick="document.getElementById('tableModal').style.display='none'">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="tmBody"></div>
+      <button class="nb-btn nb-btn-primary" style="margin-top:12px;" onclick="saveTableModal()">Guardar</button>
     </div>
   </div>
 </div>
@@ -531,6 +552,6 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=3.9.0"></script>
+<script type="module" src="js/app.js?v=3.10.0"></script>
 </body>
 </html>

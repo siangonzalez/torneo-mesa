@@ -355,3 +355,26 @@ body{font-family:"Space Grotesk",-apple-system,sans-serif;background:#E8F5A3;min
 .overall-meta{font-size:11px;font-weight:600;color:#555;}
 .overall-titles{font-size:16px;white-space:nowrap;}
 .overall-titles small{font-size:12px;font-weight:700;margin-left:2px;}
+
+/* ¿Dónde jugamos? */
+.tp-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;}
+.tp-label small{font-weight:600;text-transform:none;letter-spacing:0;color:#555;}
+.tp-hosts{display:flex;flex-wrap:wrap;gap:6px;}
+.tp-host{display:flex;align-items:center;gap:6px;background:#fff;border:2px solid #000;border-radius:999px;padding:4px 10px 4px 4px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 #000;}
+.tp-host small{font-size:11px;font-weight:700;background:#F3F4F6;border:1.5px solid #000;border-radius:999px;padding:0 6px;}
+.tp-host.on{background:#000;color:#A3E635;}
+.tp-host.on small{background:#A3E635;color:#000;}
+.tp-host > div,.tp-host > img{width:24px!important;height:24px!important;font-size:11px!important;border-width:1.5px!important;}
+.tp-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.tp-chip{background:#fff;border:2px solid #000;border-radius:8px;padding:4px 8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+span.tp-chip{cursor:default;}
+.tp-chip.on{background:#A3E635;}
+.tp-owner{font-size:12px;font-weight:700;margin:8px 0 4px;}
+.tp-hint{font-size:12px;font-weight:500;color:#555;}
+.tp-total{margin-top:12px;font-size:13px;font-weight:700;}
+.table-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff;border:2px solid #000;border-radius:10px;padding:6px 8px;margin-bottom:8px;color:#000;}
+.table-line span{flex:1;min-width:140px;}
+.table-line .nb-btn{font-size:11px;padding:3px 8px;}
+#tableModal{z-index:110;}
+#confirmModal{z-index:120;}
+.tp-host > div{color:#000;}

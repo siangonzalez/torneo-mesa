@@ -70,3 +70,10 @@ test('renombra el contador de baño actual y el de torneos archivados', () => {
   assert.deepEqual(s.bathroom, { [encodeKey('Nicolás')]: 2 });
   assert.deepEqual(s.archive[0].bathroom, { [encodeKey('Nicolás')]: 4, Otro: 1 });
 });
+
+test('renombra la colección de juegos y el anfitrión', () => {
+  const s = { players: ['Nico'], host: 'Nico', collections: { Nico: ['Catan'] } };
+  renamePlayer(s, 'Nico', 'Nicolás');
+  assert.equal(s.host, 'Nicolás');
+  assert.deepEqual(s.collections, { [encodeKey('Nicolás')]: ['Catan'] });
+});

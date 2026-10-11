@@ -16,8 +16,9 @@ export const PHOTOS_PATH = 'torneo_photos';
 // Listas que se guardan elemento por elemento con clave única
 export const KEYED_LISTS = ['games', 'archive'];
 // Mapas {clave: valor} que se escriben clave por clave (dos teléfonos sumando a jugadores
-// distintos al tiempo no se pisan): contador de idas al baño del torneo en curso.
-export const MAP_FIELDS = ['bathroom'];
+// distintos al tiempo no se pisan): contador de idas al baño del torneo en curso y juegos
+// que tiene cada jugador.
+export const MAP_FIELDS = ['bathroom', 'collections'];
 
 // Copia lista para Firebase: sin la propiedad interna _key y sin valores undefined
 export function clean(v) {

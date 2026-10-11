@@ -1,12 +1,13 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get,set}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners,playerBreakdown,overallRanking}from"./scoring.js?v=3.9.0";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.9.0";
-import{escHtml,cleanName}from"./text.js?v=3.9.0";
-import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.9.0";
-import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.9.0";
-import{renamePlayer}from"./players.js?v=3.9.0";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners,playerBreakdown,overallRanking}from"./scoring.js?v=3.10.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.10.0";
+import{escHtml,cleanName}from"./text.js?v=3.10.0";
+import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.10.0";
+import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.10.0";
+import{renamePlayer}from"./players.js?v=3.10.0";
+import{collectionOf,tableOptions,tableGames,owners}from"./table.js?v=3.10.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -822,6 +823,88 @@ function overallRankingHTML(){
     </div>`).join('')}</div>`;
 }
 
+// ==================== ¿DÓNDE JUGAMOS? (juegos de cada jugador) ====================
+// state.collections = {jugador codificado: [juegos]}. Por torneo: state.host (anfitrión) y
+// state.tableGames (juegos disponibles: los del anfitrión + los que alguien trajo).
+function myGames(name){return collectionOf(state.collections,name,state.catalog);}
+// Quién trajo un juego (si no es del anfitrión): para mostrarlo en la sugerencia
+function broughtBy(game){
+  if(!state.host||!(state.tableGames||[]).includes(game))return null;
+  const own=owners(state.collections,state.activePlayers||[],state.catalog)[game]||[];
+  return own.includes(state.host)?null:(own[0]||null);
+}
+// Selector reutilizable (paso del onboarding y ventana "Cambiar"): tp guarda la selección.
+let tp={players:[],host:null,brought:[],el:null};
+function tpStart(el,players){
+  const host=players.includes(state.host)?state.host:null;
+  const prev=new Set(state.tableGames||[]);
+  tp={players:players.slice(),host,el,brought:[]};
+  if(host)tp.brought=tableOptions({collections:state.collections,catalog:state.catalog,host,players}).extras.flatMap(x=>x.games).filter(g=>prev.has(g));
+  tpRender();
+}
+function tpRender(){
+  const el=document.getElementById(tp.el);if(!el)return;
+  const {hostGames,extras}=tableOptions({collections:state.collections,catalog:state.catalog,host:tp.host,players:tp.players});
+  const list=tableGames({collections:state.collections,catalog:state.catalog,host:tp.host,brought:tp.brought});
+  const bset=new Set(tp.brought);
+  let h='<div class="tp-label">¿En casa de quién?</div><div class="tp-hosts">'+
+    tp.players.slice().sort((a,b)=>a.localeCompare(b,'es')).map(p=>'<button class="tp-host'+(tp.host===p?' on':'')+'" onclick="tpSetHost(this.dataset.pn)" data-pn="'+escHtml(p)+'">'+av(p,24)+'<span>'+escHtml(p)+'</span><small>'+myGames(p).length+'</small></button>').join('')+
+    '<button class="tp-host'+(!tp.host?' on':'')+'" onclick="tpSetHost(\'\')"><span>📍 Otro lugar</span></button></div>';
+  if(tp.host){
+    h+='<div class="tp-label">Juegos de '+escHtml(tp.host)+' ('+hostGames.length+')</div>'+
+      (hostGames.length?'<div class="tp-chips">'+hostGames.map(n=>'<span class="tp-chip on">'+gameEmoji(n)+' '+escHtml(n)+'</span>').join('')+'</div>'
+        :'<div class="tp-hint">'+escHtml(tp.host)+' todavía no ha marcado sus juegos. Se marcan en Ajustes → Jugadores → '+escHtml(tp.host)+'.</div>');
+    if(extras.length){
+      h+='<div class="tp-label">¿Alguien trajo algo? <small>toca para agregar</small></div>'+extras.map(x=>
+        '<div class="tp-owner">🎒 '+escHtml(x.owner)+'</div><div class="tp-chips">'+x.games.map(n=>'<button class="tp-chip'+(bset.has(n)?' on':'')+'" onclick="tpToggle(this.dataset.gn)" data-gn="'+escHtml(n)+'">'+gameEmoji(n)+' '+escHtml(n)+'</button>').join('')+'</div>').join('');
+    }
+  }
+  h+='<div class="tp-total">'+(list?'✅ '+list.length+' juego'+(list.length===1?'':'s')+' disponible'+(list.length===1?'':'s'):'Se sugerirán todos los juegos del catálogo')+'</div>';
+  el.innerHTML=h;
+}
+window.tpSetHost=function(name){
+  tp.host=name||null;
+  const ex=new Set(tableOptions({collections:state.collections,catalog:state.catalog,host:tp.host,players:tp.players}).extras.flatMap(x=>x.games));
+  tp.brought=tp.brought.filter(g=>ex.has(g));
+  playSound('tap');tpRender();
+};
+window.tpToggle=function(game){const i=tp.brought.indexOf(game);if(i>=0)tp.brought.splice(i,1);else tp.brought.push(game);playSound('tap');tpRender();};
+function tpApply(){state.host=tp.host;state.tableGames=tableGames({collections:state.collections,catalog:state.catalog,host:tp.host,brought:tp.brought});}
+window.openTableModal=function(){
+  const players=(state.activePlayers||state.players||[]);
+  document.getElementById('tableModal').style.display='flex';
+  tpStart('tmBody',players);
+};
+window.saveTableModal=async function(){
+  tpApply();queShowAll=false;
+  document.getElementById('tableModal').style.display='none';
+  await window.saveState();
+  const pr=document.getElementById('pickResult');if(pr)pr.style.display='none';
+  if(document.getElementById('queJugamosModal').style.display==='flex')window.openQueJugamos();
+  showToast(state.host?'🏠 Donde '+state.host:'📍 Otro lugar');
+};
+// Perfil: juegos que tiene el jugador. Desde Ajustes se marcan tocándolos.
+function renderProfileGames(name){
+  const el=document.getElementById('profGames');if(!el)return;
+  const own=new Set(myGames(name));
+  if(profileEdit){
+    el.innerHTML='<div class="tp-hint" style="margin-bottom:6px;">Toca los juegos que tiene '+escHtml(name)+' en su casa.</div><div class="tp-chips">'+
+      (state.catalog||[]).map(g=>'<button class="tp-chip'+(own.has(g.name)?' on':'')+'" onclick="toggleOwnedGame(this.dataset.gn)" data-gn="'+escHtml(g.name)+'">'+(g.emoji||'🎲')+' '+escHtml(g.name)+'</button>').join('')+'</div>';
+  } else {
+    el.innerHTML=own.size?'<div class="tp-chips">'+[...own].map(n=>'<span class="tp-chip on">'+gameEmoji(n)+' '+escHtml(n)+'</span>').join('')+'</div>'
+      :'<div class="tp-hint">Todavía no ha marcado sus juegos (Ajustes → Jugadores).</div>';
+  }
+}
+window.toggleOwnedGame=async function(game){
+  const name=profileName;if(!name)return;
+  const list=myGames(name);const i=list.indexOf(game);
+  if(i>=0)list.splice(i,1);else list.push(game);
+  if(!state.collections)state.collections={};
+  if(list.length)state.collections[encodeKey(name)]=list;else delete state.collections[encodeKey(name)];
+  renderProfileGames(name);playSound('tap');
+  await window.saveState();
+};
+
 // Perfil del jugador. Desde Ajustes (edit=true) también muestra cambiar foto, nombre y quitar.
 let profileName=null,profileEdit=false;
 window.showProfile=function(name,edit){
@@ -830,6 +913,7 @@ window.showProfile=function(name,edit){
   document.getElementById('profEdit').style.display=profileEdit?'block':'none';
   document.getElementById('profRenameRow').style.display='none';
   renderProfileQuotes(name);
+  renderProfileGames(name);
   const myGames=getAllGamesWithSystem().map(({g,system})=>({g,r:getPlayerGameResult(g,name,system)})).filter(x=>x.r.participated);
   let wins=0,podiums=0,pts=0;const gamePts={};
   myGames.forEach(({g,r})=>{
@@ -906,7 +990,7 @@ window.closeTournament=async function(){
   if(!await nbConfirm(confirmMsg,'¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
   state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players,system:normSystem(state.system),bestN:getBestN(),...(state.bathroom&&Object.keys(state.bathroom).length?{bathroom:state.bathroom}:{})});
-  state.bathroom=null;
+  state.bathroom=null;state.host=null;state.tableGames=null;
   state.games=[];state._tournamentStarted=false;state.activePlayers=null;if(window._turnPlayers)window._turnPlayers.length=0;if(window._turnOrder)window._turnOrder.length=0;var _tol=document.getElementById('turnOrderList');if(_tol)_tol.innerHTML='';var _tpp=document.getElementById('turnPlayerPicker');if(_tpp)_tpp.innerHTML='';await window.saveState();
   playSound('fanfare');showChampionScreen(champ.name,champ.pts);
 };
@@ -1095,14 +1179,33 @@ window.renderQueJugamosList = function(games) {
   html += '<div style="padding:12px 0;border-top:2px solid #000;margin-top:8px;cursor:pointer;" onclick="quePlayCustom()"><span style="font-size:14px;font-weight:700;">✏️ Jugar un juego no listado...</span></div>';
   list.innerHTML = html;
 };
+// Juegos que se pueden sugerir: los que admiten esta cantidad de jugadores y, si se eligió
+// dónde jugar, solo los disponibles en esa mesa (salvo que pidan ver todos).
+let queShowAll=false;
+function fitsCount(g,count){if(!g.players)return true;const parts=g.players.replace(/\s/g,'').split('-');const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);return count>=min&&count<=max;}
+function queCandidates(){
+  const count=(state.activePlayers||state.players||[]).length;
+  const avail=Array.isArray(state.tableGames)&&state.tableGames.length&&!queShowAll?new Set(state.tableGames):null;
+  const inTable=(state.catalog||[]).filter(g=>!avail||avail.has(g.name));
+  return {count,avail,inTable,compatible:inTable.filter(g=>fitsCount(g,count))};
+}
+function tableLine(){
+  const host=state.host;const n=(state.tableGames||[]).length;
+  if(!host||!n){
+    return '<div class="table-line"><span>🏠 '+(host?escHtml(host)+' no ha marcado sus juegos':'¿Dónde están jugando?')+'</span><button class="nb-btn nb-btn-sm" onclick="openTableModal()">'+(host?'Cambiar':'Elegir casa')+'</button></div>';
+  }
+  return '<div class="table-line"><span>🏠 Donde <b>'+escHtml(host)+'</b> · '+n+' juego'+(n===1?'':'s')+'</span>'+
+    '<button class="nb-btn nb-btn-sm" onclick="toggleQueShowAll()">'+(queShowAll?'Solo de aquí':'Ver todos')+'</button>'+
+    '<button class="nb-btn nb-btn-sm" onclick="openTableModal()">Cambiar</button></div>';
+}
+window.toggleQueShowAll=function(){queShowAll=!queShowAll;const pr=document.getElementById('pickResult');if(pr)pr.style.display='none';window.openQueJugamos();};
 window.openQueJugamos=function(){
-  const count=(state.activePlayers||state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
+  const {count,avail,inTable,compatible}=queCandidates();if(!count){showToast('Agrega jugadores primero');return;}
   var searchEl = document.getElementById('queJugamosSearch');
   if(searchEl) searchEl.value = '';
-  const sub=document.getElementById('queJugamosSub');const list=document.getElementById('queJugamosList');
-  const compatible=(state.catalog||[]).filter(g=>{if(!g.players)return true;const parts=g.players.replace(/\s/g,'').split('-');const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);return count>=min&&count<=max;});
+  const sub=document.getElementById('queJugamosSub');
   const order={Baja:0,Media:1,Alta:2};compatible.sort((a,b)=>(order[a.complexity]??1)-(order[b.complexity]??1)||a.name.localeCompare(b.name,'es'));
-  sub.innerHTML='Con <strong>'+count+' jugador'+(count>1?'es':'')+'</strong> pueden jugar <strong>'+compatible.length+'</strong> de los '+(state.catalog||[]).length+' juegos.';
+  sub.innerHTML=tableLine()+'Con <strong>'+count+' jugador'+(count>1?'es':'')+'</strong> pueden jugar <strong>'+compatible.length+'</strong> de los '+inTable.length+' juegos'+(avail?' de esta casa':'')+'.';
   window._queCompatible = compatible;
   renderQueJugamosList(compatible);
   document.getElementById('queJugamosModal').style.display='flex';
@@ -1112,9 +1215,8 @@ window.toggleQJCard=function(id){const card=document.getElementById(id);const ar
 window.closeQueJugamos=function(e){if(e.target===document.getElementById('queJugamosModal'))document.getElementById('queJugamosModal').style.display='none';};
 window.closeQueJugamosBtn=function(){document.getElementById('queJugamosModal').style.display='none';};
 window.pickRandomGame=function(){
-  const count=(state.activePlayers||state.players||[]).length;if(!count){showToast('Agrega jugadores primero');return;}
+  const {count,compatible}=queCandidates();if(!count){showToast('Agrega jugadores primero');return;}
   const playedNames=new Set((state.games||[]).map(g=>g.name));
-  const compatible=(state.catalog||[]).filter(g=>{if(!g.players)return true;const parts=g.players.replace(/\s/g,'').split('-');const min=parseInt(parts[0]);const max=parseInt(parts[parts.length-1]);return count>=min&&count<=max;});
   const unplayed=compatible.filter(g=>!playedNames.has(g.name));
   const pool=unplayed.length>0?unplayed:compatible;
   const alreadyPlayed=unplayed.length===0&&compatible.length>0;
@@ -1126,6 +1228,7 @@ window.pickRandomGame=function(){
     <div class="pick-emoji">${pick.emoji||'🎲'}</div>
     <div class="pick-name">${escHtml(pick.name)}</div>
     <div class="pick-meta">${pick.players?'👥 '+escHtml(pick.players):''}${pick.players&&pick.duration?' · ':''}${pick.duration?'⏱ '+escHtml(pick.duration):''}</div>
+    ${broughtBy(pick.name)?'<div class="pick-meta">🎒 Lo trajo '+escHtml(broughtBy(pick.name))+'</div>':''}
     ${pick.desc?'<div class="pick-desc">'+escHtml(pick.desc)+'</div>':''}
     <div class="pick-actions">
       <button class="pick-play" onclick="playThisGame(this.dataset.gn)" data-gn="${escHtml(pick.name)}">🎮 Jugar este</button>
@@ -2072,7 +2175,8 @@ window.startOnboarding = function() {
   document.getElementById('obStep1').style.display = 'block';
   document.getElementById('obStep2').style.display = 'none';
   document.getElementById('obStep3').style.display = 'none';
-  document.getElementById('obTitle').textContent = 'Paso 1 de 3';
+  document.getElementById('obTitle').textContent = 'Paso 1 de 4';
+  document.getElementById('obStep4').style.display = 'none';
   document.getElementById('onboardingModal').style.display = 'flex';
   playSound('tap');
 };
@@ -2084,15 +2188,21 @@ window.obNext = function(step) {
     state.name = name;
     document.getElementById('obStep1').style.display = 'none';
     document.getElementById('obStep2').style.display = 'block';
-    document.getElementById('obTitle').textContent = 'Paso 2 de 3';
+    document.getElementById('obTitle').textContent = 'Paso 2 de 4';
     window.obRenderExisting();
     window.obUpdateBtn();
   } else if(step === 3) {
     document.getElementById('obStep2').style.display = 'none';
     document.getElementById('obStep3').style.display = 'block';
-    document.getElementById('obTitle').textContent = 'Paso 3 de 3';
+    document.getElementById('obTitle').textContent = 'Paso 3 de 4';
+    tpStart('obTable', obPlayers);
+  } else if(step === 4) {
+    document.getElementById('obStep3').style.display = 'none';
+    document.getElementById('obStep4').style.display = 'block';
+    document.getElementById('obTitle').textContent = 'Paso 4 de 4';
     document.getElementById('obFinalName').textContent = state.name;
-    document.getElementById('obFinalPlayers').textContent = obPlayers.length + ' jugadores';
+    const tg = tableGames({collections:state.collections,catalog:state.catalog,host:tp.host,brought:tp.brought});
+    document.getElementById('obFinalPlayers').textContent = obPlayers.length + ' jugadores' + (tp.host ? ' · donde ' + tp.host + (tg ? ' · ' + tg.length + ' juegos' : '') : '');
   }
 };
 
@@ -2195,6 +2305,7 @@ window.obRemovePlayer = function(name) {
 
 window.obFinish = async function() {
   state.activePlayers = obPlayers.slice();
+  tpApply(); queShowAll = false;
   state.games = [];
   state._tournamentStarted = true;
   // Make sure all selected players are in the permanent roster
@@ -2373,6 +2484,8 @@ window.cancelTournament = async function() {
   if(!await nbConfirm('Se descartarán todos los juegos de este torneo. No se archivará nada. Los jugadores y fotos se conservan.','¿Cancelar torneo?','Cancelar torneo')) return;
   state.games = [];
   state.bathroom = null;
+  state.host = null;
+  state.tableGames = null;
   state._tournamentStarted = false;
   state.activePlayers = null;
   if(window._turnPlayers)window._turnPlayers.length=0;
