@@ -63,3 +63,10 @@ test('funciona sin fotos, frases ni archivo', () => {
   assert.equal(renamePlayer(s, 'A', 'C').ok, true);
   assert.deepEqual(s.players, ['C', 'B']);
 });
+
+test('renombra el contador de baño actual y el de torneos archivados', () => {
+  const s = { players: ['Nico'], bathroom: { Nico: 2 }, archive: [{ players: ['Nico'], games: [], bathroom: { Nico: 4, Otro: 1 } }] };
+  renamePlayer(s, 'Nico', 'Nicolás');
+  assert.deepEqual(s.bathroom, { [encodeKey('Nicolás')]: 2 });
+  assert.deepEqual(s.archive[0].bathroom, { [encodeKey('Nicolás')]: 4, Otro: 1 });
+});

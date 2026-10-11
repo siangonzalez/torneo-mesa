@@ -139,3 +139,43 @@ export function getTiedWith(sc, player) {
 export function gameWinners(g) {
   return Object.entries(scoreGame(g, 'proportional')).filter(([, r]) => r.ranked && r.rank === 0).map(([p]) => p);
 }
+
+// Detalle de un jugador en un torneo: los puntos que sacó en cada partida que jugó, en orden.
+// counts = si esa partida entra en sus mejores N (las que suman al marcador). Con empates de
+// puntaje entre partidas se marca la más antigua; el total es el mismo de computeScores.
+// Devuelve [{index, game, pts, rank, ranked, counts}].
+export function playerBreakdown(games, name, { system, bestN = 0 } = {}) {
+  const rows = [];
+  (games || []).forEach((g, index) => {
+    const r = scoreGame(g, system)[name];
+    if (r) rows.push({ index, game: g, pts: r.pts, rank: r.rank, ranked: r.ranked, counts: true });
+  });
+  if (bestN > 0 && rows.length > bestN) {
+    const keep = new Set(rows.slice().sort((a, b) => b.pts - a.pts || a.index - b.index).slice(0, bestN).map(r => r.index));
+    rows.forEach(r => { r.counts = keep.has(r.index); });
+  }
+  return rows;
+}
+
+// Ranking general de todos los torneos cerrados.
+// tournaments: [{games, system, bestN}] (los archivados). Títulos = veces que quedó 1° en un
+// torneo (el mismo campeón que se anunció al cerrarlo). Victorias, podios y win rate cuentan
+// todas las partidas de esos torneos. Orden: títulos → victorias → win rate → partidas → nombre.
+export function overallRanking(tournaments) {
+  const stats = {};
+  const get = p => (stats[p] = stats[p] || { name: p, titles: 0, wins: 0, podiums: 0, games: 0 });
+  (tournaments || []).forEach(t => {
+    const games = t.games || [];
+    const system = t.system || 'proportional';
+    games.forEach(g => Object.entries(scoreGame(g, system)).forEach(([p, r]) => {
+      const s = get(p); s.games++;
+      if (r.ranked && r.rank === 0) s.wins++;
+      if (r.ranked && r.rank < 3) s.podiums++;
+    }));
+    const champ = computeScores(games, { system, bestN: t.bestN || 0, players: playersInGames(games) })[0];
+    if (champ && champ.pts > 0) get(champ.name).titles++;
+  });
+  return Object.values(stats)
+    .map(s => ({ ...s, winRate: s.games ? Math.round(s.wins / s.games * 100) : 0 }))
+    .sort((a, b) => b.titles - a.titles || b.wins - a.wins || b.winRate - a.winRate || b.games - a.games || a.name.localeCompare(b.name, 'es'));
+}

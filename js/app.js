@@ -1,12 +1,12 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,update,push,get,set}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners}from"./scoring.js?v=3.8.0";
-import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.8.0";
-import{escHtml,cleanName}from"./text.js?v=3.8.0";
-import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.8.0";
-import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.8.0";
-import{renamePlayer}from"./players.js?v=3.8.0";
+import{DEFAULT_BEST_N,normSystem,scoreGame,playersInGames,computeScores as computeStandings,computeDisplayRanks,getTiedWith,gameWinners,playerBreakdown,overallRanking}from"./scoring.js?v=3.9.0";
+import{ROOT_PATH,PHOTOS_PATH,normalizeRemote,computeUpdates,photosFromRemote,computePhotoUpdates,photoMigrationUpdates,encodeKey}from"./sync.js?v=3.9.0";
+import{escHtml,cleanName}from"./text.js?v=3.9.0";
+import{dieSVG,rollValues,dieBadge}from"./dice.js?v=3.9.0";
+import{cleanQuote,seedQuotesFor,statFacts,pickSplash,restrictPool}from"./quotes.js?v=3.9.0";
+import{renamePlayer}from"./players.js?v=3.9.0";
 const firebaseConfig = {
   apiKey: "AIzaSyAh_JOEu_hU-GpaJnf-rsMEa1p2hpfuy_k",
   authDomain: "torneo-mesa.firebaseapp.com",
@@ -349,7 +349,7 @@ function currentFacts(){
   (state.archive||[]).forEach(t=>{const c=archiveScores(t)[0];if(c&&c.pts>0)titles[c.name]=(titles[c.name]||0)+1;});
   const last=(state.archive||[]).length?state.archive[state.archive.length-1]:null;
   const lc=last?archiveScores(last)[0]:null;
-  return statFacts({standings,streaks:getStreaks(),kings,titles,lastChampion:lc&&lc.pts>0?{name:lc.name,tournament:last.name}:null});
+  return statFacts({standings,streaks:getStreaks(),kings,titles,lastChampion:lc&&lc.pts>0?{name:lc.name,tournament:last.name}:null,bathroom:bathMap()});
 }
 
 // De quiénes se muestran frases y datos:
@@ -541,7 +541,7 @@ window.render=function(){
       <div style="font-size:20px;font-weight:700;margin-bottom:6px;">${(state.players||[]).length ? 'Nuevo torneo' : 'Bienvenido'}</div>
       <div style="font-size:14px;font-weight:500;color:#555;margin-bottom:20px;">${(state.players||[]).length ? 'Elige quién juega hoy' : 'Configura tu primer torneo'}</div>
       <button class="nb-btn nb-btn-primary" style="margin-bottom:10px;" onclick="startOnboarding()">🏆 ${(state.players||[]).length ? 'Configurar torneo' : 'Crear torneo'}</button>
-    </div>`;}
+    </div>${overallRankingHTML()}`;}
   else{
     const sc=computeScores(state.games);
     const ranks=computeDisplayRanks(sc);
@@ -550,7 +550,8 @@ window.render=function(){
       const rank=ranks[i];
       const isFirst=rank===1;
       const streak=streaks[p.name];
-      return `<div class="leader-row${isFirst?' first-place':''}">
+      const bath=getBath(p.name);
+      return `<div class="leader-row tappable${isFirst?' first-place':''}" role="button" tabindex="0" onclick="showBreakdown(this.dataset.pn)" data-pn="${escHtml(p.name)}">
         <span class="rank">${rank<=3?medals[rank-1]:rank}</span>
         ${av(p.name,36)}
         <div style="flex:1;">
@@ -560,6 +561,7 @@ window.render=function(){
             ${p.podiums>p.wins?`<span class="nb-tag tag-pod">${p.podiums} pod</span>`:''}
             <span class="nb-tag tag-games">${p.gamesPlayed} part${p.counted<p.gamesPlayed?` · cuentan ${p.counted}`:''}</span>
             ${streak?`<span class="nb-tag" style="background:#FF6B9D;border-color:#000;">\u{1F525} ${streak} racha</span>`:''}
+            ${bath?`<span class="nb-tag tag-bath">🚽 ${bath}</span>`:''}
           </div>
         </div>
         <div class="player-pts">${p.pts}<small> pts</small></div>
@@ -760,6 +762,66 @@ function getPlayerGameResult(g,name,system){
   return{participated:true,ranked:r.ranked,idx:r.rank,points:r.pts};
 }
 
+// ==================== IDAS AL BAÑO ====================
+// torneo_v2/bathroom = {nombre codificado: veces} del torneo en curso. Al cerrar el torneo se
+// guarda con el archivado y se reinicia.
+function getBath(name){return Number((state.bathroom||{})[encodeKey(name)])||0;}
+function bathMap(){const out={};(state.activePlayers||state.players||[]).forEach(p=>{const n=getBath(p);if(n)out[p]=n;});return out;}
+window.bathAdd=async function(delta){
+  const name=breakdownName;if(!name)return;
+  const n=Math.max(0,getBath(name)+delta);
+  if(!state.bathroom)state.bathroom={};
+  if(n)state.bathroom[encodeKey(name)]=n;else delete state.bathroom[encodeKey(name)];
+  renderBathCounter();
+  await window.saveState();window.render();
+  if(delta>0){playSound('tap');if(n>=3)showToast(n===3?name+' otra vez 🚽👀':n===4?name+': ¿todo bien? 😅':name+' vive en el baño 🚽');}
+};
+function renderBathCounter(){
+  const el=document.getElementById('bdBathCount');if(el)el.textContent=getBath(breakdownName);
+  const minus=document.getElementById('bdBathMinus');if(minus)minus.disabled=!getBath(breakdownName);
+}
+
+// ==================== PUNTOS POR JUEGO (marcador en vivo) ====================
+let breakdownName=null;
+window.showBreakdown=function(name){
+  breakdownName=name;
+  const bestN=getBestN();
+  const rows=playerBreakdown(state.games,name,{system:state.system,bestN});
+  const total=rows.filter(r=>r.counts).reduce((a,r)=>a+r.pts,0);
+  const dropped=rows.filter(r=>!r.counts).length;
+  document.getElementById('bdHeader').innerHTML=`${av(name,52)}<div style="flex:1;min-width:0;"><div class="profile-name">${escHtml(name)}</div>
+    <div class="profile-sub">${rows.length} partida${rows.length===1?'':'s'}${dropped?' · cuentan sus '+bestN+' mejores':''}</div></div>
+    <div class="bd-total">${total}<small> pts</small></div>`;
+  document.getElementById('bdList').innerHTML=rows.length?rows.map(r=>{
+    const place=r.game.teams&&r.game.teams.length?(r.rank+1)+'° equipo':r.ranked?(r.rank<3?medals[r.rank]:(r.rank+1)+'°'):'Participó';
+    return `<div class="bd-row${r.counts?'':' bd-off'}">
+      <span class="bd-n">${r.index+1}</span>
+      <div style="flex:1;min-width:0;"><div class="bd-game">${gameEmoji(r.game.name)} ${escHtml(r.game.name)}</div>
+        <div class="bd-place">${place}${r.counts?'':' · <b>no cuenta</b>'}</div></div>
+      <span class="nb-tag ${r.counts?'tag-win':''}">+${r.pts}</span></div>`;
+  }).join(''):'<div class="nb-empty">Todavía no ha jugado en este torneo.</div>';
+  document.getElementById('bdNote').style.display=dropped?'block':'none';
+  document.getElementById('bdNote').textContent='Las partidas en gris no suman: solo cuentan sus '+bestN+' mejores resultados.';
+  document.getElementById('bdProfileBtn').dataset.pn=name;
+  renderBathCounter();
+  document.getElementById('breakdownModal').style.display='flex';
+};
+
+// ==================== RANKING GENERAL (pantalla de inicio) ====================
+function overallRankingHTML(){
+  const list=overallRanking(state.archive||[]);
+  if(!list.length)return '';
+  const ms=['🥇','🥈','🥉'];
+  return `<div class="overall-card"><span class="nb-card-title">🏅 Ranking general</span>
+    <div class="overall-sub">${(state.archive||[]).length} torneo${(state.archive||[]).length===1?'':'s'} · ordenado por títulos, luego victorias</div>
+    ${list.map((p,i)=>`<div class="overall-row" role="button" tabindex="0" onclick="showProfile(this.dataset.pn)" data-pn="${escHtml(p.name)}">
+      <span class="rank">${i<3?ms[i]:i+1}</span>${av(p.name,32)}
+      <div style="flex:1;min-width:0;"><div class="player-name">${escHtml(p.name)}</div>
+        <div class="overall-meta">${p.wins}V · ${p.podiums} pod · ${p.games} partida${p.games===1?'':'s'} · ${p.winRate}%</div></div>
+      <div class="overall-titles">${p.titles?'🏆'.repeat(Math.min(p.titles,3))+(p.titles>3?'<small>×'+p.titles+'</small>':''):'<span style="opacity:.35">—</span>'}</div>
+    </div>`).join('')}</div>`;
+}
+
 // Perfil del jugador. Desde Ajustes (edit=true) también muestra cambiar foto, nombre y quitar.
 let profileName=null,profileEdit=false;
 window.showProfile=function(name,edit){
@@ -843,7 +905,8 @@ window.closeTournament=async function(){
   confirmMsg+='\n\nEl torneo se archivará y empezará uno nuevo.';
   if(!await nbConfirm(confirmMsg,'¿Cerrar "'+state.name+'"?','Cerrar torneo'))return;
   if(!state.archive)state.archive=[];
-  state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players,system:normSystem(state.system),bestN:getBestN()});
+  state.archive.push({name:state.name,date:new Date().toISOString(),games:state.games,players:state.players,system:normSystem(state.system),bestN:getBestN(),...(state.bathroom&&Object.keys(state.bathroom).length?{bathroom:state.bathroom}:{})});
+  state.bathroom=null;
   state.games=[];state._tournamentStarted=false;state.activePlayers=null;if(window._turnPlayers)window._turnPlayers.length=0;if(window._turnOrder)window._turnOrder.length=0;var _tol=document.getElementById('turnOrderList');if(_tol)_tol.innerHTML='';var _tpp=document.getElementById('turnPlayerPicker');if(_tpp)_tpp.innerHTML='';await window.saveState();
   playSound('fanfare');showChampionScreen(champ.name,champ.pts);
 };
@@ -1064,7 +1127,10 @@ window.pickRandomGame=function(){
     <div class="pick-name">${escHtml(pick.name)}</div>
     <div class="pick-meta">${pick.players?'👥 '+escHtml(pick.players):''}${pick.players&&pick.duration?' · ':''}${pick.duration?'⏱ '+escHtml(pick.duration):''}</div>
     ${pick.desc?'<div class="pick-desc">'+escHtml(pick.desc)+'</div>':''}
-    <button class="pick-reroll" onclick="pickRandomGame()">🔀 Otra opción</button>
+    <div class="pick-actions">
+      <button class="pick-play" onclick="playThisGame(this.dataset.gn)" data-gn="${escHtml(pick.name)}">🎮 Jugar este</button>
+      <button class="pick-reroll" onclick="pickRandomGame()">🔀 Otra opción</button>
+    </div>
   </div>${!alreadyPlayed&&unplayed.length>1?'<div style="font-size:12px;font-weight:700;color:#555;text-align:center;margin-bottom:8px;">Quedan '+(unplayed.length-1)+' juegos sin jugar</div>':''}`;
 };
 
@@ -2306,6 +2372,7 @@ window.tsrSave = function() {
 window.cancelTournament = async function() {
   if(!await nbConfirm('Se descartarán todos los juegos de este torneo. No se archivará nada. Los jugadores y fotos se conservan.','¿Cancelar torneo?','Cancelar torneo')) return;
   state.games = [];
+  state.bathroom = null;
   state._tournamentStarted = false;
   state.activePlayers = null;
   if(window._turnPlayers)window._turnPlayers.length=0;

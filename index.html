@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Torneo de Mesa v3</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=3.8.0">
+<link rel="stylesheet" href="css/styles.css?v=3.9.0">
 <!-- Bloquea toques hasta que js/app.js termine de cargar (lo quita al final) -->
 <style>body.booting{pointer-events:none}</style>
 </head>
@@ -480,6 +480,27 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="breakdownModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h2>📊 Puntos por juego</h2>
+      <button class="modal-close" onclick="document.getElementById('breakdownModal').style.display='none'">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-header" id="bdHeader"></div>
+      <div class="bath-counter">
+        <span class="bath-label">🚽 Idas al baño</span>
+        <button class="nb-btn nb-btn-sm" id="bdBathMinus" onclick="bathAdd(-1)" aria-label="Restar">−</button>
+        <span class="bath-count" id="bdBathCount">0</span>
+        <button class="nb-btn nb-btn-sm nb-btn-yellow" onclick="bathAdd(1)" aria-label="Sumar">+</button>
+      </div>
+      <div id="bdList"></div>
+      <div id="bdNote" class="bd-note" style="display:none;"></div>
+      <button class="nb-btn" id="bdProfileBtn" style="width:100%;margin-top:12px;" onclick="document.getElementById('breakdownModal').style.display='none';showProfile(this.dataset.pn)">👤 Ver perfil completo</button>
+    </div>
+  </div>
+</div>
+
 <!-- Custom confirm modal -->
 <div class="modal-overlay" id="confirmModal" style="display:none;align-items:center;">
   <div style="background:#fff;border:3px solid #000;border-radius:12px;box-shadow:6px 6px 0 #000;max-width:340px;width:90%;padding:20px;margin:0 16px;">
@@ -510,6 +531,6 @@
   </div>
 </div>
 
-<script type="module" src="js/app.js?v=3.8.0"></script>
+<script type="module" src="js/app.js?v=3.9.0"></script>
 </body>
 </html>

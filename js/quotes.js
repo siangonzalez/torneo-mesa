@@ -40,8 +40,13 @@ export function seedQuotesFor(players) {
 }
 
 // Datos curiosos a partir de las estadísticas. Cada uno: {name, icon, text}
-export function statFacts({ standings = [], streaks = {}, kings = {}, titles = {}, lastChampion = null } = {}) {
+export function statFacts({ standings = [], streaks = {}, kings = {}, titles = {}, lastChampion = null, bathroom = {} } = {}) {
   const facts = [];
+  // Idas al baño en el torneo en curso: solo el que más va (si no hay empate) y desde 2 veces
+  const bt = Object.entries(bathroom).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  if (bt.length && bt[0][1] >= 2 && (bt.length === 1 || bt[1][1] < bt[0][1])) {
+    facts.push({ name: bt[0][0], icon: '🚽', text: `${bt[0][0]} ya fue ${bt[0][1]} veces al baño 👀` });
+  }
   Object.entries(streaks).forEach(([p, n]) => { if (n >= 2) facts.push({ name: p, icon: '🔥', text: `${p} lleva ${n} victorias seguidas` }); });
   const [first, second] = standings;
   if (first && first.pts > 0 && (!second || second.pts < first.pts)) {

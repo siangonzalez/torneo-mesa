@@ -133,3 +133,32 @@ test('ganadores: individual, solo ganador registrado y equipos', () => {
   assert.deepEqual(gameWinners({ positions: ['A', 'B', 'C', 'D'], teams: [['C', 'D'], ['A', 'B']] }).sort(), ['C', 'D']);
   assert.deepEqual(gameWinners({ positions: [] }), []);
 });
+
+import { playerBreakdown, overallRanking } from '../js/scoring.js';
+
+test('playerBreakdown: puntos por partida y cuáles cuentan en mejores N', () => {
+  const g = (pos) => ({ name: 'X', positions: pos, participants: pos });
+  const games = [g(['A', 'B']), g(['B', 'A']), g(['C', 'B']), g(['A', 'C']), g(['B', 'A'])];
+  const all = playerBreakdown(games, 'A', { system: 'rivals' });
+  assert.deepEqual(all.map(r => r.index), [0, 1, 3, 4]);
+  assert.ok(all.every(r => r.counts));
+  const best2 = playerBreakdown(games, 'A', { system: 'rivals', bestN: 2 });
+  assert.deepEqual(best2.filter(r => r.counts).map(r => r.index), [0, 3]);
+  const total = best2.filter(r => r.counts).reduce((s, r) => s + r.pts, 0);
+  const sc = computeScores(games, { system: 'rivals', bestN: 2, players: ['A', 'B', 'C'] }).find(p => p.name === 'A');
+  assert.equal(total, sc.pts);
+  assert.deepEqual(playerBreakdown(games, 'Z', {}), []);
+});
+
+test('overallRanking: títulos, luego victorias y win rate', () => {
+  const g = (pos) => ({ name: 'X', positions: pos, participants: pos });
+  const t1 = { system: 'rivals', bestN: 5, games: [g(['A', 'B']), g(['A', 'C'])] };
+  const t2 = { system: 'rivals', bestN: 5, games: [g(['B', 'A']), g(['B', 'C']), g(['C', 'A'])] };
+  const t3 = { games: [g(['A', 'B'])] }; // archivado viejo: proporcional
+  const r = overallRanking([t1, t2, t3]);
+  assert.deepEqual(r.map(p => [p.name, p.titles, p.wins]), [['A', 2, 3], ['B', 1, 2], ['C', 0, 1]]);
+  const a = r[0];
+  assert.equal(a.games, 5);
+  assert.equal(a.winRate, 60);
+  assert.deepEqual(overallRanking([]), []);
+});

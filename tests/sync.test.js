@@ -158,3 +158,10 @@ test('migración de fotos viejas al nodo nuevo', () => {
   assert.deepEqual(photosFromRemote(db.data[PHOTOS_PATH]), { Ana: 'nueva', 'Juan.P': 'jp' });
   assert.deepEqual(photoMigrationUpdates(null, {}), {});
 });
+
+test('bathroom se escribe clave por clave', () => {
+  const up = computeUpdates({ bathroom: { A: 1, B: 2 } }, { bathroom: { A: 2, C: 1 } }, () => 'k');
+  assert.deepEqual(up, { 'torneo_v2/bathroom/A': 2, 'torneo_v2/bathroom/B': null, 'torneo_v2/bathroom/C': 1 });
+  const clear = computeUpdates({ bathroom: { A: 3 } }, { bathroom: null }, () => 'k');
+  assert.deepEqual(clear, { 'torneo_v2/bathroom/A': null });
+});

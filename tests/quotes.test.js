@@ -53,3 +53,12 @@ test('solo frases y datos de los jugadores permitidos', () => {
   assert.deepEqual(restrictPool(pool, null), pool);
   assert.equal(pickSplash({ ...restrictPool(pool, ['Caro']), rng: () => 0.1 }).text, 'y');
 });
+
+test('dato curioso del baño: solo el que más va, desde 2 y sin empate', () => {
+  const f = statFacts({ bathroom: { Nico: 3, Sian: 1 } });
+  assert.equal(f.length, 1);
+  assert.equal(f[0].name, 'Nico');
+  assert.match(f[0].text, /3 veces al baño/);
+  assert.equal(statFacts({ bathroom: { Nico: 2, Sian: 2 } }).length, 0);
+  assert.equal(statFacts({ bathroom: { Nico: 1 } }).length, 0);
+});

@@ -15,6 +15,9 @@ export const ROOT_PATH = 'torneo_v2';
 export const PHOTOS_PATH = 'torneo_photos';
 // Listas que se guardan elemento por elemento con clave única
 export const KEYED_LISTS = ['games', 'archive'];
+// Mapas {clave: valor} que se escriben clave por clave (dos teléfonos sumando a jugadores
+// distintos al tiempo no se pisan): contador de idas al baño del torneo en curso.
+export const MAP_FIELDS = ['bathroom'];
 
 // Copia lista para Firebase: sin la propiedad interna _key y sin valores undefined
 export function clean(v) {
@@ -65,10 +68,18 @@ export function computeUpdates(prev, next, newKey) {
   for (const f of fields) {
     if (f === 'playerPhotos') continue;
     if (KEYED_LISTS.includes(f)) { diffList(f, prev[f] || [], next[f] || [], newKey, up); continue; }
+    if (MAP_FIELDS.includes(f)) { diffMap(f, prev[f] || {}, next[f] || {}, up); continue; }
     const after = clean(next[f]);
     if (JSON.stringify(clean(prev[f])) !== JSON.stringify(after)) up[`${ROOT_PATH}/${f}`] = after;
   }
   return up;
+}
+
+function diffMap(name, prevMap, nextMap, up) {
+  new Set([...Object.keys(prevMap), ...Object.keys(nextMap)]).forEach(k => {
+    const a = JSON.stringify(clean(prevMap[k])), b = clean(nextMap[k]);
+    if (a !== JSON.stringify(b)) up[`${ROOT_PATH}/${name}/${k}`] = b;
+  });
 }
 
 function diffList(name, prevList, nextList, newKey, up) {
